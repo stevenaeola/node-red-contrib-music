@@ -1,0 +1,87 @@
+<script type="text/javascript">
+  RED.nodes.registerType('sequencer',{
+  category: 'music',
+  color: '#a6bbcf',
+  defaults: {
+  name: {value: "sequencer"},
+  input: {value: "beat",
+          required: true},
+  notes: {value: "[1,4,5,4]", required: true},
+  notesrand: {value: false, required: false},
+  rhythm: {value: "[3,1]", required: true},
+  rhythmrand: {value: false, required: false},
+  octave: {value: 0},
+  loop: {value: true, required: true},
+  start: {value: "bar", required: true},
+  root: {value:"", required: false},
+  scale: {value:"default", required: false}
+  },
+  inputs:1,
+  outputs:1,
+  icon: "file.png",
+  label: function() {
+  return this.name||"sequencer";
+  }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="sequencer">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-input"><i class="icon-tag"></i> Input event</label>
+        <input type="text" id="node-input-input" placeholder="e.g. beat">
+    </div>
+    <div class="form-row">
+        <label for="node-input-start"><i class="icon-tag"></i> Start event</label>
+        <input type="text" id="node-input-start" placeholder="e.g. bar">
+    </div>
+    <div class="form-row">
+        <label for="node-input-loop"><i class="icon-tag"></i> Loop</label>
+        <input type="checkbox" id="node-input-loop">
+    </div>
+    <div class="form-row">
+        <label for="node-input-notes"><i class="icon-tag"></i> List of notes</label>
+        <input type="text" id="node-input-notes" placeholder="e.g. [1,4,5,4]">
+    </div>
+    <div class="form-row">
+        <label for="node-input-notesrand"><i class="icon-tag"></i> Choose notes randomly from list</label>
+        <input type="checkbox" id="node-input-notesrand">
+    </div>
+    <div class="form-row">
+        <label for="node-input-rhythm"><i class="icon-tag"></i> List of lengths</label>
+        <input type="text" id="node-input-rhythm" placeholder="e.g. [3,1]">
+    </div>
+    <div class="form-row">
+        <label for="node-input-rhythmrand"><i class="icon-tag"></i> Choose lengths randomly from list</label>
+        <input type="checkbox" id="node-input-rhythmrand">
+    </div>
+    <div class="form-row">
+        <label for="node-input-octave"><i class="icon-tag"></i> Octave</label>
+        <input type="text" id="node-input-octave" placeholder="e.g. -1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-root"><i class="icon-tag"></i> Root note of scale (if different from global) </label>
+        <input type="text" id="node-input-root" placeholder="e.g. C4">
+    </div>
+    <div class="form-row">
+        <label for="node-input-scale"><i class="icon-tag"></i> Scale type </label>
+        <select id="node-input-scale">
+	  <option>default</option>
+	  <option>minor</option>
+	  <option>major</option>
+	  <option>dorian</option>
+	  <option>mixolydian</option>
+	  <option>major pentatonic</option>
+	  <option>minor pentatonic</option>
+	  <option>blues</option>
+	  <option>chromatic</option>
+	</select>
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="sequencer">
+    <p>Plays notes with a rhythm, can be randomised.</p>
+</script>

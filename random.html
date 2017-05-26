@@ -1,0 +1,50 @@
+<script type="text/javascript">
+  RED.nodes.registerType('random',{
+  category: 'creativitease',
+  color: '#a6bbcf',
+  defaults: {
+  name: {value: "", required: false},
+  generate: {value: "notes", required: true},
+  values: {value: "[1,15]", required: true},
+  inbetween: {value: "none", required: true},
+  forward: {value: false, required: false}
+  },
+  inputs:1,
+  outputs:1,
+  icon: "file.png",
+  label: function() {
+  return this.name||"random";
+  }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="random">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-generate"><i class="icon-tag"></i> Target for generated values</label>
+    <input type="text" id="node-input-generate" placeholder="e.g. notes">
+  </div>
+  <div class="form-row">
+    <label for="node-input-min"><i class="icon-tag"></i> Values to choose from (as a list)</label>
+    <input type="text" id="node-input-min" placeholder="e.g. [1,15]">
+  </div>
+  <div class="form-row">
+    <label for="node-input-inbetween"><i class="icon-tag"></i> Use values in between </label>
+    <select id="node-input-inbetween">
+      <option value="none">Generate numbers taken from the list only</option>
+      <option value="int">Generate whole numbers in between first two items in list</option>
+      <option value="float">Generate fractional numbers in between first two items in list</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-forward"><i class="icon-tag"></i> Forward original message after sending randomised message </label>
+    <input type="checkbox" id="node-input-forward"/>
+  </div>
+  </script>
+
+<script type="text/x-red" data-help-name="random">
+<p>Generates random numbers</p>
+</script>

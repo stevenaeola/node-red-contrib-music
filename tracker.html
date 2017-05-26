@@ -1,0 +1,60 @@
+<script type="text/javascript">
+  RED.nodes.registerType('tracker',{
+  category: 'music',
+  color: '#a6bbcf',
+  defaults: {
+  name: {required: false},
+  track: {value: "volume", required: true},
+  min: {value: 0, required: true},
+  max: {value: 100, required: true},
+  initial: {value: 50, required: true},
+  step: {value: 5, required: true},
+  multiply: {value: false, required: true}
+        },
+  inputs:1,
+  outputs:1,
+  icon: "feed.png",
+  label: function() {
+  return this.name||"tracker";
+  }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="tracker">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="e.g. volume tracker">
+    </div>
+    <div class="form-row">
+        <label for="node-input-track"><i class="icon-tag"></i> Property to track</label>
+        <input type="text" id="node-input-track" placeholder="e.g. volume">
+    </div>
+    <div class="form-row">
+        <label for="node-input-min"><i class="icon-tag"></i> Minimum Value</label>
+        <input type="text" id="node-input-min" placeholder="e.g. 0">
+    </div>
+    <div class="form-row">
+        <label for="node-input-max"><i class="icon-tag"></i> Maximum Value</label>
+        <input type="text" id="node-input-max" placeholder="e.g. 100">
+    </div>
+    <div class="form-row">
+        <label for="node-input-initial"><i class="icon-tag"></i> Initial Value</label>
+        <input type="text" id="node-input-initial" placeholder="e.g. 50">
+    </div>
+    <div class="form-row">
+        <label for="node-input-step"><i class="icon-tag"></i> Step Size</label>
+        <input type="text" id="node-input-step" placeholder="e.g. 5">
+    </div>
+    <div class="form-row">
+      <label for="node-input-mutiply"><i class="icon-tag"></i> When going up or down </label>
+      <select id='node-input-multiply'>
+	<option value='false'>add</option>
+	<option value='true'>multiply</option>
+      </select>
+     the values
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="tracker">
+    <p>Keeps track of a value that can go up or down.</p>
+</script>
