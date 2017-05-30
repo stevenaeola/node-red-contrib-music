@@ -52,7 +52,7 @@ module.exports = function(RED) {
 			}
 			var playmsg = 
 			    {payload: "play",
-			     midi: note2midi(note)};
+			     note: note};
 			node.send(playmsg);
 		    }
 		}
@@ -105,116 +105,16 @@ module.exports = function(RED) {
 		node.warn("Invalid or undefined note lengths for using [1]");
 		node.rhythm = [1];
 	    }
-	    
-	    node.octave = config.octave || 0;
-	    
+	    	    
 	    node.start = config.start || "bar"; // sequence won't start until this
 	    
 	    node.loop = config.loop || false;
 	    node.notesrand = config.notesrand || false;
 	    node.rhythmrand = config.rhythmrand || false;
 	    
-	    setRoot(config.root);
-	    node.scale = config.scale; // if not defined we will use the global value
-
 	    restart();
 	}
 
-	function setRoot(root){
-	    var global = node.context().global;
-	    root = root || global.get("root");
-	    root = root || 60;
-
-	    var midiroot = Number(root);
-
-	    if(isNaN(midiroot)){
-		var name2midi = {
-		    c: 60,
-		    d: 62,
-		    e: 64,
-		    f: 65,
-		    g: 67,
-		    a: 69,
-		    b: 71
-		}
-
-		var rootbits = root.toLowerCase().split("");
-		var base = rootbits.shift();
-		midiroot = name2midi[base];
-		if(midiroot === undefined){
-		    node.warn("Scale root should be a midi number or start with a letter A-G");
-		    return;
-		}
-		var next = rootbits.shift();
-		if(next == "#" || next == "s"){
-		    midiroot++;
-		}
-		else if(next == "b"){
-		    midiroot--;
-		}
-		else if(next !== undefined){
-		    rootbits.unshift(next);
-		}
-		if(rootbits.length > 0){
-		    var octave = Number(rootbits.join(""));
-		    if(!isNaN(octave)){
-			midiroot += (octave - 5)*12;
-		    }
-		}
-
-	    }
-	    else{
-		if(midiroot<0 && midiroot>127){
-		    node.warn("Scale root must be in range 0-127");
-		    return;
-		}
-	    }
-	    node.root = midiroot;
-	
-	}
-	// use default scale for now    
-	function note2midi(note){
-	    
-	    var global = node.context().global;
-
-	    setRoot(config.root);
-	    
-	    if(Array.isArray(note)){
-		return _.map(note, note2midi);
-	    }
-	    if(note === null){
-		return -1;
-	    }
-	    var intervals = {
-		minor: [0,2,3,5,7,8,10,12],
-		major: [0,2,4,5,7,9,11,12],
-		dorian: [0,2,3,5,7,9,10,12],
-		mixolydian: [0,2,4,5,7,9,10,12],
-		"major pentatonic": [0,2,4,7,9,12],
-		"minor pentatonic": [0,3,5,7,10,12],
-		blues: [0,3,5,6,7,10,12],
-		chromatic: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-	    }
-
-	    var scale = node.scale;
-	    if(scale == "default"){
-		scale = null;
-	    }
-	    scale = scale || global.get("scale") || "minor";
-
-	    var offsets = intervals[scale];
-	    var midi = node.root;
-	    while(note > offsets.length){
-		note -= offsets.length-1;
-		midi += offsets[offsets.length-1];
-	    }
-	    
-	    midi += node.octave*12;
-	    
-	    midi += offsets[note-1];
-	    
-	    return midi;
-	}
 
     }
 

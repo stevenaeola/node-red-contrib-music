@@ -159,7 +159,7 @@ module.exports = function(RED) {
 	    }
 
 	    var msg = {payload: "tick",
-		       start: subBeat.names
+		       start: _.clone(subBeat.names)
 		       };
 
 

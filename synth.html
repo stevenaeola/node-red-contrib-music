@@ -5,6 +5,9 @@
   defaults: {
   name: {value: "piano", required: "true"},
   start_vol: {value: 70, required: "true"},
+  octave: {value: 0},
+  root: {value:"", required: false},
+  scale: {value:"default", required: false},
   voices: {value: 1, required: "true"}
         },
   inputs:1,
@@ -22,11 +25,33 @@
         <input type="text" id="node-input-name" placeholder="e.g. piano">
     </div>
     <div class="form-row">
-        <label for="node-input-start_vol"><i class="icon-tag"></i> Start Volume</label>
+        <label for="node-input-start_vol"> Start Volume</label>
         <input type="number" id="node-input-start_vol" placeholder="0-100">
     </div>
     <div class="form-row">
-        <label for="node-input-voices"><i class="icon-tag"></i> Number of voices</label>
+        <label for="node-input-octave"> Octave</label>
+        <input type="text" id="node-input-octave" placeholder="e.g. -1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-root"> Root note of scale (if different from global) </label>
+        <input type="text" id="node-input-root" placeholder="e.g. C4">
+    </div>
+    <div class="form-row">
+        <label for="node-input-scale"><i class="icon-tag"></i> Scale type </label>
+        <select id="node-input-scale">
+	  <option>default</option>
+	  <option>minor</option>
+	  <option>major</option>
+	  <option>dorian</option>
+	  <option>mixolydian</option>
+	  <option>major pentatonic</option>
+	  <option>minor pentatonic</option>
+	  <option>blues</option>
+	  <option>chromatic</option>
+	</select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-voices"> Number of voices</label>
         <input type="number" id="node-input-voices" placeholder="e.g. 4">
     </div>
 

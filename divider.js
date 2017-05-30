@@ -12,7 +12,6 @@ module.exports = function(RED) {
 	    switch(msg.payload){
 	    case "tick":
 		var start = msg.start || [];
-
 		if(start.indexOf(node.input)>=0){
 		    node.inputCount++;
 		    if(node.inputCount > node.ratio || node.outputCount === 0){

@@ -10,11 +10,8 @@
   notesrand: {value: false, required: false},
   rhythm: {value: "[3,1]", required: true},
   rhythmrand: {value: false, required: false},
-  octave: {value: 0},
   loop: {value: true, required: true},
-  start: {value: "bar", required: true},
-  root: {value:"", required: false},
-  scale: {value:"default", required: false}
+  start: {value: "bar", required: true}
   },
   inputs:1,
   outputs:1,
@@ -31,54 +28,32 @@
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-input"><i class="icon-tag"></i> Input event</label>
+        <label for="node-input-input"> Input event</label>
         <input type="text" id="node-input-input" placeholder="e.g. beat">
     </div>
     <div class="form-row">
-        <label for="node-input-start"><i class="icon-tag"></i> Start event</label>
+        <label for="node-input-start"> Start event</label>
         <input type="text" id="node-input-start" placeholder="e.g. bar">
     </div>
     <div class="form-row">
-        <label for="node-input-loop"><i class="icon-tag"></i> Loop</label>
+        <label for="node-input-loop"> Loop</label>
         <input type="checkbox" id="node-input-loop">
     </div>
     <div class="form-row">
-        <label for="node-input-notes"><i class="icon-tag"></i> List of notes</label>
+        <label for="node-input-notes"> List of notes</label>
         <input type="text" id="node-input-notes" placeholder="e.g. [1,4,5,4]">
     </div>
     <div class="form-row">
-        <label for="node-input-notesrand"><i class="icon-tag"></i> Choose notes randomly from list</label>
+        <label for="node-input-notesrand"> Choose notes randomly from list</label>
         <input type="checkbox" id="node-input-notesrand">
     </div>
     <div class="form-row">
-        <label for="node-input-rhythm"><i class="icon-tag"></i> List of lengths</label>
+        <label for="node-input-rhythm"> List of lengths</label>
         <input type="text" id="node-input-rhythm" placeholder="e.g. [3,1]">
     </div>
     <div class="form-row">
-        <label for="node-input-rhythmrand"><i class="icon-tag"></i> Choose lengths randomly from list</label>
+        <label for="node-input-rhythmrand"> Choose lengths randomly from list</label>
         <input type="checkbox" id="node-input-rhythmrand">
-    </div>
-    <div class="form-row">
-        <label for="node-input-octave"><i class="icon-tag"></i> Octave</label>
-        <input type="text" id="node-input-octave" placeholder="e.g. -1">
-    </div>
-    <div class="form-row">
-        <label for="node-input-root"><i class="icon-tag"></i> Root note of scale (if different from global) </label>
-        <input type="text" id="node-input-root" placeholder="e.g. C4">
-    </div>
-    <div class="form-row">
-        <label for="node-input-scale"><i class="icon-tag"></i> Scale type </label>
-        <select id="node-input-scale">
-	  <option>default</option>
-	  <option>minor</option>
-	  <option>major</option>
-	  <option>dorian</option>
-	  <option>mixolydian</option>
-	  <option>major pentatonic</option>
-	  <option>minor pentatonic</option>
-	  <option>blues</option>
-	  <option>chromatic</option>
-	</select>
     </div>
 </script>
 
