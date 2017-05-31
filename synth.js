@@ -74,18 +74,33 @@ module.exports = function(RED) {
 	});
 	
 	function sendNote(noteVal, msg){
-	    var payload = [node.synth_ids[node.next_voice]];
+
 	    var midi = note2midi(noteVal);
+
+	    var payload;
+	    var action;
+	    var synth_id;
 	    
-	    if(midi == -1){
-		payload.push("gate", 0);
+	    if(node.voices>0){
+		action = "/n_set";
+		synth_id = node.synth_ids[node.next_voice];
+		payload = [synth_id];
+		if(midi == -1){
+		    payload.push("gate", 0);
+		}
+		else{
+		    payload.push("gate", 1);
+		    payload.push("t_trig", 1);
+		}
 	    }
 	    else{
-		payload.push("gate", 1);
-		payload.push("t_trig", 1);
-		if(midi){
-		    payload.push("midi", midi);
-		}
+		action = "/s_new";
+		synth_id = -1;
+		payload = [node.name, -1, 1, 1];
+	    }
+	    
+	    if(midi){
+		payload.push("midi", midi);
 	    }
 
 	    if(msg.timeTag ){
@@ -94,7 +109,7 @@ module.exports = function(RED) {
 			timeTag: msg.timeTag,
 			packets: [
 			    {
-				address: "/n_set",
+				address: action,
 				args: payload
 			    }
 			]
@@ -103,7 +118,7 @@ module.exports = function(RED) {
 	    }
 	    else{
 		var playmsg = {
-		    topic: "/n_set",
+		    topic: action,
 		    payload:  payload
 		}
 	    }
@@ -161,7 +176,7 @@ module.exports = function(RED) {
 	function reset(){
 	    node.name = config.name || "piano";
 	    node.vol = Number(config.start_vol) || 70;
-	    node.voices = Number(config.voices) || 1;
+	    node.voices = Number(config.voices) || 0;
 	    node.next_voice = 0;
 	    node.synth_ids = Array(node.voices);
 

@@ -8,7 +8,7 @@
   octave: {value: 0},
   root: {value:"", required: false},
   scale: {value:"default", required: false},
-  voices: {value: 1, required: "true"}
+  voices: {value: 0, required: "true"}
         },
   inputs:1,
   outputs:1,
@@ -51,8 +51,8 @@
 	</select>
     </div>
     <div class="form-row">
-        <label for="node-input-voices"> Number of voices</label>
-        <input type="number" id="node-input-voices" placeholder="e.g. 4">
+        <label for="node-input-voices"> Number of voices (sustain only)</label>
+        <input type="number" id="node-input-voices" placeholder="0 for percussive sounds">
     </div>
 
 </script>
