@@ -96,7 +96,7 @@ module.exports = function(RED) {
 	    else{
 		action = "/s_new";
 		synth_id = -1;
-		payload = [node.name, -1, 1, 1];
+		payload = [node.name, -1, 1, 1, "amp", node.vol/100.0];
 	    }
 	    
 	    if(midi){
