@@ -1,0 +1,53 @@
+<script type="text/javascript">
+  RED.nodes.registerType('setting',{
+  category: 'music',
+  color: '#a6bbcf',
+  defaults: {
+  name: {required: false},
+  setting: {value: "volume", required: true},
+  initial: {required: true},
+  global: {value: false, required:true},
+  min: {required: false},
+  max: {required: false}
+
+        },
+  inputs:1,
+  outputs:1,
+  icon: "feed.png",
+  label: function() {
+  return this.name || this.setting || "setting";
+  }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="setting">
+    <div class="form-row">
+        <label for="node-input-name"> Name</label>
+        <input type="text" id="node-input-name" placeholder="e.g. drums volume">
+    </div>
+    <div class="form-row">
+        <label for="node-input-track"> Setting</label>
+        <input type="text" id="node-input-track" placeholder="e.g. volume">
+    </div>
+    <div class="form-row">
+        <label for="node-input-initial"> Initial Value</label>
+        <input type="text" id="node-input-initial" placeholder="e.g. 50">
+    </div>
+    <div class="form-row">
+        <label for="node-input-initial"> Global</label>
+        <input type="checkbox" id="node-input-initial">
+    </div>
+    <div class="form-row">
+        <label for="node-input-min"> Minimum Value (if relevant)</label>
+        <input type="text" id="node-input-min" placeholder="e.g. 0">
+    </div>
+    <div class="form-row">
+        <label for="node-input-max"> Maximum Value (if relevant)</label>
+        <input type="text" id="node-input-max" placeholder="e.g. 100">
+    </div>
+    
+</script>
+
+<script type="text/x-red" data-help-name="setting">
+    <p>Keeps track of a value that can change, e.g. volume, speed (bpm). If <code>global</code> is selected then this value is shared with other nodes, which is used for the default key and scale type.</p>
+</script>

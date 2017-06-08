@@ -1,30 +1,29 @@
 {
-  "name": "node-red-contrib-music",
-  "version": "0.0.1",
-  "description": "Synthesise music with node-red. The beat node creates regular beats at a rate you can control. The divider node adds information to beat events, dividing beats into bars, bars into phrases, phrases into sections. The synth node creates messages for SuperCollider that can be sent via OSC. The sequencer node plays a sequence of notes with a specificed rhythm.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "node-red"
-  ],
-  "node-red": {
-    "nodes": {
-      "beat": "beat.js",
-      "divider": "divider.js",
-      "global": "global.js",
-      "sampler": "sampler.js",
-      "sequencer": "sequencer.js",
-      "synth": "synth.js",
-      "tracker": "tracker.js"
+    "name": "node-red-contrib-music",
+    "version": "0.0.1",
+    "description": "Synthesise music with node-red. The beat node creates regular beats at a rate you can control. The divider node adds information to beat events, dividing beats into bars, bars into phrases, phrases into sections. The synth node creates messages for SuperCollider that can be sent via OSC. The sequencer node plays a sequence of notes with a specificed rhythm.",
+    "main": "index.js",
+    "scripts": {
+	"test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+	"node-red"
+    ],
+    "node-red": {
+	"nodes": {
+	    "beat": "beat.js",
+	    "divider": "divider.js",
+	    "sampler": "sampler.js",
+	    "sequencer": "sequencer.js",
+	    "setting": "setting.js",
+	    "synth": "synth.js"
+	}
+    },
+    "author": "s.p.bradley@durham.ac.uk",
+    "license": "ISC",
+    "dependencies": {
+	"mathjs": "^3.12.2",
+	"osc": "^2.2.0",
+	"underscore": "^1.8.3"
     }
-  },
-  "author": "s.p.bradley@durham.ac.uk",
-  "license": "ISC",
-  "dependencies": {
-    "mathjs": "^3.12.2",
-    "osc": "^2.2.0",
-    "underscore": "^1.8.3"
-  }
 }
