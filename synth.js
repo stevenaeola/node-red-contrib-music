@@ -96,7 +96,7 @@ module.exports = function(RED) {
 	    else{
 		action = "/s_new";
 		synth_id = -1;
-		payload = [node.name, -1, 1, 1, "amp", node.vol/100.0];
+		payload = [node.name, -1, 1, 1, "amp", vol2amp(node.vol)];
 	    }
 	    
 	    if(midi){
@@ -132,15 +132,22 @@ module.exports = function(RED) {
 	}
     
 	function setSynthVol(){
-	    var amp = node.vol/100.0; // Use a logarithmic scale?
 	    for(var voice = 0; voice<node.voices; voice++){
 		var volmsg = {
 		    "topic": "/n_set",
-		    "payload": [node.synth_ids[voice], "amp", amp]
+		    "payload": [node.synth_ids[voice], "amp", vol2amp(node.vol)]
 		}
 		node.send(volmsg);
 	    }
 	}
+
+	// logathmic scale with 0->0 and 100->1
+	function vol2amp(vol){
+	    vol = Math.min(100, Math.max(0, vol));
+	    var base = 1.02;
+	    return (Math.pow(base, vol)-1)/(Math.pow(base,100)-1);
+	}
+
 	
 	function createSynth(){
 	    var global = node.context().global;
@@ -175,7 +182,7 @@ module.exports = function(RED) {
 	
 	function reset(){
 	    node.name = config.name || "piano";
-	    node.vol = Number(config.start_vol) || 70;
+	    node.vol = Number(config.start_vol) || 50;
 	    node.voices = Number(config.voices) || 0;
 	    node.next_voice = 0;
 	    node.synth_ids = Array(node.voices);
@@ -185,9 +192,12 @@ module.exports = function(RED) {
 	    setRoot(config.root);
 	    node.scale = config.scale; // if not defined we will use the global value
 
-
-	    freeSynth();
-	    createSynth();
+	    // wait a little while to allow wires to be created
+	    setTimeout(function(){
+		freeSynth();
+		createSynth();
+	    }, 200);
+		  
 	}
 
 	function setRoot(root){
