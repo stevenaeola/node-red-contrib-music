@@ -3,8 +3,14 @@ module.exports = function(RED) {
 
     var osc = require("osc"); // required by node-red-contrib-osc
     var _ = require("underscore");
-    
-    
+
+    // exponential scale with 0->0 and 100->1
+    function vol2amp(vol){
+	vol = Math.max(0, vol);
+	var base = 1.02;
+	return (Math.pow(base, vol)-1)/(Math.pow(base,100)-1);
+    }
+
     function SynthNode(config) {
 	
         RED.nodes.createNode(this,config);
@@ -57,9 +63,7 @@ module.exports = function(RED) {
 		    break;
 		    
 		case "start":
-		    // restart the synth
-		    freeSynth();
-		    createSynth();
+		    // nothing to do
 		    break;
 		    
 		default:
@@ -96,7 +100,10 @@ module.exports = function(RED) {
 	    else{
 		action = "/s_new";
 		synth_id = -1;
-		payload = [node.name, -1, 1, 1, "amp", vol2amp(node.vol)];
+		
+		// add it to the head of the default group
+		payload = [node.name, -1, 0, 1, "amp", vol2amp(node.vol), "out", node.outBus];
+//				payload = [node.name, 1003, 0, 1,"out", node.outBus];
 	    }
 	    
 	    if(midi){
@@ -141,13 +148,6 @@ module.exports = function(RED) {
 	    }
 	}
 
-	// logathmic scale with 0->0 and 100->1
-	function vol2amp(vol){
-	    vol = Math.min(100, Math.max(0, vol));
-	    var base = 1.02;
-	    return (Math.pow(base, vol)-1)/(Math.pow(base,100)-1);
-	}
-
 	
 	function createSynth(){
 	    var global = node.context().global;
@@ -158,9 +158,11 @@ module.exports = function(RED) {
 		}
 		global.set("synth_next_sc_node", id + 1);
 		node.synth_ids[voice] = id;
+		
+		// add it to the head of the default group
 		var createMsg = {
 		    topic: "/s_new",
-		    payload: [node.name, node.synth_ids[voice], 1, 1]
+		    payload: [node.name, node.synth_ids[voice], 0, 1, "out", node.outBus]
 		}
 		node.send(createMsg);
 	    }
@@ -186,7 +188,8 @@ module.exports = function(RED) {
 	    node.voices = Number(config.voices) || 0;
 	    node.next_voice = 0;
 	    node.synth_ids = Array(node.voices);
-
+	    node.outBus = Number(config.outBus) || 0;
+	    
 	    node.octave = config.octave || 0;
 
 	    setRoot(config.root);
@@ -299,8 +302,103 @@ module.exports = function(RED) {
 	
     }
 
+    function SoundFXNode(config) {
+	
+        RED.nodes.createNode(this,config);
+        var node = this;
+	
+	reset();
+	
+        this.on('input', function(msg) {
+	    switch(msg.topic){
+	    case "volume":
+		var newVol = Number(msg.payload);
+		if(!Number.isNaN(newVol)){
+		    node.vol = newVol;
+		}
+		// 100 should be neutral volume, not max
+		
+		setFXParam("amp", vol2amp(node.vol));
+		
+		break;
+		
+	    default:
+		    
+		if(msg.payload== "reset"){
+		    reset();
+		    // just this once the reset message is not propagated
+		    return;
+		}
+
+		setFXParam(msg.topic, msg.payload);
+		
+	    }
+        });
+	
+	this.on('close', function(){
+//	    freeFX();
+	});
+	
+    
+	function setFXParam(param, val){
+	    var parammsg = {
+		"topic": "/n_set",
+		"payload": [node.synth_id, param, val]
+	    };
+	    node.send(parammsg);
+	}
+
+	function createFX(){
+	    var global = node.context().global;
+	    var id = Number(global.get("synth_next_sc_node"));
+	    if(isNaN(id)){
+		id = 100000; // high to avoid nodes from sclang
+	    }
+	    global.set("synth_next_sc_node", id + 1);
+	    node.synth_id = id;
+	    
+	    // add it to the tail of the default group
+	    var createMsg = {
+		topic: "/s_new",
+		payload: [node.fxtype, node.synth_id, 1, 1, "inBus", node.inBus]
+	    }
+	    node.send(createMsg);
+	    
+	    setFXParam("amp", vol2amp(node.vol));
+	}
+
+	function freeFX(){
+	    node.warn("freeFX");
+	    if(node.synth_id){
+		var freeMsg = {
+		    topic: "/n_free",
+		    payload: node.synth_id
+		}
+		node.warn(freeMsg);
+		node.send(freeMsg);
+		node.synth_id = null;
+	    }
+	}
+
+	function reset(){
+	    node.fxtype = config.fxtype || "reverb";
+	    node.name = config.name || node.fxtype;
+	    node.inBus = Number(config.inBus);
+	    node.outBus = Number(config.outBus) || 0;
+	    
+	    // wait a little while to allow wires to be created
+	    setTimeout(function(){
+		freeFX();
+		createFX();
+	    }, 200);
+	    
+	}
+	
+    }
 
 	
     RED.nodes.registerType("synth",SynthNode);
+    RED.nodes.registerType("soundfx",SoundFXNode);
 }
+
 

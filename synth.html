@@ -8,6 +8,7 @@
   octave: {value: 0},
   root: {value:"", required: false},
   scale: {value:"default", required: false},
+  outBus: {value:0, required: true},
   voices: {value: 0, required: "true"}
         },
   inputs:1,
@@ -51,6 +52,11 @@
 	</select>
     </div>
     <div class="form-row">
+        <label for="node-input-outBus"> Output bus </label>
+        <input type="number" id="node-input-outBus" placeholder="0 for direct output">
+    </div>
+    
+    <div class="form-row">
         <label for="node-input-voices"> Number of voices (sustain only)</label>
         <input type="number" id="node-input-voices" placeholder="0 for percussive sounds">
     </div>
@@ -59,4 +65,46 @@
 
 <script type="text/x-red" data-help-name="synth">
     <p>Turns note instructions into SuperCollider messages</p>
+</script>
+
+<script type="text/javascript">
+  RED.nodes.registerType('soundfx',{
+  category: 'music',
+  color: '#a6bbcf',
+  defaults: {
+  name: {required: "false"},
+  inBus: {value:2, required: "true"},
+  outBus: {value:0, required: "true"},
+  fxtype: {value: "reverb", required: "true"},
+        },
+  inputs:1,
+  outputs:1,
+  icon: "file.png",
+  label: function() {
+  return this.name || this.fxtype || "soundfx";
+  }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="soundfx">
+    <div class="form-row">
+        <label for="node-input-name">Name</label>
+        <input type="text" id="node-input-name" placeholder="e.g. drums reverb">
+    </div>
+    <div class="form-row">
+        <label for="node-input-inBus">Input Bus</label>
+        <input type="number" id="node-input-inBus" placeholder="e.g. 2">
+    </div>
+    <div class="form-row">
+        <label for="node-input-outBus">Output Bus</label>
+        <input type="number" id="node-input-outBus" placeholder="e.g. 0">
+    </div>
+    <div class="form-row">
+        <label for="node-input-fxtype">Effect Type</label>
+        <input type="text" id="node-input-fxtype" placeholder="e.g. reverb">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="soundfx">
+    <p>Make a SuperCollider sound effect</p>
 </script>
