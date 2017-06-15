@@ -11,6 +11,26 @@ module.exports = function(RED) {
 	return (Math.pow(base, vol)-1)/(Math.pow(base,100)-1);
     }
 
+    function freeSynths(node){
+	var global = node.context().global;
+	var toDelete = global.get("synth_delete_sc") || [];
+	for(var i = 0; i < toDelete.length; i++){
+	    var freeMsg = {
+		topic: "/n_free",
+		payload: toDelete[i]
+	    }
+	}
+	node.send(freeMsg);
+	global.set("synth_delete_sc", []);
+    }
+
+    function deleteSynth(node, synth_id){
+	var global = node.context().global;
+	var toDelete = global.get("synth_delete_sc") || [];
+	toDelete.push(synth_id);
+	global.set("synth_delete_sc", toDelete);
+    }
+
     function SynthNode(config) {
 	
         RED.nodes.createNode(this,config);
@@ -74,7 +94,7 @@ module.exports = function(RED) {
         });
 	
 	this.on('close', function(){
-	    freeSynth();
+	    deleteSynths();
 	});
 	
 	function sendNote(noteVal, msg){
@@ -84,6 +104,8 @@ module.exports = function(RED) {
 	    var payload;
 	    var action;
 	    var synth_id;
+
+	    var amp = vol2amp(node.vol);
 	    
 	    if(node.voices>0){
 		action = "/n_set";
@@ -100,10 +122,10 @@ module.exports = function(RED) {
 	    else{
 		action = "/s_new";
 		synth_id = -1;
-		
+
 		// add it to the head of the default group
-		payload = [node.name, -1, 0, 1, "amp", vol2amp(node.vol), "out", node.outBus];
-//				payload = [node.name, 1003, 0, 1,"out", node.outBus];
+		payload = [node.name, -1, 0, 1, "amp", amp, "out", node.outBus];
+		
 	    }
 	    
 	    if(midi){
@@ -130,7 +152,10 @@ module.exports = function(RED) {
 		}
 	    }
 
-	    node.send(playmsg);
+	    // avoid problems with DetectSilence leaving zombie synths at amp 0
+	    if(amp>0){
+		node.send(playmsg);
+	    }
 	    
 	    node.next_voice++;
 	    if(node.next_voice >= node.voices){
@@ -150,6 +175,7 @@ module.exports = function(RED) {
 
 	
 	function createSynth(){
+	    freeSynths(node);
 	    var global = node.context().global;
 	    for(var voice = 0; voice < node.voices; voice++){
 		var id = Number(global.get("synth_next_sc_node"));
@@ -168,20 +194,18 @@ module.exports = function(RED) {
 	    }
 	    setSynthVol();
 	}
-	
-	function freeSynth(){
+
+	// mark for deletion: the actual freeing takes place when the new one is deployed,
+	// so that we can be sure all the wires are in place to connect to server via OSC
+	function deleteSynths(){
 	    for(var voice = 0; voice<node.voices; voice++){
 		if(node.synth_ids[voice]){
-		    var freeMsg = {
-			topic: "/n_free",
-			payload: node.synth_ids[voice]
-		    }
-		    node.send(freeMsg);
+		    deleteSynth(node, node.synth_ids[voice]);
 		    node.synth_ids[voice] = null;
 		}
 	    }
 	}
-	
+
 	function reset(){
 	    node.name = config.name || "piano";
 	    node.vol = Number(config.start_vol) || 50;
@@ -197,7 +221,6 @@ module.exports = function(RED) {
 
 	    // wait a little while to allow wires to be created
 	    setTimeout(function(){
-		freeSynth();
 		createSynth();
 	    }, 200);
 		  
@@ -287,14 +310,35 @@ module.exports = function(RED) {
 
 	    var offsets = intervals[scale];
 	    var midi = node.root;
+
+	    // work out notes above the offset values by shifting up an octave
 	    while(note > offsets.length){
 		note -= offsets.length-1;
 		midi += offsets[offsets.length-1];
 	    }
+
+	    // work out notes below the offset values by shifting down an octave
+	    // notes 0 and -1 are the same as +1
+
+	    if(note == 0 || note == -1){
+		note = 1;
+	    }
+	    
+	    var negative = false;
+	    while(note < 0){
+		negative = true;
+		note += offsets.length-1;
+		midi -= offsets[offsets.length-1];
+	    }
 	    
 	    midi += node.octave*12;
-	    
-	    midi += offsets[note-1];
+
+	    if(negative){
+		midi += offsets[note+1];
+	    }
+	    else{
+		midi += offsets[note-1];
+	    }
 	    
 	    return midi;
 	}
@@ -336,7 +380,8 @@ module.exports = function(RED) {
         });
 	
 	this.on('close', function(){
-//	    freeFX();
+	    deleteSynth(node, node.synth_id);
+	    node.synth_id = null;
 	});
 	
     
@@ -349,6 +394,7 @@ module.exports = function(RED) {
 	}
 
 	function createFX(){
+	    freeSynths(node);
 	    var global = node.context().global;
 	    var id = Number(global.get("synth_next_sc_node"));
 	    if(isNaN(id)){
@@ -367,19 +413,6 @@ module.exports = function(RED) {
 	    setFXParam("amp", vol2amp(node.vol));
 	}
 
-	function freeFX(){
-	    node.warn("freeFX");
-	    if(node.synth_id){
-		var freeMsg = {
-		    topic: "/n_free",
-		    payload: node.synth_id
-		}
-		node.warn(freeMsg);
-		node.send(freeMsg);
-		node.synth_id = null;
-	    }
-	}
-
 	function reset(){
 	    node.fxtype = config.fxtype || "reverb";
 	    node.name = config.name || node.fxtype;
@@ -388,7 +421,6 @@ module.exports = function(RED) {
 	    
 	    // wait a little while to allow wires to be created
 	    setTimeout(function(){
-		freeFX();
 		createFX();
 	    }, 200);
 	    
