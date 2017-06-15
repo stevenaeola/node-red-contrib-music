@@ -53,6 +53,9 @@ module.exports = function(RED) {
 			var playmsg = 
 			    {payload: "play",
 			     note: note};
+			if(msg.timeTag){
+			    playmsg.timeTag = msg.timeTag;
+			}
 			node.send(playmsg);
 		    }
 		}
