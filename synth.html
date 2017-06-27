@@ -22,8 +22,20 @@
 
 <script type="text/x-red" data-template-name="synth">
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="e.g. piano">
+      <label for="node-input-name"> Name</label>
+      <select id="node-input-name">
+	<option>piano</option>
+	<option>bell</option>
+	<option>kick</option>
+	<option>snare</option>
+	<option>crotale</option>
+	<option>blip</option>
+	<option>marimba</option>
+	<option>prophet</option>
+	<option>moog</option>
+	<option>ghost</option>
+	</select>
+
     </div>
     <div class="form-row">
         <label for="node-input-start_vol"> Start Volume</label>
@@ -56,10 +68,6 @@
         <input type="number" id="node-input-outBus" placeholder="0 for direct output">
     </div>
     
-    <div class="form-row">
-        <label for="node-input-voices"> Number of voices (sustain only)</label>
-        <input type="number" id="node-input-voices" placeholder="0 for percussive sounds">
-    </div>
 
 </script>
 

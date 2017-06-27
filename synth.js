@@ -3,6 +3,7 @@ module.exports = function(RED) {
 
     var osc = require("osc"); // required by node-red-contrib-osc
     var _ = require("underscore");
+    var fs = require("fs");
 
     // exponential scale with 0->0 and 100->1
     function vol2amp(vol){
@@ -116,7 +117,6 @@ module.exports = function(RED) {
 		}
 		else{
 		    payload.push("gate", 1);
-		    payload.push("t_trig", 1);
 		}
 	    }
 	    else{
@@ -124,7 +124,7 @@ module.exports = function(RED) {
 		synth_id = -1;
 
 		// add it to the head of the default group
-		payload = [node.name, -1, 0, 1, "amp", amp, "out", node.outBus];
+		payload = [node.name, -1, 0, 0, "amp", amp, "out", node.outBus];
 		
 	    }
 	    
@@ -153,7 +153,7 @@ module.exports = function(RED) {
 	    }
 
 	    // avoid problems with DetectSilence leaving zombie synths at amp 0
-	    if(amp>0){
+	    if(amp>0 && (!midi || midi>=0 || node.voices>0)){
 		node.send(playmsg);
 	    }
 	    
@@ -176,23 +176,44 @@ module.exports = function(RED) {
 	
 	function createSynth(){
 	    freeSynths(node);
-	    var global = node.context().global;
-	    for(var voice = 0; voice < node.voices; voice++){
-		var id = Number(global.get("synth_next_sc_node"));
-		if(isNaN(id)){
-		    id = 100000; // high to avoid nodes from sclang
+	    var synthdefFile = __dirname +"/synthdefs/" + node.name + ".scsyndef";
+	    fs.readFile(synthdefFile, function (err,data){
+		if(err){
+		    node.warn(err);
 		}
-		global.set("synth_next_sc_node", id + 1);
-		node.synth_ids[voice] = id;
-		
-		// add it to the head of the default group
-		var createMsg = {
-		    topic: "/s_new",
-		    payload: [node.name, node.synth_ids[voice], 0, 1, "out", node.outBus]
+		else{
+		    var synthMsg={
+			topic: "/d_recv",
+			payload: [data, 0]
+		    }
+		    node.send(synthMsg);
 		}
-		node.send(createMsg);
+	    });
+
+
+	    // leave some time for the synthdef to be sent
+	    // check for sustained synths: should do this by seeing if they've got a gate parameter
+	    if(node.voices > 0){
+		setTimeout(function(){
+		    var global = node.context().global;
+		    for(var voice = 0; voice < node.voices; voice++){
+			var id = Number(global.get("synth_next_sc_node"));
+			if(isNaN(id)){
+			    id = 100000; // high to avoid nodes from sclang
+			}
+			global.set("synth_next_sc_node", id + 1);
+			node.synth_ids[voice] = id;
+			
+			// add it to the head of the default group
+			var createMsg = {
+			    topic: "/s_new",
+			    payload: [node.name, node.synth_ids[voice], 0, 0, "out", node.outBus]
+			}
+			node.send(createMsg);
+		    }
+		    setSynthVol();
+ 		}, 200);
 	    }
-	    setSynthVol();
 	}
 
 	// mark for deletion: the actual freeing takes place when the new one is deployed,
@@ -209,12 +230,19 @@ module.exports = function(RED) {
 	function reset(){
 	    node.name = config.name || "piano";
 	    node.vol = Number(config.start_vol) || 50;
-	    node.voices = Number(config.voices) || 0;
 	    node.next_voice = 0;
-	    node.synth_ids = Array(node.voices);
 	    node.outBus = Number(config.outBus) || 0;
 	    
 	    node.octave = config.octave || 0;
+
+	    if(_.contains(["moog", "prophet", "ghost"], node.name)){
+		node.voices = 1;
+	    }
+	    else{
+		node.voices = 0;
+	    }
+
+	    node.synth_ids = Array(node.voices);
 
 	    setRoot(config.root);
 	    node.scale = config.scale; // if not defined we will use the global value
@@ -342,7 +370,6 @@ module.exports = function(RED) {
 	    
 	    return midi;
 	}
-
 	
     }
 
@@ -406,7 +433,7 @@ module.exports = function(RED) {
 	    // add it to the tail of the default group
 	    var createMsg = {
 		topic: "/s_new",
-		payload: [node.fxtype, node.synth_id, 1, 1, "inBus", node.inBus]
+		payload: [node.fxtype, node.synth_id, 1, 0, "inBus", node.inBus]
 	    }
 	    node.send(createMsg);
 	    
@@ -425,7 +452,7 @@ module.exports = function(RED) {
 	    }, 200);
 	    
 	}
-	
+
     }
 
 	
