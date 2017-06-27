@@ -58,7 +58,7 @@ module.exports = function(RED) {
 	    node.status({fill: "grey", shape: "ring", text: node.setting + ": " + disp});
 
 	    if(node.global){
-		node.context().global.set(node.variable, node.trackedVal);
+		node.context().global.set(node.setting, node.trackedVal);
 	    }
 	    node.send({
 		topic: node.setting,
