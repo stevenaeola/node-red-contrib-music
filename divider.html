@@ -19,19 +19,19 @@
 
 <script type="text/x-red" data-template-name="divider">
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <label for="node-input-name"> name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-input"><i class="icon-tag"></i> Input event</label>
+        <label for="node-input-input"> input event</label>
         <input type="text" id="node-input-input" placeholder="e.g. beat">
     </div>
     <div class="form-row">
-        <label for="node-input-output"><i class="icon-tag"></i> Output event</label>
+        <label for="node-input-output"> output event</label>
         <input type="text" id="node-input-output" placeholder="e.g. bar">
     </div>
     <div class="form-row">
-        <label for="node-input-ratio"><i class="icon-tag"></i> Ratio (input events per output event)</label>
+        <label for="node-input-ratio"> ratio (input events per output event)</label>
         <input type="text" id="node-input-ratio" placeholder="e.g. 4">
     </div>
 </script>
@@ -40,9 +40,9 @@
   <p>The divider takes the output of a beat generator and adds further information to the tick messages, dividing up the ticks into bars, phrases, sections or whatever structures you choose.</p>
   <p>By default the divider counts beats into bars of four beats, so that every four beats a new bar is started. For each input message with <code>msg.payload</code> as <code>tick</code>, the value <code>beat_of_bar</code> is added, which counts from 1 to 4 for subsequent ticks. The value <code>bar</code> is also added, which increments by one every four beats. At the beginning of each bar (when <code>beat_of_bar</code> is 1) the value <code>bar</code> is also added to the array <code>msg.start</code>.</p>
   <p>Divider nodes can also be used to add larger scale structure to the music, by appropriate configuration.</p>
-  <p><b>Input event</b> controls which events are counted, by default this is <code>beat</code>.</p>
-  <p><b>Output event</b> is the event that is created, by default this is <code>bar</code>.</p>
-  <p><b>Ratio</b> controls the number of input events per output event, e.g. the number of beats in a bar, and defaults to 4. To count four beats in a bar and eight bars in a phrase you should have two divider nodes, the first one (beats to bars) should have its input connected to the output of a beat generator, and then send its output to the input of the second divider. The second divider should then be configured with the input event as <code>bar</code> and the output event as <code>phrase</code> and a ratio of 8. The tick messages coming from the second divider will then include properties for <code>beat</code>, <code>bar</code>, <code>phrase</code>, <code>beat_of_bar</code>, <code>bar_of_phrase</code> and <code>start</code> (an array).</p>
-  <p>A payload of <code>reset</code> will reset all counters to 0</p>
-  <p>All messages that do no have the payload <code>tick</code> will be sent directly to the output without modification.</p>
+  <p><code>input event</code> controls which events are counted, by default this is <code>beat</code>.</p>
+  <p><code>output event</code> is the event that is created, by default this is <code>bar</code>.</p>
+  <p><code>ratio</code> controls the number of input events per output event, e.g. the number of beats in a bar, and defaults to 4. To count four beats in a bar and eight bars in a phrase you should have two divider nodes, the first one (beats to bars) should have its input connected to the output of a beat generator, and then send its output to the input of the second divider. The second divider should then be configured with the input event as <code>bar</code> and the output event as <code>phrase</code> and a ratio of 8. The tick messages coming from the second divider will then include properties for <code>beat</code>, <code>bar</code>, <code>phrase</code>, <code>beat_of_bar</code>, <code>bar_of_phrase</code> and <code>start</code> (an array).</p>
+  <p>A <code>msg.payload</code> input of <code>reset</code> will reset all counters to 0</p>
+  <p>All input messages that do not have a <code>msg.payload</code> of <code>tick</code> will be sent directly to the output without modification.</p>
 </script>

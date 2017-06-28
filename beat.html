@@ -22,7 +22,7 @@
 	 $('#node-input-sub-beat-container').editableList({
 	     addItem: function(container,i,subBeat) {
 		 var row = $('<div/>').appendTo(container);
-		 $("<span>Sub-beat </span>").appendTo(row);
+		 $("<span>sub-beat </span>").appendTo(row);
 		 var nameField = $('<input/>',{class: "node-input-sub-beat-name",  type:"text", size: 15, placeholder:"e.g. triplet", style:"width:10em"}).appendTo(row);
 		 $("<span> # per beat </span>").appendTo(row);
 		 var countField = $('<input/>',{class: "node-input-sub-beat-count",  type:"number", size:6, placeholder: "e.g. 3", style:"width:6em"}).appendTo(row);
@@ -55,34 +55,84 @@
 
 <script type="text/x-red" data-template-name="beat">
   <div class="form-row">
-    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-    <input type="text" id="node-input-name" placeholder="Name">
+    <label for="node-input-name"><i class="icon-tag"></i> name</label>
+    <input type="text" id="node-input-name" placeholder="name">
   </div>
   <div class="form-row">
-    <label for="node-input-output"><i class="icon-tag"></i> Output counter</label>
+    <label for="node-input-output"><i class="icon-tag"></i> output counter</label>
     <input type="text" id="node-input-output" placeholder="e.g. beat)">
   </div>
   <div class="form-row">
-    <label for="node-input-bpm"><i class="icon-tag"></i> Initial beats per minute</label>
-    <input type="text" id="node-input-bpm" placeholder="BPM (e.g. 200)">
+    <label for="node-input-bpm"><i class="icon-tag"></i> initial beats per minute (bpm)</label>
+    <input type="number" id="node-input-bpm" placeholder="bpm (e.g. 200)">
   </div>
   <div class="form-row">
-    <label for="node-input-latency"><i class="icon-tag"></i> Latency</label>
-    <input type="text" id="node-input-latency" placeholder="In milliseconds">
+    <label for="node-input-latency"><i class="icon-tag"></i> latency</label>
+    <input type="number" id="node-input-latency" placeholder="in milliseconds">
   </div>
   <div class="form-row node-input-sub-beat-container-row">
-    <label><b>Sub-beats</b> Enter the name and number per beat</label>
+    <label><b>sub-beats</b> Enter the name and number per beat</label>
     <ol id="node-input-sub-beat-container"></ol>
   </div>
 </script>
 
 <script type="text/x-red" data-help-name="beat">
-  <p>The beat generator ouputs ticks at a regular interval once it has started, like a metronome.</p>
-  <p>The output message has the payload "tick". The number of ticks is counted and included in the output message. By default the tick count is sent in <code>msg.beat</code> but this can be changed with the <b>Output counter</b> property.</p>
-  <p>Initially the number of beats per minute is set by the <b>BPM</b> property, with a default of 200. This can be altered by sending a message to the beat generator with <code>msg.topic</code> and the required beats-per-minute in <code>msg.payload</code></p>
-  <p>If you set the <b>Latency</b> property then beats will be sent with a timeTag when the beat should occur, including the latency required. Including latency allows for more accurate placement of beats. If the latency is too small you will get "late" messages from supercollider, indicating that the request didn't seach supercollider in time to be executed. Increasing the latency allows more time for the beats to propogate through the node-red flows and to be sent to supercollider.</p>
-  <p>To start the beat generator, send it a message with <code>msg.payload</code> as <code>start</code>.</p>
-  <p>A message with a payload of <code>stop</code> payload will stop (pause) the generator. If the generator is started again then the tick count will continue from where it left off.</p>
-  <p>To start counting from 0 again, send a message with a payload of <code>reset</code>. Any reset messages will also be forwarded to the output of the node, as will any other input messages that do not have the topic <code>bpm</code> and do not have the payload <code>start</code> or <code>stop</code>.</p>
+  <p>The beat generator outputs tick messages at a regular interval once it has started, like a metronome.</p>
+
+  <h3>Inputs</h3>
+  <dl class='message-properties'>
+
+    <dt class="optional">topic <span class="property-type">(string)</span></dt>
+    <dd>If <code>msg.topic</code> is <code>bpm</code> then <code>msg.payload</code> is used to set the number of beats-per-minute for the ticks that are output</dd>
+
+    <dt>payload <span class='property-type'>(string)</span></dt>
+    <dd>If the input <code>msg.topic</code> is not <code>bpm</code> then <code>msg.payload</code> is used to control the beats with <code>start</code>, <code>stop</code> or <code>reset</code>. </dd>
+
+  </dl>
+
+  <h3>Outputs</h3>
+  <dl class='message-properties'>
+
+    <dt>payload <span class='property-type'>(string)</span></dt>
+    <dd>Usually the string <code>tick</code>, which is generated at the specified <code>bpm</code>, but all input messages are also output without change</dd>
+
+    <dt><span class='optional'>beat</span> <span class='property-type'>(number)</span></dt>
+    <dd>The number of ticks since the last deployment or <code>reset</code> is counted and added as a property to the message. By default this property is simply called <code>beat</code> but this can be configured with the <code>output counter</code> configuration.</dd>
+
+    <dt>start <span class='property-type'>(array)</span></dt>
+    <dd>This property usually contains the single string <code>beat</code>. However if the beat is divided into sub-beats then only some of the <code>tick</code> messages will contain <code>beat</code> in the <code>start</code> array.</dd>
+
+    <dt><span class='optional'>timeTag</span> <span class='property-type'>(number)</span></dt>
+    <dd>If <code>latency</code> is defined in the configuration then a <code>timeTag</code> property is given for <code>tick</code> messages to indicate the timestamp on which the beat should occur.</dd>
+
+  </dl>
+
+  <h3>Configuration</h3>
+
+  <dl class='message-properties'>
+
+    <dt><span class='optional'>name</span> <span class='property-type'>(string)</span></dt>
+    <dd>The label for the node. If not specified then the name of the <code>output counter</code> is used</dd>
+
+    <dt>output counter <span class='property-type'>(string)</span></dt>
+    <dd>The name of the counter property used for ticks: this is usually <code>beat</code>, but could be e.g. <code>crotchet</code></dd>
+
+    <dt><span class='optional'>initial beats per minute</span> <span class='property-type'>(number)</span></dt>
+    <dd>Which can be altered by input messages with a <code>msg.topic</code> of <code>bpm</code></dd>
+    
+    <dt><span class='optional'>latency</span> <span class='property-type'>(number)</span></dt>
+    <dd>If specified, this many milliseconds will be added to the current time when ticks are generated, and included in <code>msg.timeTag</code>. This can be useful for dealing with jitter between beats or sub-beats.</dd>
+
+    <dt><span class='optional'>sub-beats</span> <span class='property-type'>(string,number)</span></dt>
+    <dd>Named sub-beats (e.g. quaver, triplet) can be added, including how many should be included in the dandard beat. Each sub-beat will add a proerty to tick messages to give the position of the sub-beat within the beat, and the name of the sub-beat will also be included in the <code>msg.start</code> array when relevant. </dd>
+
+  </dl>
+  
+  <h3>Details</h3>
+  
+  <p>Initially the number of beats per minute is set by the <code>bpm</code> property, with a default of 200. This can be altered by sending a message to the beat generator with a <code>msg.topic</code> of <code>bpm</code> and the required beats-per-minute in <code>msg.payload</code></p>
+  <p>To start the beat generator, send it a message with a <code>msg.payload</code> of <code>start</code>.</p>
+  <p>A message with a <code>msg.payload</code> of <code>stop</code> will stop (pause) the generator. If the generator is started again then the beat count will continue from where it left off.</p>
+  <p>To start counting from 0 again, send a message with a payload of <code>reset</code>. Any reset messages will also be forwarded to the output of the node, as will any other input messages that do not have the topic <code>bpm</code>.</p>
 
 </script>
