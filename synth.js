@@ -124,7 +124,7 @@ module.exports = function(RED) {
 		synth_id = -1;
 
 		// add it to the head of the default group
-		payload = [node.name, -1, 0, 0, "amp", amp, "out", node.outBus];
+		payload = [node.name, -1, 1, 0, "amp", amp, "out", node.outBus];
 		
 	    }
 	    
@@ -156,7 +156,7 @@ module.exports = function(RED) {
 	    if(amp>0 && (!midi || midi>=0 || node.voices>0)){
 		node.send(playmsg);
 	    }
-	    
+
 	    node.next_voice++;
 	    if(node.next_voice >= node.voices){
 		node.next_voice = 0;
@@ -207,7 +207,7 @@ module.exports = function(RED) {
 			// add it to the head of the default group
 			var createMsg = {
 			    topic: "/s_new",
-			    payload: [node.name, node.synth_ids[voice], 0, 0, "out", node.outBus]
+			    payload: [node.name, node.synth_ids[voice], 1, 0, "out", node.outBus]
 			}
 			node.send(createMsg);
 		    }
