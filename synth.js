@@ -40,6 +40,14 @@ module.exports = function(RED) {
 	reset();
 	
         this.on('input', function(msg) {
+	    if(msg.topic && msg.topic.startsWith("synthcontrol:")){
+		var synthcontrol = msg.topic.substring(13);
+		var controlval = Number(msg.payload);
+		node.parameters[synthcontrol] = controlval;
+		setSynthParam(synthcontrol, controlval);
+		return;
+	    }
+	    
 	    switch(msg.topic){
 	    case "volume":
 		var newVol = Number(msg.payload);
@@ -52,7 +60,7 @@ module.exports = function(RED) {
 		setSynthVol();
 		
 		break;
-		
+
 	    default:
 		switch(msg.payload){
 		    
@@ -132,6 +140,11 @@ module.exports = function(RED) {
 		payload.push("midi", midi);
 	    }
 
+	    for(var param in node.parameters){
+		payload.push(param);
+		payload.push(node.parameters[param]);
+	    }
+	    
 	    if(msg.timeTag ){
 		var playmsg = {
 		    payload:{
@@ -162,15 +175,20 @@ module.exports = function(RED) {
 		node.next_voice = 0;
 	    }
 	}
-    
-	function setSynthVol(){
+
+	function setSynthParam(param, val){
 	    for(var voice = 0; voice<node.voices; voice++){
 		var volmsg = {
 		    "topic": "/n_set",
-		    "payload": [node.synth_ids[voice], "amp", vol2amp(node.vol)]
+		    "payload": [node.synth_ids[voice], param, val]
 		}
 		node.send(volmsg);
 	    }
+
+	}
+	
+	function setSynthVol(){
+	    setSynthParam("amp", vol2amp(node.vol));
 	}
 
 	
@@ -244,6 +262,8 @@ module.exports = function(RED) {
 
 	    node.synth_ids = Array(node.voices);
 
+	    node.parameters = {};
+	    
 	    setRoot(config.root);
 	    node.scale = config.scale; // if not defined we will use the global value
 
