@@ -94,8 +94,7 @@ module.exports = function(RED) {
 		node.notes = null;
 	    }
 	    if(!Array.isArray(node.notes)){
-		node.warn("Invalid or undefined notes, using [1]");
-		node.notes = [1];
+		node.notes=[node.notes];
 	    }
 	    
 	    try{
@@ -105,8 +104,7 @@ module.exports = function(RED) {
 		node.rhythm = null;
 	    }
 	    if(!Array.isArray(node.rhythm)){
-		node.warn("Invalid or undefined note lengths for using [1]");
-		node.rhythm = [1];
+		node.rhythm = [node.rhythm];
 	    }
 	    	    
 	    node.start = config.start || "bar"; // sequence won't start until this

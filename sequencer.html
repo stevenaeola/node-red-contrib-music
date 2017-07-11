@@ -24,39 +24,114 @@
 
 <script type="text/x-red" data-template-name="sequencer">
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-input"> Input event</label>
+        <label for="node-input-input"> input event</label>
         <input type="text" id="node-input-input" placeholder="e.g. beat">
     </div>
     <div class="form-row">
-        <label for="node-input-start"> Start event</label>
+        <label for="node-input-start"> start event</label>
         <input type="text" id="node-input-start" placeholder="e.g. bar">
     </div>
     <div class="form-row">
-        <label for="node-input-loop"> Loop</label>
+        <label for="node-input-loop"> loop</label>
         <input type="checkbox" id="node-input-loop">
     </div>
     <div class="form-row">
-        <label for="node-input-notes"> List of notes</label>
+        <label for="node-input-notes"> list of notes</label>
         <input type="text" id="node-input-notes" placeholder="e.g. [1,4,5,4]">
     </div>
     <div class="form-row">
-        <label for="node-input-notesrand"> Choose notes randomly from list</label>
+        <label for="node-input-notesrand"> choose notes randomly from list</label>
         <input type="checkbox" id="node-input-notesrand">
     </div>
     <div class="form-row">
-        <label for="node-input-rhythm"> List of lengths</label>
+        <label for="node-input-rhythm"> list of lengths</label>
         <input type="text" id="node-input-rhythm" placeholder="e.g. [3,1]">
     </div>
     <div class="form-row">
-        <label for="node-input-rhythmrand"> Choose lengths randomly from list</label>
+        <label for="node-input-rhythmrand"> choose lengths randomly from list</label>
         <input type="checkbox" id="node-input-rhythmrand">
     </div>
 </script>
 
 <script type="text/x-red" data-help-name="sequencer">
-    <p>Plays notes with a rhythm, can be randomised.</p>
+    <p>Plays a sequence of notes with a given rhythm, which can be looped and randomised.</p>
+
+    <h3>Inputs</h3>
+
+    <p>A sequencer usually gets its input from a <code>beat</code> node or a <code>divider</code> node, possibly via a <code>link</code> node.</p>
+  <dl class='message-properties'>
+
+    <dt>payload <span class='property-type'>(string)</span></dt>
+    <dd>There are two relevant values for <code>msg.payload</code>:
+      <ol>
+	<li>a <code>tick</code> input is counted by the sequencer if <code>msg.start</code> includes the input event (usually <code>beat</code>)</li>
+	<li>a <code>reset</code> input returns the sequencer to its starting state, and also forwards the message to the output.</li>
+      </ol>
+      Any other value for <code>msg.payload</code> is sent straight to the output.
+       </dd>
+
+  </dl>
+
+  <h3>Outputs</h3>
+
+    <p>A sequencer usually sends its output to a <code>synth</code> node.</p>
+  <dl class='message-properties'>
+
+    <dt>payload <span class='property-type'>(string)</span></dt>
+    <dd>The string <code>play</code> is sent when enough <code>tick</code> inputs have been received, according to the <code>list of lengths</code> configuration</dd>
+
+    <dt><span class='optional'>note</span> <span class='property-type'>(number)</span></dt>
+    <dd>The sequencer moves through its <code>list of notes</code> with the rhythm specified and the values in the <code>list of notes</code> are added to the <code>note</code> property.</dd>
+
+    <dt><span class='optional'>timeTag</span> <span class='property-type'>(number)</span></dt>
+    <dd>If a <code>timeTag</code> property is given for the incoming <code>tick</code> message it is included in the outgoing <code>play</code> message.</dd>
+
+  </dl>
+
+  <h3>Configuration</h3>
+
+  <dl class='message-properties'>
+
+    <dt><span class='optional'>name</span> <span class='property-type'>(string)</span></dt>
+    <dd>The label for the node.</dd>
+
+    <dt>input event <span class='property-type'>(string)</span></dt>
+    <dd>The <code>tick</code> event (included in <code>msg.start</code>) that is counted by the sequencer. By default this is <code>beat</code>, but could be e.g. <code>bar</code></dd>
+
+    <dt>start event <span class='property-type'>(string)</span></dt>
+    <dd>After a reset (or reaching the end of a non-looping sequence) the sequencer will wait until this event (included in <code>msg.start</code>) to start the sequence. By default this is <code>bar</code>, but could be e.g. <code>section</code></dd>
+    
+    <dt>loop <span class='property-type'>(boolean)</span></dt>
+    <dd>If selected, the sequencer will loop straight back to the beginning again and continue. If not the sequencer will restart at the next <code>start event</code>.</dd>
+
+    <dt>list of notes <span class='property-type'>(list,number)</span>
+    <dd>A list of numbers representing the position in the scale of the note to be played. The list should be specified as a JSON array, with default <code>[1,4,5,4]</code> or a number can be used if a single note is to be repeated. If no note is to be played at some part of the sequence (i.e. a rest), the value <code>null</code> should be used.</dd>
+
+    <dt>choose notes randomly from list <span class='property-type'>(boolean)</span>
+    <dd>If selected, the list of notes is shuffled randomly each time the sequence starts.</dd>
+
+    <dt>list of lengths <span class='property-type'>(list,number)</span>
+    <dd>A list of numbers representing the number of ticks to be counted for a note. The list should be specified as a JSON array, with default <code>[3,1]</code> or a number can be used if all notes have the same length. The size of this list does not have to be the same as the size of the list of notes: the list will be repeated as many times as necessary.</dd>
+
+    <dt>choose lengths randomly from list <span class='property-type'>(boolean)</span>
+    <dd>If selected, the list of lengths is shuffled randomly each time the sequence starts.</dd>
+
+
+    </dt>
+
+  </dl>
+  
+  <h3>Details</h3>
+  
+    <p>With the default settings of <code>[1,4,5,4]</code> for notes and <code>[3,1]</code> for lengths, the note 1 will be played on the first beat of the bar, then 4 on the fourth beat (i.e. 3 beats later), then 5 on the fifth beat (i.e. 1 beat later, going back to the start of the list of lengths) and finally 4 is played on the eighth beat (i.e. 3 beats later) before the whole sequence starts again.</p>
+
+    <p>Changing the list of notes to <code>[1,4,5,null]</code> has a rest on the eighth beat instead of another note 4.</p>
+
+    <p>Using the <code>start event</code> means that a new sequencer node can be deployed or reconfigured during a piece and will line up with a bar (by default) so that the timing of the deployment does not have to be exact, as long as it is some time in the bar before it needs to start.</p>
+
+
 </script>
