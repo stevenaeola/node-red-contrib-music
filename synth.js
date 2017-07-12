@@ -131,8 +131,8 @@ module.exports = function(RED) {
 		action = "/s_new";
 		synth_id = -1;
 
-		// add it to the head of the default group
-		payload = [node.name, -1, 1, 0, "amp", amp, "out", node.outBus];
+		// add it to the head of the root group
+		payload = [node.name, -1, 0, 0, "amp", amp, "out", node.outBus];
 		
 	    }
 	    
@@ -222,10 +222,10 @@ module.exports = function(RED) {
 			global.set("synth_next_sc_node", id + 1);
 			node.synth_ids[voice] = id;
 			
-			// add it to the head of the default group
+			// add it to the head of the root group
 			var createMsg = {
 			    topic: "/s_new",
-			    payload: [node.name, node.synth_ids[voice], 1, 0, "out", node.outBus]
+			    payload: [node.name, node.synth_ids[voice], 0, 0, "out", node.outBus]
 			}
 			node.send(createMsg);
 		    }
@@ -450,10 +450,10 @@ module.exports = function(RED) {
 	    global.set("synth_next_sc_node", id + 1);
 	    node.synth_id = id;
 	    
-	    // add it to the tail of the default group
+	    // add it to the tail of the root group
 	    var createMsg = {
 		topic: "/s_new",
-		payload: [node.fxtype, node.synth_id, 1, 0, "inBus", node.inBus]
+		payload: [node.fxtype, node.synth_id, 0, 0, "inBus", node.inBus]
 	    }
 	    node.send(createMsg);
 	    
