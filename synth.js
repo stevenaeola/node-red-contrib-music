@@ -477,7 +477,7 @@ module.exports = function(RED) {
 
 	
     RED.nodes.registerType("synth",SynthNode);
-    RED.nodes.registerType("soundfx",SoundFXNode);
+//    RED.nodes.registerType("soundfx",SoundFXNode);
 }
 
 
