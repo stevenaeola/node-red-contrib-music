@@ -1,45 +1,285 @@
 <script type="text/javascript">
-  RED.nodes.registerType('sampler',{
-  category: 'music',
-  color: '#a6bbcf',
-  defaults: {
-  name: {value: "sampler"},
-  input: {value: "beat",
-          required: true},
-  length: {value: 4, required: true},
-  start: {value: "bar", required: true},
-  loop: {value: false, required: true},
-  },
-  inputs:1,
-  outputs:1,
-  icon: "file.png",
-  label: function() {
-  return this.name||"sampler";
-  }
-  });
+ RED.nodes.registerType('sampler',{
+     category: 'music',
+     color: '#a6bbcf',
+     defaults: {
+	 name: {value: "sampler"},
+	 input: {value: "beat",
+		 required: true},
+	 length: {value: 4, required: true},
+	 start: {value: "bar", required: true},
+	 loop: {value: false, required: true},
+	 load: {value: "", required: false},
+	 loadoffset: {value: 0, required: false}
+     },
+     inputs:1,
+     outputs:1,
+     icon: "file.png",
+     label: function() {
+	 return this.name|| this.load || "sampler";
+     },
+     
+     oneditprepare: function(){
+	 const fs = require('fs');
+	 const path = require('path');
+	 //	 const root = path.join(__dirname, "Dirt-Samples");
+	 const root = __dirname + "/Dirt-Samples";
+	 var subs = fs.readdirSync(root);
+	 
+	 for (var i=0; i<subs.length; i++){
+	     console.log("looking at " + subs[i]);
+	     if(fs.statSync(root + "/" + subs[i]).isDirectory()){
+		 $('#node-input-load').append("<option>" + sampleDirs[i] + "</option>");
+	     }
+	     
+	 }
+     }
+ });
 </script>
 
 <script type="text/x-red" data-template-name="sampler">
-    <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-input"><i class="icon-tag"></i> Input event</label>
-        <input type="text" id="node-input-input" placeholder="e.g. beat">
-    </div>
-    <div class="form-row">
-        <label for="node-input-length"><i class="icon-tag"></i> Length of sample (count of input event)</label>
-        <input type="number" id="node-input-length" placeholder="e.g. 4">
-    </div>
-    <div class="form-row">
-        <label for="node-input-start"><i class="icon-tag"></i> Start event</label>
-        <input type="text" id="node-input-start" placeholder="e.g. bar">
-    </div>
-    <div class="form-row">
-        <label for="node-input-loop"><i class="icon-tag"></i> Loop</label>
-        <input type="checkbox" id="node-input-loop">
-    </div>
+ <div class="form-row">
+ <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+ <input type="text" id="node-input-name" placeholder="Name">
+ </div>
+ <div class="form-row">
+ <label for="node-input-input"><i class="icon-tag"></i> Input event</label>
+ <input type="text" id="node-input-input" placeholder="e.g. beat">
+ </div>
+ <div class="form-row">
+ <label for="node-input-length"><i class="icon-tag"></i> Length of sample (count of input event)</label>
+ <input type="number" id="node-input-length" placeholder="e.g. 4">
+ </div>
+ <div class="form-row">
+ <label for="node-input-start"><i class="icon-tag"></i> Start event</label>
+ <input type="text" id="node-input-start" placeholder="e.g. bar">
+ </div>
+ <div class="form-row">
+ <label for="node-input-loop"><i class="icon-tag"></i> Loop</label>
+ <input type="checkbox" id="node-input-loop">
+ </div>
+ <div class="form-row">
+ <label for="node-input-load"> Load sample</label>
+ <select id="node-input-load">
+     <option value="">[None]</option>
+     <option>808</option>
+     <option>808bd</option>
+     <option>808cy</option>
+     <option>808hc</option>
+     <option>808ht</option>
+     <option>808lc</option>
+     <option>808lt</option>
+     <option>808mc</option>
+     <option>808mt</option>
+     <option>808oh</option>
+     <option>808sd</option>
+     <option>909</option>
+     <option>ab</option>
+     <option>ade</option>
+     <option>ades2</option>
+     <option>ades3</option>
+     <option>ades4</option>
+     <option>alex</option>
+     <option>alphabet</option>
+     <option>amencutup</option>
+     <option>armora</option>
+     <option>arp</option>
+     <option>arpy</option>
+     <option>auto</option>
+     <option>baa</option>
+     <option>baa2</option>
+     <option>bass</option>
+     <option>bass0</option>
+     <option>bass1</option>
+     <option>bass2</option>
+     <option>bass3</option>
+     <option>bassdm</option>
+     <option>bassfoo</option>
+     <option>battles</option>
+     <option>bd</option>
+     <option>bend</option>
+     <option>bev</option>
+     <option>bin</option>
+     <option>birds</option>
+     <option>birds3</option>
+     <option>bleep</option>
+     <option>blip</option>
+     <option>blue</option>
+     <option>bottle</option>
+     <option>breaks152</option>
+     <option>breaks1</option>
+     <option>breaks165</option>
+     <option>breath</option>
+     <option>bubble</option>
+     <option>can</option>
+     <option>casio</option>
+     <option>cb</option>
+     <option>cc</option>
+     <option>chin</option>
+     <option>chink</option>
+     <option>circus</option>
+     <option>clak</option>
+     <option>click</option>
+     <option>clubkick</option>
+     <option>co</option>
+     <option>control</option>
+     <option>cosmicg</option>
+     <option>cp</option>
+     <option>cr</option>
+     <option>crow</option>
+     <option>d</option>
+     <option>db</option>
+     <option>diphone</option>
+     <option>diphone2</option>
+     <option>dist</option>
+     <option>dork2</option>
+     <option>dorkbot</option>
+     <option>dr</option>
+     <option>dr2</option>
+     <option>dr55</option>
+     <option>dr_few</option>
+     <option>drum</option>
+     <option>drumtraks</option>
+     <option>e</option>
+     <option>east</option>
+     <option>electro1</option>
+     <option>erk</option>
+     <option>f</option>
+     <option>feel</option>
+     <option>feelfx</option>
+     <option>fest</option>
+     <option>fire</option>
+     <option>flick</option>
+     <option>fm</option>
+     <option>foo</option>
+     <option>future</option>
+     <option>gab</option>
+     <option>gabba</option>
+     <option>gabbaloud</option>
+     <option>gabbalouder</option>
+     <option>glasstap</option>
+     <option>glitch</option>
+     <option>glitch2</option>
+     <option>gretsch</option>
+     <option>gtr</option>
+     <option>h</option>
+     <option>hand</option>
+     <option>hardcore</option>
+     <option>hardkick</option>
+     <option>haw</option>
+     <option>hc</option>
+     <option>hh</option>
+     <option>hh27</option>
+     <option>hit</option>
+     <option>hmm</option>
+     <option>ho</option>
+     <option>hoover</option>
+     <option>house</option>
+     <option>if</option>
+     <option>ifdrums</option>
+     <option>incoming</option>
+     <option>industrial</option>
+     <option>insect</option>
+     <option>invaders</option>
+     <option>jazz</option>
+     <option>jungbass</option>
+     <option>jungle</option>
+     <option>jvbass</option>
+     <option>kicklinn</option>
+     <option>koy</option>
+     <option>kurt</option>
+     <option>latibro</option>
+     <option>led</option>
+     <option>less</option>
+     <option>lighter</option>
+     <option>linnhats</option>
+     <option>lt</option>
+     <option>made</option>
+     <option>made2</option>
+     <option>mash</option>
+     <option>mash2</option>
+     <option>metal</option>
+     <option>miniyeah</option>
+     <option>moan</option>
+     <option>monsterb</option>
+     <option>moog</option>
+     <option>mouth</option>
+     <option>mp3</option>
+     <option>msg</option>
+     <option>mt</option>
+     <option>mute</option>
+     <option>newnotes</option>
+     <option>noise</option>
+     <option>noise2</option>
+     <option>notes</option>
+     <option>numbers</option>
+     <option>oc</option>
+     <option>odx</option>
+     <option>off</option>
+     <option>outdoor</option>
+     <option>pad</option>
+     <option>pebbles</option>
+     <option>perc</option>
+     <option>peri</option>
+     <option>pluck</option>
+     <option>popkick</option>
+     <option>print</option>
+     <option>proc</option>
+     <option>procshort</option>
+     <option>psr</option>
+     <option>rave</option>
+     <option>rave2</option>
+     <option>ravemono</option>
+     <option>realclaps</option>
+     <option>reverbkick</option>
+     <option>rm</option>
+     <option>rs</option>
+     <option>sax</option>
+     <option>sd</option>
+     <option>seawolf</option>
+     <option>sequential</option>
+     <option>sf</option>
+     <option>sheffield</option>
+     <option>short</option>
+     <option>sid</option>
+     <option>sine</option>
+     <option>sitar</option>
+     <option>sn</option>
+     <option>space</option>
+     <option>speakspell</option>
+     <option>speech</option>
+     <option>speechless</option>
+     <option>speedupdown</option>
+     <option>stab</option>
+     <option>stomp</option>
+     <option>subroc3d</option>
+     <option>sugar</option>
+     <option>sundance</option>
+     <option>tabla</option>
+     <option>tabla2</option>
+     <option>tablex</option>
+     <option>tacscan</option>
+     <option>tech</option>
+     <option>techno</option>
+     <option>tink</option>
+     <option>tok</option>
+     <option>toys</option>
+     <option>trump</option>
+     <option>ul</option>
+     <option>ulgab</option>
+     <option>uxay</option>
+     <option>v</option>
+     <option>voodoo</option>
+     <option>wind</option>
+     <option>wobble</option>
+     <option>world</option>
+     <option>xmas</option>
+     <option>yeah</option>
+
+ </select>
+ sample number <input type="number" size ="2"  id="node-input-loadoffset" placeholder="e.g. 1">
+
+ </div>
 </script>
 
 <script type="text/x-red" data-help-name="sampler">

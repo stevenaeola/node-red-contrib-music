@@ -1,6 +1,8 @@
 module.exports = function(RED) {
     "use strict";
 
+    var glob = require("glob");
+    
     function SamplerNode(config) {
         RED.nodes.createNode(this,config);
         var node = this;
@@ -36,8 +38,10 @@ module.exports = function(RED) {
 		case "play":
 		case "record":
 		    stopSynth(node.state);
-		    node.count = -1;
-		    setState("waiting");
+		    if(!node.load){
+			node.count = -1;
+			setState("waiting")
+		    };
 		}
 		break;
 		
@@ -107,12 +111,33 @@ module.exports = function(RED) {
 		node.bufnum = bufnum;
 	    }
 	    var fps = 44100;
-	    var seconds = 20; //assumed max length for now
-	    var createMsg = {
-		topic: "/b_alloc",
-		payload: [node.bufnum, fps * seconds * 2, 2]
+	    if(node.load){
+		var dir = __dirname + "/Dirt-Samples/" + node.load;
+		var match = dir + "/*.wav";
+		var fname;
+		glob(match, {nocase: true}, function (er, files) {
+		    var offset = node.loadoffset % files.length;
+		    fname = files[offset];
+		    // create and load the buffer from file
+		    var createMsg = {
+			topic: "/b_allocRead",
+			payload: [node.bufnum, fname ]
+		    }
+		    node.send(createMsg);
+		    setState("play");
+		});
+					     
 	    }
-	    node.send(createMsg);
+	    else{
+		// create an empty buffer ready for recording
+		var seconds = 20; //assumed max length for now
+		var createMsg = {
+		    topic: "/b_alloc",
+		    payload: [node.bufnum, fps * seconds * 2, 2]
+		}
+		node.send(createMsg);
+	    }
+
 	}
 
 	function freeBuffer(){
@@ -208,9 +233,13 @@ module.exports = function(RED) {
 	function restart(){
 	    node.count = -1; // the number of relevant ticks left to the end of the play/record. -1 indicates it hasn't started yet
 	    setState("wait");
-	    
-	    freeBuffer();
-	    createBuffer();
+
+	    // wait a little while to allow wires to be created
+
+	    setTimeout(function(){
+		freeBuffer();
+		createBuffer();
+	    }, 200);
 	}
 	
 	function reset(){
@@ -222,6 +251,9 @@ module.exports = function(RED) {
 
 	    node.length = Number(config.length) || 4;
 
+	    node.load = config.load || "";
+	    node.loadoffset = Number(config.loadoffset) || 0;
+	    
 	    restart();
 	}
     }

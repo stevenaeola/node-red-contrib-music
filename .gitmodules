@@ -1,0 +1,3 @@
+[submodule "Dirt-Samples"]
+	path = Dirt-Samples
+	url = https://github.com/tidalcycles/Dirt-Samples.git
