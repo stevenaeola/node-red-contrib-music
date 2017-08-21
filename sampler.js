@@ -10,20 +10,34 @@ module.exports = function(RED) {
 	reset();
 	
         this.on('input', function(msg) {
-	    switch(msg.payload){
-	    case "tick":
-		createSynth(node, "play");
+	    switch(msg.topic){
+
+	    case "load":
+		node.load = msg.payload;
+		loadBuffer(node);
 		break;
 		
-	    case "reset":
-		reset();
-		// do not send on message
+	    case "offset":
+		node.loadoffset = Number(msg.payload);
+		loadBuffer(node);
 		break;
 		
 	    default:
+		switch(msg.payload){
+		case "tick":
+		    createSynth(node, "play", msg.timeTag);
+		    break;
+		    
+		case "reset":
+		    reset();
+		    // do not send on message
+		    break;
+
+		default:
 		// do nothing
 		break;
 
+		}
 	    }
         });
 
@@ -108,7 +122,7 @@ module.exports = function(RED) {
 		    if(start.includes(node.start)){
 			node.count = node.length;
 			setState(node.state); // to display status
-			createSynth(node, node.state);
+			createSynth(node, node.state, msg.timeTag);
 		    }
 		    else{
 			return; // ignore all ticks until the start event
@@ -211,20 +225,7 @@ module.exports = function(RED) {
 	}
 	var fps = 44100;
 	if(node.load){
-	    var dir = __dirname + "/Dirt-Samples/" + node.load;
-	    var match = dir + "/*.wav";
-	    var fname;
-	    glob(match, {nocase: true}, function (er, files) {
-		var offset = node.loadoffset % files.length;
-		fname = files[offset];
-		// create and load the buffer from file
-		var createMsg = {
-		    topic: "/b_allocRead",
-		    payload: [node.bufnum, fname ]
-		}
-		node.send(createMsg);
-	    });
-	    
+	    loadBuffer(node);
 	}
 	else{
 	    // create an empty buffer ready for recording
@@ -238,6 +239,22 @@ module.exports = function(RED) {
 
     }
 
+    function loadBuffer(node){
+	var dir = __dirname + "/Dirt-Samples/" + node.load;
+	var match = dir + "/*.wav";
+	var fname;
+	glob(match, {nocase: true}, function (er, files) {
+	    var offset = node.loadoffset % files.length;
+	    fname = files[offset];
+	    // create and load the buffer from file
+	    var createMsg = {
+		topic: "/b_allocRead",
+		payload: [node.bufnum, fname ]
+	    }
+	    node.send(createMsg);
+	});
+    }
+    
     function freeBuffer(node){
 	if(node.bufnum){
 	    var freeMsg = {
@@ -248,7 +265,7 @@ module.exports = function(RED) {
 	}
     }
 
-    function createSynth(node, action){
+    function createSynth(node, action, timeTag){
 	if(!["play", "record"].includes(action)){
 	    node.warn("no synth for action " + action);
 	    return;
@@ -273,10 +290,30 @@ module.exports = function(RED) {
 	global.set("synth_next_sc_node", id + 1);
 	node[synth] = id;
 
-	var createMsg = {
-	    topic: "/s_new",
-	    payload: [action + "Sample", node[synth], 1, 1, "buffer", node.bufnum]
+	var payload = [action + "Sample", node[synth], 1, 1, "buffer", node.bufnum];
+
+	var address = "/s_new";
+
+	var createMsg;
+	if(timeTag){
+	    createMsg  = {
+		    payload:{
+			timeTag: timeTag,
+			packets: [
+			    {
+				address: address,
+				args: payload
+			    }
+			]
+		    }
+		};
+
+
 	}
+	else{
+	    createMsg = {topic: address, payload:payload};
+	}
+
 	node.send(createMsg);
     }
 
