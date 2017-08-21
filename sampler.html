@@ -1,14 +1,9 @@
 <script type="text/javascript">
- RED.nodes.registerType('sampler',{
+ RED.nodes.registerType('sample',{
      category: 'music',
      color: '#a6bbcf',
      defaults: {
-	 name: {value: "sampler"},
-	 input: {value: "beat",
-		 required: true},
-	 length: {value: 4, required: true},
-	 start: {value: "bar", required: true},
-	 loop: {value: false, required: true},
+	 name: {value: "sample"},
 	 load: {value: "", required: false},
 	 loadoffset: {value: 0, required: false}
      },
@@ -16,47 +11,15 @@
      outputs:1,
      icon: "file.png",
      label: function() {
-	 return this.name|| this.load || "sampler";
-     },
-     
-     oneditprepare: function(){
-	 const fs = require('fs');
-	 const path = require('path');
-	 //	 const root = path.join(__dirname, "Dirt-Samples");
-	 const root = __dirname + "/Dirt-Samples";
-	 var subs = fs.readdirSync(root);
-	 
-	 for (var i=0; i<subs.length; i++){
-	     console.log("looking at " + subs[i]);
-	     if(fs.statSync(root + "/" + subs[i]).isDirectory()){
-		 $('#node-input-load').append("<option>" + sampleDirs[i] + "</option>");
-	     }
-	     
-	 }
+	 return this.name|| this.load || "sample";
      }
  });
 </script>
 
-<script type="text/x-red" data-template-name="sampler">
+<script type="text/x-red" data-template-name="sample">
  <div class="form-row">
  <label for="node-input-name"><i class="icon-tag"></i> Name</label>
  <input type="text" id="node-input-name" placeholder="Name">
- </div>
- <div class="form-row">
- <label for="node-input-input"><i class="icon-tag"></i> Input event</label>
- <input type="text" id="node-input-input" placeholder="e.g. beat">
- </div>
- <div class="form-row">
- <label for="node-input-length"><i class="icon-tag"></i> Length of sample (count of input event)</label>
- <input type="number" id="node-input-length" placeholder="e.g. 4">
- </div>
- <div class="form-row">
- <label for="node-input-start"><i class="icon-tag"></i> Start event</label>
- <input type="text" id="node-input-start" placeholder="e.g. bar">
- </div>
- <div class="form-row">
- <label for="node-input-loop"><i class="icon-tag"></i> Loop</label>
- <input type="checkbox" id="node-input-loop">
  </div>
  <div class="form-row">
  <label for="node-input-load"> Load sample</label>
@@ -277,11 +240,62 @@
      <option>yeah</option>
 
  </select>
- sample number <input type="number" size ="2"  id="node-input-loadoffset" placeholder="e.g. 1">
+ </div>
+ <div class="form-row">
+ <label for="node-input-loadoffset">sample number <input type="number" min="0" max="99"  id="node-input-loadoffset" placeholder="e.g. 1">
 
+ </div>
+ 
+</script>
+
+<script type="text/x-red" data-help-name="sample">
+    <p>Plays pre-recorded sample sounds, much like a synth node.</p>
+</script>
+
+<script type="text/javascript">
+ RED.nodes.registerType('looper',{
+     category: 'music',
+     color: '#a6bbcf',
+     defaults: {
+	 name: {value: "looper"},
+	 input: {value: "beat",
+		 required: true},
+	 length: {value: 4, required: true},
+	 start: {value: "bar", required: true},
+	 loop: {value: false, required: true}
+     },
+     inputs:1,
+     outputs:1,
+     icon: "file.png",
+     label: function() {
+	 return this.name || "looper";
+     }
+ });
+</script>
+
+<script type="text/x-red" data-template-name="looper">
+ <div class="form-row">
+ <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+ <input type="text" id="node-input-name" placeholder="Name">
+ </div>
+ <div class="form-row">
+ <label for="node-input-input"><i class="icon-tag"></i> Input event</label>
+ <input type="text" id="node-input-input" placeholder="e.g. beat">
+ </div>
+ <div class="form-row">
+ <label for="node-input-length"><i class="icon-tag"></i> Length of loop (count of input event)</label>
+ <input type="number" id="node-input-length" placeholder="e.g. 4">
+ </div>
+ <div class="form-row">
+ <label for="node-input-start"><i class="icon-tag"></i> Start event</label>
+ <input type="text" id="node-input-start" placeholder="e.g. bar">
+ </div>
+ <div class="form-row">
+ <label for="node-input-loop"><i class="icon-tag"></i> Loop</label>
+ <input type="checkbox" id="node-input-loop">
  </div>
 </script>
 
-<script type="text/x-red" data-help-name="sampler">
-    <p>Samples and replays sounds.</p>
+<script type="text/x-red" data-help-name="loop">
+    <p>Samples and replays (loops) sounds.</p>
 </script>
