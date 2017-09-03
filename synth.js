@@ -64,7 +64,6 @@ module.exports = function(RED) {
 	    default:
 		switch(msg.payload){
 		    
-		case "play":
 		case "tick":
 		    if(Array.isArray(msg.note)){
 			msg.note.forEach(function(noteVal){

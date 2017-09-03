@@ -13,54 +13,107 @@ module.exports = function(RED) {
 	    switch(msg.payload){
 	    case "tick":
 		var start = msg.start || [];
+		var controlSet = false;
 		if(start.indexOf(node.input)>=0){
-//		    only start/ restart when we get the right kind of tick
-		    if(node.rhythmPos == -1 && start.indexOf(node.start)<0){
-			return;
-		    }
-		    node.rhythmCount--;
-		    if(node.rhythmCount<=0){
-			if(node.rhythmrand && node.loop){
-			    node.rhythmCount = _.sample(node.rhythm);
-			    node.rhythmPos = 0; // needs to be > 0 so that it continues after start/restart
-			}
-			else{
-			    node.rhythmPos++;
-			    if(node.rhythmPos>=node.rhythm.length){
-				node.rhythmPos = 0;
+		    //		    only start/ restart when we get the right kind of tick
+		    if(node.rhythmPos > -1 || start.indexOf(node.start)>=0){
+			node.rhythmCount--;
+			if(node.rhythmCount<=0){
+			    if(node.rhythmrand && node.loop){
+				node.rhythmCount = _.sample(node.rhythm);
+				node.rhythmPos = 0; // needs to be > 0 so that it continues after start/restart
 			    }
-			    node.rhythmCount = node.rhythm[node.rhythmPos];
-			    msg.rhythm_pos = node.rhythmPos;
-			}
+			    else{
+				node.rhythmPos++;
+				if(node.rhythmPos>=node.rhythm.length){
+				    node.rhythmPos = 0;
+				}
+				node.rhythmCount = node.rhythm[node.rhythmPos];
+			    }
 
-			var note;
-			if(node.notesrand && node.loop){
-			    note = _.sample(node.notes);
-			}
-			else{
-			    node.notePos++;
-			    if(node.notePos >= node.notes.length){
-				if(node.loop){
-				    node.notePos = 0;
+			    for(var i = 0; i<node.controls.length; i++){
+				var control = node.controls[i];
+				control.value = null;
+				if(node.notesrand && node.loop){
+				    control.value = _.sample(control.values);
 				}
 				else{
-				    restart();
-				    return;
+				    control.pos++;
+				    if(control.pos >= control.values.length){
+					if(node.loop){
+					    control.pos = 0;
+					    control.value = control.values[control.pos];
+					}
+				    }
+				    else{
+					control.value = control.values[control.pos];
+				    }
+				}
+				if(control.value){
+				    controlSet = true;
 				}
 			    }
-			    note = node.notes[node.notePos]
+			    if(!controlSet){
+				reset();
+			    }
 			}
-			var playmsg = 
-			    {payload: "play",
-			     note: note};
+		    }
+		}
+
+		switch(node.output){
+		case "single":
+		    if(controlSet){
+			var playmsg = {payload: "tick"};
 			if(msg.timeTag){
 			    playmsg.timeTag = msg.timeTag;
 			}
+			for(var i = 0; i<node.controls.length; i++){
+			    var control = node.controls[i];
+			    node.warn("Adding output " + control.name);
+			    if(control.value){
+				playmsg[control.name] = control.value;
+			    }
+			}
+			node.warn("Sending msg");
+			node.warn(playmsg);
 			node.send(playmsg);
 		    }
+		    else{
+			node.warn("No controlSet");
+		    }
+		    break;
+		    
+		case "all":
+		    for(var i = 0; i<node.controls.length; i++){
+			var control = node.controls[i];
+			if(control.value){
+			    msg[control.name] = control.value;
+			}
+		    }
+		    node.send(msg);
+
+		    break;
+
+		case "extra":
+		    for(var i = 0; i<node.controls.length; i++){
+			var control = node.controls[i];
+			if(control.value){
+			    var controlMsg = {};
+			    controlMsg[control.name] = control.value;
+			    node.send(controlMsg);
+			}
+		    }
+		    node.send(msg);
+		    break;
+		    
+		default:
+		    node.warn("Unknown output type " + node.output);
+		    // do nothing
+		    break;
+		    
 		}
 		break;
-
+		
 	    case "reset":
 		reset();
 		node.send(msg);
@@ -75,27 +128,21 @@ module.exports = function(RED) {
 	function restart(){
 	    node.rhythmPos = -1; // the position in the list of lengths
 	    node.rhythmCount = 0; // count down the number of beats
-	    node.notePos = -1; // the position in the list of notes
 	    if(node.rhythmrand & !node.loop){
 		node.rhythm = _.shuffle(node.rhythm);
 	    }
-	    if(node.notesrand & !node.loop){
-		node.notes = _.shuffle(node.notes);
+
+	    for(var i = 0; i<node.controls.length; i++){
+		var control = node.controls[i];
+		control.pos = -1;
+		if(node.notesrand & !node.loop){
+		    control.values = _.shuffle(control.values);
+		}
 	    }
 	}
 	
 	function reset(){
 	    node.input = config.input || "beat";
-	    
-	    try{
-		node.notes = JSON.parse(config.notes);
-	    }
-	    catch(e){
-		node.notes = null;
-	    }
-	    if(!Array.isArray(node.notes)){
-		node.notes=[node.notes];
-	    }
 	    
 	    try{
 		node.rhythm = JSON.parse(config.rhythm);
@@ -112,7 +159,26 @@ module.exports = function(RED) {
 	    node.loop = config.loop || false;
 	    node.notesrand = config.notesrand || false;
 	    node.rhythmrand = config.rhythmrand || false;
-	    
+	    node.output = config.output || "single";
+
+	    node.controls = config.controls;
+	    if(!Array.isArray(node.controls) || node.controls.length <=1){
+		node.controls = [{name: "note", values: "[1,4,5,4]"}];
+	    }
+
+	    for(var i = 0; i<node.controls.length; i++){
+		var control = node.controls[i];
+		try{
+		    control.values = JSON.parse(control.values);
+		}
+		catch(e){
+		    control.values = null;
+		}
+		if(!Array.isArray(control.values)){
+		    control.values = [control.values];
+		}
+	    }
+
 	    restart();
 	}
 
