@@ -6,12 +6,13 @@
 	 name: {value: "sequencer"},
 	 input: {value: "beat",
 		 required: true},
-	 notes: {value: "[1,4,5,4]", required: true},
 	 notesrand: {value: false, required: false},
 	 rhythm: {value: "[3,1]", required: true},
 	 rhythmrand: {value: false, required: false},
 	 loop: {value: true, required: true},
-	 start: {value: "bar", required: true}
+	 start: {value: "bar", required: true},
+	 output: {value: "single", required: true},
+	 controls: {value:[{name: "note", value: "[1,4,5,4]"}], required: true}
      },
      inputs:1,
      outputs:1,
@@ -27,8 +28,6 @@
 	 if(!Array.isArray(node.controls) ||node.controls.length == 0){
 	     node.controls = defaultControls;
 	 }
-	 console.log("oneditprepare");
-	 console.log(node.controls);
 	 $('#node-input-control-container').editableList({
 	     addItem: function(container, i, control) {
 		 var row = $('<div/>').appendTo(container);

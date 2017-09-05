@@ -27,7 +27,7 @@ module.exports = function(RED) {
 				node.rhythmPos++;
 				if(node.rhythmPos>=node.rhythm.length){
 				    node.rhythmPos = 0;
-				}
+			}
 				node.rhythmCount = node.rhythm[node.rhythmPos];
 			    }
 
@@ -69,17 +69,11 @@ module.exports = function(RED) {
 			}
 			for(var i = 0; i<node.controls.length; i++){
 			    var control = node.controls[i];
-			    node.warn("Adding output " + control.name);
 			    if(control.value){
 				playmsg[control.name] = control.value;
 			    }
 			}
-			node.warn("Sending msg");
-			node.warn(playmsg);
 			node.send(playmsg);
-		    }
-		    else{
-			node.warn("No controlSet");
 		    }
 		    break;
 		    
@@ -95,12 +89,15 @@ module.exports = function(RED) {
 		    break;
 
 		case "extra":
-		    for(var i = 0; i<node.controls.length; i++){
-			var control = node.controls[i];
-			if(control.value){
-			    var controlMsg = {};
-			    controlMsg[control.name] = control.value;
-			    node.send(controlMsg);
+		    if(controlSet){
+			for(var i = 0; i<node.controls.length; i++){
+			    var control = node.controls[i];
+			    if(control.value){
+				var controlMsg = {topic: control.name,
+						  payload: control.value,
+						 };
+				node.send(controlMsg);
+			    }
 			}
 		    }
 		    node.send(msg);
@@ -162,7 +159,7 @@ module.exports = function(RED) {
 	    node.output = config.output || "single";
 
 	    node.controls = config.controls;
-	    if(!Array.isArray(node.controls) || node.controls.length <=1){
+	    if((!Array.isArray(node.controls)) || node.controls.length <1){
 		node.controls = [{name: "note", values: "[1,4,5,4]"}];
 	    }
 
