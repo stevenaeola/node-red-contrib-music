@@ -5,6 +5,9 @@ module.exports = function(RED) {
     var _ = require("underscore");
     var fs = require("fs");
 
+    
+    var configurables = ["root", "scale", "volume", "octave", "name"];
+
     // exponential scale with 0->0 and 100->1
     function vol2amp(vol){
 	vol = Math.max(0, vol);
@@ -49,22 +52,12 @@ module.exports = function(RED) {
 	    }
 	    
 	    switch(msg.topic){
-	    case "volume":
-		var newVol = Number(msg.payload);
-		if(!Number.isNaN(newVol)){
-		    node.vol = newVol;
-		}
-		
-		node.vol = Math.min(100, Math.max(0, node.vol));
-
-		setSynthVol();
-		
-		break;
 
 	    default:
 		switch(msg.payload){
 		    
 		case "tick":
+		    configureTick(msg);
 		    if(Array.isArray(msg.note)){
 			msg.note.forEach(function(noteVal){
 			    sendNote(noteVal, msg);
@@ -95,6 +88,7 @@ module.exports = function(RED) {
 		    break;
 		    
 		default:
+		    configureMsg(msg);
 		    // do nothing
 		}
 		
@@ -260,7 +254,7 @@ module.exports = function(RED) {
 	    }
 
 	    node.synth_ids = Array(node.voices);
-
+	    node.noteoffset = 0;
 	    node.parameters = {};
 	    
 	    setRoot(config.root);
@@ -278,6 +272,22 @@ module.exports = function(RED) {
 	    root = root || global.get("root");
 	    root = root || 60;
 
+	    var roman = {
+		i: 1,
+		ii: 2,
+		iii: 3,
+		iv: 4,
+		v: 5,
+		vi: 6,
+		vii:7,
+		viii:8
+	    }
+
+	    if(roman[root]){
+		node.noteoffset = roman[root];
+		root = global.get("root") || 60;
+	    }
+	    
 	    var midiroot = Number(root);
 
 	    if(isNaN(midiroot)){
@@ -291,6 +301,7 @@ module.exports = function(RED) {
 		    b: 71
 		}
 
+		
 		var rootbits = root.toLowerCase().split("");
 		var base = rootbits.shift();
 		midiroot = name2midi[base];
@@ -390,6 +401,41 @@ module.exports = function(RED) {
 	    return midi;
 	}
 	
+	function configureTick(msg){
+	    for(var i=0; i<configurables.length; i++){
+		var configurable = configurables[i];
+		if(msg[configurable]){
+		    configure(configurable, msg[configurable]);
+		}
+	    }
+	}
+
+	function configureMsg(msg){
+	    for(var i=0; i<configurables.length; i++){
+		var configurable = configurables[i];
+		if(msg.topic == configurable){
+		    configure(configurable, msg.payload);
+		}
+	    }
+	}
+
+	function configure(config, val){
+	    switch(config){
+	    case "volume":
+		var newVol = Number(val);
+		if(!Number.isNaN(newVol)){
+		    node.vol = newVol;
+		}
+		
+		node.vol = Math.min(100, Math.max(0, node.vol));
+
+		setSynthVol();
+		break;
+
+	    }
+	}
+
+	
     }
 
     function SoundFXNode(config) {
@@ -473,7 +519,6 @@ module.exports = function(RED) {
 	}
 
     }
-
 	
     RED.nodes.registerType("synth",SynthNode);
 //    RED.nodes.registerType("soundfx",SoundFXNode);

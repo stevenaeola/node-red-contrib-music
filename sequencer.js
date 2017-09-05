@@ -63,10 +63,7 @@ module.exports = function(RED) {
 		switch(node.output){
 		case "single":
 		    if(controlSet){
-			var playmsg = {payload: "tick"};
-			if(msg.timeTag){
-			    playmsg.timeTag = msg.timeTag;
-			}
+			var playmsg = JSON.parse(JSON.stringify(msg));
 			for(var i = 0; i<node.controls.length; i++){
 			    var control = node.controls[i];
 			    if(control.value){
@@ -140,7 +137,7 @@ module.exports = function(RED) {
 	
 	function reset(){
 	    node.input = config.input || "beat";
-	    
+
 	    try{
 		node.rhythm = JSON.parse(config.rhythm);
 	    }
