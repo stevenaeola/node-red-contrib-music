@@ -12,20 +12,20 @@ module.exports = function(RED) {
         this.on('input', function(msg) {
 	    switch(msg.topic){
 
-	    case "load":
-		node.load = msg.payload;
+	    case "sound":
+		node.sound = msg.payload;
 		loadBuffer(node);
 		break;
 		
 	    case "offset":
-		node.loadoffset = Number(msg.payload);
+		node.soundoffset = Number(msg.payload);
 		loadBuffer(node);
 		break;
 		
 	    default:
 		switch(msg.payload){
 		case "tick":
-		    createSynth(node, "play", msg.timeTag);
+		    createSynth(node, msg, "play");
 		    break;
 		    
 		case "reset":
@@ -43,8 +43,8 @@ module.exports = function(RED) {
 
 	function reset(){
 
-	    node.load = config.load || "";
-	    node.loadoffset = Number(config.loadoffset) || 0;
+	    node.sound = config.sound || "";
+	    node.soundoffset = Number(config.soundoffset) || 0;
 	    
 	    setTimeout(function(){
 		freeBuffer(node);
@@ -90,7 +90,7 @@ module.exports = function(RED) {
 		case "play":
 		case "record":
 		    stopSynth(node, node.state);
-		    if(!node.load){
+		    if(!node.sound){
 			node.count = -1;
 			setState("waiting")
 		    };
@@ -122,7 +122,7 @@ module.exports = function(RED) {
 		    if(start.includes(node.start)){
 			node.count = node.length;
 			setState(node.state); // to display status
-			createSynth(node, node.state, msg.timeTag);
+			createSynth(node, msg, node.state);
 		    }
 		    else{
 			return; // ignore all ticks until the start event
@@ -224,7 +224,7 @@ module.exports = function(RED) {
 	    node.bufnum = bufnum;
 	}
 	var fps = 44100;
-	if(node.load){
+	if(node.sound){
 	    loadBuffer(node);
 	}
 	else{
@@ -240,11 +240,11 @@ module.exports = function(RED) {
     }
 
     function loadBuffer(node){
-	var dir = __dirname + "/Dirt-Samples/" + node.load;
+	var dir = __dirname + "/Dirt-Samples/" + node.sound;
 	var match = dir + "/*.wav";
 	var fname;
 	glob(match, {nocase: true}, function (er, files) {
-	    var offset = node.loadoffset % files.length;
+	    var offset = node.soundoffset % files.length;
 	    fname = files[offset];
 	    // create and load the buffer from file
 	    var createMsg = {
@@ -265,7 +265,7 @@ module.exports = function(RED) {
 	}
     }
 
-    function createSynth(node, action, timeTag){
+    function createSynth(node, msg, action){
 	if(!["play", "record"].includes(action)){
 	    node.warn("no synth for action " + action);
 	    return;
@@ -274,6 +274,11 @@ module.exports = function(RED) {
 	if(!node.bufnum){
 	    node.warn("cannot create sampler synth without buffer");
 	    return;
+	}
+
+	if(msg.sound){
+	    node.sound = msg.sound;
+	    loadBuffer(node);
 	}
 	
 	var synth = action + "_synth_id";
@@ -295,10 +300,10 @@ module.exports = function(RED) {
 	var address = "/s_new";
 
 	var createMsg;
-	if(timeTag){
+	if(msg.timeTag){
 	    createMsg  = {
 		    payload:{
-			timeTag: timeTag,
+			timeTag: msg.timeTag,
 			packets: [
 			    {
 				address: address,

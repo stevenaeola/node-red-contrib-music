@@ -4,14 +4,14 @@
      color: '#a6bbcf',
      defaults: {
 	 name: {value: "sample"},
-	 load: {value: "", required: false},
-	 loadoffset: {value: 0, required: false}
+	 sound: {value: "", required: false},
+	 soundoffset: {value: 0, required: false}
      },
      inputs:1,
      outputs:1,
      icon: "file.png",
      label: function() {
-	 return this.name|| this.load || "sample";
+	 return this.name|| this.sound || "sample";
      }
  });
 </script>
@@ -22,8 +22,8 @@
  <input type="text" id="node-input-name" placeholder="Name">
  </div>
  <div class="form-row">
- <label for="node-input-load"> Load sample</label>
- <select id="node-input-load">
+ <label for="node-input-sound"> Sound sample</label>
+ <select id="node-input-sound">
      <option value="">[None]</option>
      <option>808</option>
      <option>808bd</option>
@@ -242,7 +242,7 @@
  </select>
  </div>
  <div class="form-row">
- <label for="node-input-loadoffset">sample number <input type="number" min="0" max="99"  id="node-input-loadoffset" placeholder="e.g. 1">
+ <label for="node-input-soundoffset">sample number <input type="number" min="0" max="99"  id="node-input-soundoffset" placeholder="e.g. 1">
 
  </div>
  
