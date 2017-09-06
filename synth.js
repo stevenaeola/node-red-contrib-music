@@ -9,10 +9,10 @@ module.exports = function(RED) {
     var configurables = ["root", "scale", "volume", "octave", "name"];
 
     // exponential scale with 0->0 and 100->1
-    function vol2amp(vol){
-	vol = Math.max(0, vol);
+    function volume2amp(volume){
+	volume = Math.max(0, volume);
 	var base = 1.02;
-	return (Math.pow(base, vol)-1)/(Math.pow(base,100)-1);
+	return (Math.pow(base, volume)-1)/(Math.pow(base,100)-1);
     }
 
     function freeSynths(node){
@@ -107,7 +107,7 @@ module.exports = function(RED) {
 	    var action;
 	    var synth_id;
 
-	    var amp = vol2amp(node.vol);
+	    var amp = volume2amp(node.volume);
 	    
 	    if(node.voices>0){
 		action = "/n_set";
@@ -180,8 +180,8 @@ module.exports = function(RED) {
 
 	}
 	
-	function setSynthVol(){
-	    setSynthParam("amp", vol2amp(node.vol));
+	function setSynthVolume(){
+	    setSynthParam("amp", volume2amp(node.volume));
 	}
 
 	
@@ -222,7 +222,7 @@ module.exports = function(RED) {
 			}
 			node.send(createMsg);
 		    }
-		    setSynthVol();
+		    setSynthVolume();
  		}, 200);
 	    }
 	}
@@ -240,7 +240,7 @@ module.exports = function(RED) {
 
 	function reset(){
 	    node.name = config.name || "piano";
-	    node.vol = Number(config.start_vol) || 50;
+	    node.volume = Number(config.volume) || 50;
 	    node.next_voice = 0;
 	    node.outBus = Number(config.outBus) || 0;
 	    
@@ -283,9 +283,10 @@ module.exports = function(RED) {
 		viii:8
 	    }
 
-	    if(roman[root]){
-		node.noteoffset = roman[root];
-		root = global.get("root") || 60;
+	    if(roman[root.toLowerCase()]){
+		node.noteoffset = roman[root.toLowerCase()] -1;
+		node.root = global.get("root") || 60;
+		return;
 	    }
 	    
 	    var midiroot = Number(root);
@@ -341,14 +342,16 @@ module.exports = function(RED) {
 	    
 	    var global = node.context().global;
 
-	    setRoot(config.root);
-	    
 	    if(Array.isArray(note)){
 		return _.map(note, note2midi);
 	    }
+	    
 	    if(note === null){
 		return -1;
 	    }
+
+	    note += node.noteoffset;
+
 	    var intervals = {
 		minor: [0,2,3,5,7,8,10,12],
 		major: [0,2,4,5,7,9,11,12],
@@ -397,14 +400,14 @@ module.exports = function(RED) {
 	    else{
 		midi += offsets[note-1];
 	    }
-	    
+
 	    return midi;
 	}
 	
 	function configureTick(msg){
 	    for(var i=0; i<configurables.length; i++){
 		var configurable = configurables[i];
-		if(msg[configurable]){
+		if(msg[configurable] != null){
 		    configure(configurable, msg[configurable]);
 		}
 	    }
@@ -420,17 +423,29 @@ module.exports = function(RED) {
 	}
 
 	function configure(config, val){
+	    if(!configurables.includes(config)){
+		node.warn(config + " is not configurable");
+		return;
+	    }
+	    
 	    switch(config){
 	    case "volume":
 		var newVol = Number(val);
 		if(!Number.isNaN(newVol)){
-		    node.vol = newVol;
+		    node.volume = newVol;
 		}
 		
-		node.vol = Math.min(100, Math.max(0, node.vol));
+		node.volume = Math.min(100, Math.max(0, node.volume));
 
-		setSynthVol();
+		setSynthVolume();
 		break;
+
+	    case "root":
+		setRoot(val);
+		break;
+
+	    default:
+		node[config] = val;
 
 	    }
 	}
@@ -450,11 +465,11 @@ module.exports = function(RED) {
 	    case "volume":
 		var newVol = Number(msg.payload);
 		if(!Number.isNaN(newVol)){
-		    node.vol = newVol;
+		    node.volume = newVol;
 		}
 		// 100 should be neutral volume, not max
 		
-		setFXParam("amp", vol2amp(node.vol));
+		setFXParam("amp", volume2amp(node.volume));
 		
 		break;
 		
@@ -502,7 +517,7 @@ module.exports = function(RED) {
 	    }
 	    node.send(createMsg);
 	    
-	    setFXParam("amp", vol2amp(node.vol));
+	    setFXParam("amp", volume2amp(node.volume));
 	}
 
 	function reset(){

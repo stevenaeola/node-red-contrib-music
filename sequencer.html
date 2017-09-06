@@ -32,9 +32,9 @@
 	     addItem: function(container, i, control) {
 		 var row = $('<div/>').appendTo(container);
 		 $("<span>name </span>").appendTo(row);
-		 var nameField = $('<input/>',{class: "node-input-control-name",  type:"text", size: 15, placeholder:"e.g. note", style:"width:10em"}).appendTo(row);
+		 var nameField = $('<input/>',{class: "node-input-control-name",  type:"text", size: 15, placeholder:"e.g. note", style:"width:8em"}).appendTo(row);
 		 $("<span> values </span>").appendTo(row);
-		 var countField = $('<input/>',{class: "node-input-control-values",  type:"text", size:20, placeholder: "e.g. [1,4,5,4]", style:"width:6em"}).appendTo(row);
+		 var countField = $('<input/>',{class: "node-input-control-values",  type:"text", size:20, placeholder: "e.g. [1,4,5,4]", style:"width:12em"}).appendTo(row);
 
 		 nameField.val(control.name);
 		 countField.val(control.values);

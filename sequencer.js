@@ -49,7 +49,7 @@ module.exports = function(RED) {
 					control.value = control.values[control.pos];
 				    }
 				}
-				if(control.value){
+				if(control.value != null){
 				    controlSet = true;
 				}
 			    }
@@ -66,7 +66,7 @@ module.exports = function(RED) {
 			var playmsg = JSON.parse(JSON.stringify(msg));
 			for(var i = 0; i<node.controls.length; i++){
 			    var control = node.controls[i];
-			    if(control.value){
+			    if(control.value != null){
 				playmsg[control.name] = control.value;
 			    }
 			}
@@ -77,7 +77,7 @@ module.exports = function(RED) {
 		case "all":
 		    for(var i = 0; i<node.controls.length; i++){
 			var control = node.controls[i];
-			if(control.value){
+			if(control.value != null){
 			    msg[control.name] = control.value;
 			}
 		    }
@@ -89,7 +89,7 @@ module.exports = function(RED) {
 		    if(controlSet){
 			for(var i = 0; i<node.controls.length; i++){
 			    var control = node.controls[i];
-			    if(control.value){
+			    if(control.value != null){
 				var controlMsg = {topic: control.name,
 						  payload: control.value,
 						 };
