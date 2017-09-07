@@ -3,7 +3,8 @@
   category: 'music',
   color: '#a6bbcf',
   defaults: {
-  name: {value: "piano", required: "true"},
+  name: {value: "", required: "false"},
+  synthtype: {value: "piano", required: "true"},
   volume: {value: 50, required: "true"},
   octave: {value: 0},
   root: {value:"", required: false},
@@ -15,15 +16,19 @@
   outputs:1,
   icon: "file.png",
   label: function() {
-  return this.name||"synth";
+  return this.name || this.synthtype || "synth";
   }
   });
 </script>
 
 <script type="text/x-red" data-template-name="synth">
     <div class="form-row">
-      <label for="node-input-name"> name</label>
-      <select id="node-input-name">
+        <label for="node-input-name">Name</label>
+        <input type="text" id="node-input-name" placeholder="">
+    </div>
+    <div class="form-row">
+      <label for="node-input-synthtype"> synth type</label>
+      <select id="node-input-synthtype">
 	<option>piano</option>
 	<option>bell</option>
 	<option>kick</option>

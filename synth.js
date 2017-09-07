@@ -6,7 +6,7 @@ module.exports = function(RED) {
     var fs = require("fs");
 
     
-    var configurables = ["root", "scale", "volume", "octave", "name"];
+    var configurables = ["root", "scale", "volume", "octave", "synthtype"];
 
     // exponential scale with 0->0 and 100->1
     function volume2amp(volume){
@@ -125,7 +125,7 @@ module.exports = function(RED) {
 		synth_id = -1;
 
 		// add it to the head of the root group
-		payload = [node.name, -1, 0, 0, "amp", amp, "out", node.outBus];
+		payload = [node.synthtype, -1, 0, 0, "amp", amp, "out", node.outBus];
 		
 	    }
 	    
@@ -187,7 +187,7 @@ module.exports = function(RED) {
 	
 	function createSynth(){
 	    freeSynths(node);
-	    var synthdefFile = __dirname +"/synthdefs/" + node.name + ".scsyndef";
+	    var synthdefFile = __dirname +"/synthdefs/" + node.synthtype + ".scsyndef";
 	    fs.readFile(synthdefFile, function (err,data){
 		if(err){
 		    node.warn(err);
@@ -218,7 +218,7 @@ module.exports = function(RED) {
 			// add it to the head of the root group
 			var createMsg = {
 			    topic: "/s_new",
-			    payload: [node.name, node.synth_ids[voice], 0, 0, "out", node.outBus]
+			    payload: [node.synthtype, node.synth_ids[voice], 0, 0, "out", node.outBus]
 			}
 			node.send(createMsg);
 		    }
@@ -239,14 +239,14 @@ module.exports = function(RED) {
 	}
 
 	function reset(){
-	    node.name = config.name || "piano";
+	    node.synthtype = config.synthtype || "piano";
 	    node.volume = Number(config.volume) || 50;
 	    node.next_voice = 0;
 	    node.outBus = Number(config.outBus) || 0;
 	    
 	    node.octave = config.octave || 0;
 
-	    if(_.contains(["moog", "prophet", "ghost"], node.name)){
+	    if(_.contains(["moog", "prophet", "ghost"], node.synthtype)){
 		node.voices = 1;
 	    }
 	    else{
