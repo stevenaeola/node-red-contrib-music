@@ -24,10 +24,11 @@ module.exports = function(RED) {
 				node.rhythmPos = 0; // needs to be > 0 so that it continues after start/restart
 			    }
 			    else{
+
 				node.rhythmPos++;
 				if(node.rhythmPos>=node.rhythm.length){
 				    node.rhythmPos = 0;
-			}
+				}
 				node.rhythmCount = node.rhythm[node.rhythmPos];
 			    }
 
@@ -120,6 +121,27 @@ module.exports = function(RED) {
         });
 
 	function restart(){
+	    node.controls = JSON.parse(JSON.stringify(node.controlsraw));
+	    if((!Array.isArray(node.controls)) || node.controls.length <1){
+		node.controls = [{name: "note", values: "[1,4,5,4]"}];
+	    }
+	    
+	    for(var i = 0; i<node.controls.length; i++){
+		var control = node.controls[i];
+		try{
+		    control.values = JSON.parse(control.values);
+		}
+		catch(e){
+		    control.values = null;
+		}
+		if(!Array.isArray(control.values)){
+		    control.values = [control.values];
+		}
+	    }
+
+
+
+
 	    node.rhythmPos = -1; // the position in the list of lengths
 	    node.rhythmCount = 0; // count down the number of beats
 	    if(node.rhythmrand & !node.loop){
@@ -133,6 +155,7 @@ module.exports = function(RED) {
 		    control.values = _.shuffle(control.values);
 		}
 	    }
+
 	}
 	
 	function reset(){
@@ -147,7 +170,7 @@ module.exports = function(RED) {
 	    if(!Array.isArray(node.rhythm)){
 		node.rhythm = [node.rhythm];
 	    }
-	    	    
+
 	    node.start = config.start || "bar"; // sequence won't start until this
 	    
 	    node.loop = config.loop || false;
@@ -155,23 +178,7 @@ module.exports = function(RED) {
 	    node.rhythmrand = config.rhythmrand || false;
 	    node.output = config.output || "single";
 
-	    node.controls = config.controls;
-	    if((!Array.isArray(node.controls)) || node.controls.length <1){
-		node.controls = [{name: "note", values: "[1,4,5,4]"}];
-	    }
-
-	    for(var i = 0; i<node.controls.length; i++){
-		var control = node.controls[i];
-		try{
-		    control.values = JSON.parse(control.values);
-		}
-		catch(e){
-		    control.values = null;
-		}
-		if(!Array.isArray(control.values)){
-		    control.values = [control.values];
-		}
-	    }
+	    node.controlsraw = config.controls;
 
 	    restart();
 	}
