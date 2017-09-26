@@ -57,14 +57,7 @@ module.exports = function(RED) {
 		    
 		case "tick":
 		    configureTick(msg);
-		    if(Array.isArray(msg.note)){
-			msg.note.forEach(function(noteVal){
-			    sendNote(noteVal, msg);
-			});
-		    }
-		    else{
-			sendNote(msg.note, msg);
-		    }
+		    handleTickSynth(msg);
 		    break;
 		    
 		case "reset":
@@ -73,13 +66,7 @@ module.exports = function(RED) {
 		    break;
 		    
 		case "stop":
-		    for(var voice = 0; voice < node.voices; voice++){
-			var stopMsg = {topic: "/n_set",
-				       payload:
-				       [node.synth_ids[voice], "gate" , 0]
-				      }
-			node.send(stopMsg);
-		    }
+		    handleStopSynth();
 		    break;
 		    
 		case "start":
@@ -92,16 +79,51 @@ module.exports = function(RED) {
 		}
 		
 	    }
+	    
         });
 	
 	this.on('close', function(){
-	    deleteSynths();
+	    handleCloseSynth();
 	});
 	
+	function handleTickSynth(msg){
+	    if(Array.isArray(msg.note)){
+		msg.note.forEach(function(noteVal){
+		    sendNote(noteVal, msg);
+		});
+	    }
+	    else{
+		sendNote(msg.note, msg);
+	    }
+	}
+
+	function handleStopSynth(){
+	    for(var voice = 0; voice < node.voices; voice++){
+		var stopMsg = {topic: "/n_set",
+			       payload:
+			       [node.synth_ids[voice], "gate" , 0]
+			      }
+		node.send(stopMsg);
+	    }
+	}
+	
+	function handleCloseSynth(){
+	    // mark for deletion: the actual freeing takes place when the new one is deployed,
+	    // so that we can be sure all the wires are in place to connect to server via OSC
+	    for(var voice = 0; voice<node.voices; voice++){
+		if(node.synth_ids[voice]){
+		    deleteSynth(node, node.synth_ids[voice]);
+		    node.synth_ids[voice] = null;
+		}
+	    }
+	}
+    
 	function sendNote(noteVal, msg){
 
 	    var midi = note2midi(noteVal);
-
+	    if(node.voices>0){
+		node.warn(midi);
+	    }
 	    var payload;
 	    var action;
 	    var synth_id;
@@ -226,18 +248,12 @@ module.exports = function(RED) {
 	    }
 	}
 
-	// mark for deletion: the actual freeing takes place when the new one is deployed,
-	// so that we can be sure all the wires are in place to connect to server via OSC
-	function deleteSynths(){
-	    for(var voice = 0; voice<node.voices; voice++){
-		if(node.synth_ids[voice]){
-		    deleteSynth(node, node.synth_ids[voice]);
-		    node.synth_ids[voice] = null;
-		}
-	    }
-	}
 
 	function reset(){
+	    resetSynth();
+	}
+	
+	function resetSynth(){
 	    node.synthtype = config.synthtype || "piano";
 	    node.volume = Number(config.volume) || 50;
 	    node.next_voice = 0;
