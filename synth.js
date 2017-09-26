@@ -283,12 +283,12 @@ module.exports = function(RED) {
 		viii:8
 	    }
 
-	    if(roman[root.toLowerCase()]){
+	    if(_.isString(root) && roman[root.toLowerCase()]){
 		node.noteoffset = roman[root.toLowerCase()] -1;
 		node.root = global.get("root") || 60;
 		return;
 	    }
-	    
+
 	    var midiroot = Number(root);
 
 	    if(isNaN(midiroot)){
