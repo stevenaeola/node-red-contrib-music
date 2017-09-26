@@ -2,6 +2,7 @@ module.exports = function(RED) {
     "use strict";
 
     var glob = require("glob");
+    var fs = require("fs");
     
     function SampleNode(config) {
         RED.nodes.createNode(this,config);
@@ -49,10 +50,27 @@ module.exports = function(RED) {
 	    setTimeout(function(){
 		freeBuffer(node);
 		createBuffer(node);
+		sendSynthDef(node);
 	    }, 200);
 
 	}
 
+    }
+
+    function sendSynthDef(node){
+	var synthdefFile = __dirname +"/synthdefs/playSample.scsyndef";
+	fs.readFile(synthdefFile, function (err,data){
+	    if(err){
+		node.warn(err);
+	    }
+	    else{
+		var synthMsg={
+		    topic: "/d_recv",
+		    payload: [data, 0]
+		}
+		node.send(synthMsg);
+	    }
+	});
     }
 
     function LooperNode(config) {
@@ -161,6 +179,7 @@ module.exports = function(RED) {
 	    setTimeout(function(){
 		freeBuffer(node);
 		createBuffer(node);
+		sendSynthDef(node);
 	    }, 200);
 	}
 	

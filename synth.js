@@ -1,7 +1,6 @@
 module.exports = function(RED) {
     "use strict";
 
-    var osc = require("osc"); // required by node-red-contrib-osc
     var _ = require("underscore");
     var fs = require("fs");
 
