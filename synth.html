@@ -1,23 +1,99 @@
 <script type="text/javascript">
-  RED.nodes.registerType('synth',{
-  category: 'music',
-  color: '#a6bbcf',
-  defaults: {
-  name: {value: "", required: false},
-  synthtype: {value: "piano", required: true},
-  volume: {value: 50, required: true},
-  octave: {value: 0},
-  root: {value:"", required: false},
-  scale: {value:"default", required: false},
-  outBus: {value:0, required: true}
-  },
-  inputs:1,
-  outputs:1,
-  icon: "file.png",
-  label: function() {
-  return this.name || this.synthtype || "synth";
-  }
-  });
+ var synthtypes = {
+     piano: {tuned: true, synth:true},
+     bell: {tuned: true, synth:true},
+     dx: {tuned: true, synth:true},
+     marimba: {tuned: true, synth:true},
+     dulcimer: {tuned: true, synth:true},
+     prophet: {tuned: true, synth:true, sustained: true},
+     moog: {tuned: true, synth:true, sustained: true},
+     ghost: {tuned: true, synth:true, sustained: true},
+     kick: {synth:true},
+     snare: {synth:true},
+     crotale: {synth:true},
+     arpy: {tuned: true},
+     bass: {tuned: true},
+     bass0: {},
+     bass2: {tuned: true},
+     bass3: {tuned: true},
+     bd: {},
+     birds3: {},
+     blip: {tuned: true},
+     bottle: {},
+     can: {},
+     cp: {},
+     cr: {},
+     crow: {},
+     diphone2: {},
+     drum: {},
+     drumtraks: {},
+     feel: {},
+     flick: {tuned: true},
+     future: {},
+     gabba: {},
+     gretsch: {},
+     h: {},
+     hc: {},
+     hh: {},
+     ho: {},
+     house: {},
+     industrial: {},
+     jazz: {},
+     jvbass: {tuned: true},
+     kurt: {tuned: true},
+     latibro: {},
+     less: {tuned: true},
+     lighter: {},
+     lt: {tuned: true},
+     metal: {},
+     mouth: {},
+     mt: {},
+     newnotes: {tuned: true},
+     odx: {},
+     off: {tuned: true},
+     perc: {},
+     pluck: {tuned: true},
+     print: {},
+     psr: {tuned: true},
+     rm: {},
+     "short": {},
+     sid: {},
+     sn: {},
+     stab: {tuned: true},
+     tabla: {},
+     tink: {},
+     trump: {tuned: true},
+     ul: {tuned: true},
+     voodoo: {}
+ };
+ 
+ RED.nodes.registerType('synth',{
+     category: 'music',
+     color: '#a6bbcf',
+     defaults: {
+	 name: {value: "", required: false},
+	 synthtype: {value: "piano", required: true},
+	 volume: {value: 50, required: true},
+	 octave: {value: 0},
+	 root: {value:"", required: false},
+	 scale: {value:"default", required: false},
+	 outBus: {value:0, required: true},
+	 synthtypes: {value:synthtypes, required: false}
+     },
+     inputs:1,
+     outputs:1,
+     icon: "file.png",
+     label: function() {
+	 return this.name || this.synthtype || "synth";
+     },
+     oneditprepare: function(){
+	 node = this;
+	 for(var synthtype in synthtypes){
+	     var row = $("<option>" + synthtype + "</option>").appendTo($("#node-input-synthtype"));
+	 
+	 }
+     }
+ });
 </script>
 
 <script type="text/x-red" data-template-name="synth">
@@ -28,17 +104,6 @@
     <div class="form-row">
       <label for="node-input-synthtype"> synth type</label>
       <select id="node-input-synthtype">
-	<option>piano</option>
-	<option>bell</option>
-	<option>kick</option>
-	<option>snare</option>
-	<option>crotale</option>
-	<option>blip</option>
-	<option>marimba</option>
-	<option>dulcimer</option>
-	<option value="prophet">prophet (sustained)</option>
-	<option value="moog">moog (sustained)</option>
-	<option value="ghost">ghost (sustained)</option>
 	</select>
 
     </div>

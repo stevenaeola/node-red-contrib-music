@@ -4,7 +4,6 @@ module.exports = function(RED) {
     var _ = require("underscore");
     var fs = require("fs");
 
-    
     var configurables = ["root", "scale", "volume", "octave", "synthtype"];
 
     // exponential scale with 0->0 and 100->1
@@ -38,7 +37,7 @@ module.exports = function(RED) {
 	
         RED.nodes.createNode(this,config);
         var node = this;
-	
+
 	reset();
 	
         this.on('input', function(msg) {
@@ -121,9 +120,6 @@ module.exports = function(RED) {
 	function sendNote(noteVal, msg){
 
 	    var midi = note2midi(noteVal);
-	    if(node.voices>0){
-		node.warn(midi);
-	    }
 	    var payload;
 	    var action;
 	    var synth_id;
@@ -250,18 +246,26 @@ module.exports = function(RED) {
 
 
 	function reset(){
-	    resetSynth();
-	}
-	
-	function resetSynth(){
 	    node.synthtype = config.synthtype || "piano";
 	    node.volume = Number(config.volume) || 50;
+	    node.parameters = {};
+	    node.synthtypes = config.synthtypes;
+	    
+	    if(isSynth()){
+		resetSynth();
+	    }
+
+	    if(isTuned()){
+		resetTuned();
+	    }
+	    
+	}
+
+	function resetSynth(){
 	    node.next_voice = 0;
 	    node.outBus = Number(config.outBus) || 0;
 	    
-	    node.octave = config.octave || 0;
-
-	    if(_.contains(["moog", "prophet", "ghost"], node.synthtype)){
+	    if(isSustained()){
 		node.voices = 1;
 	    }
 	    else{
@@ -269,11 +273,6 @@ module.exports = function(RED) {
 	    }
 
 	    node.synth_ids = Array(node.voices);
-	    node.noteoffset = 0;
-	    node.parameters = {};
-	    
-	    setRoot(config.root);
-	    node.scale = config.scale; // if not defined we will use the global value
 
 	    // wait a little while to allow wires to be created
 	    setTimeout(function(){
@@ -281,6 +280,29 @@ module.exports = function(RED) {
 	    }, 200);
 		  
 	}
+
+	function resetTuned(){
+	    node.noteoffset = 0;
+
+	    node.octave = config.octave || 0;
+	    setRoot(config.root);
+	    node.scale = config.scale; // if not defined we will use the global value
+	}
+	
+	function isSynth(){
+	    if (node.synthtypes[node.synthtype] && node.synthtypes[node.synthtype].synth){
+		return true;
+	    }
+	}
+	
+	function isTuned(){
+	    return node.synthtypes[node.synthtype] && node.synthtypes[node.synthtype].tuned;
+	}
+	
+	function isSustained(){
+	    return node.synthtypes[node.synthtype] && node.synthtypes[node.synthtype].sustained;
+	}
+	
 
 	function setRoot(root){
 	    var global = node.context().global;
