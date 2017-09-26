@@ -46,7 +46,7 @@ module.exports = function(RED) {
 
 	    node.sound = config.sound || "";
 	    node.soundoffset = Number(config.soundoffset) || 0;
-	    
+
 	    setTimeout(function(){
 		freeBuffer(node);
 		createBuffer(node);
@@ -58,7 +58,7 @@ module.exports = function(RED) {
     }
 
     function sendSynthDef(node){
-	var synthdefFile = __dirname +"/synthdefs/playSample.scsyndef";
+	var synthdefFile = __dirname +"/synthdefs/playSampleMono.scsyndef";
 	fs.readFile(synthdefFile, function (err,data){
 	    if(err){
 		node.warn(err);
@@ -314,7 +314,7 @@ module.exports = function(RED) {
 	global.set("synth_next_sc_node", id + 1);
 	node[synth] = id;
 
-	var payload = [action + "Sample", node[synth], 1, 1, "buffer", node.bufnum];
+	var payload = [action + "SampleMono", node[synth], 0, 0, "buffer", node.bufnum];
 
 	var address = "/s_new";
 
