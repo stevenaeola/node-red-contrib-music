@@ -3,7 +3,8 @@ module.exports = function(RED) {
 
     var _ = require("underscore");
     var fs = require("fs");
-
+    var glob = require("glob");
+    
     var configurables = ["root", "scale", "volume", "octave", "synthtype"];
 
     // exponential scale with 0->0 and 100->1
@@ -13,16 +14,22 @@ module.exports = function(RED) {
 	return (Math.pow(base, volume)-1)/(Math.pow(base,100)-1);
     }
 
+    function freeSynth(node, synth_id){
+	if(synth_id){
+	    var freeMsg = {
+		topic: "/n_free",
+		payload: synth_id
+	    }
+	    node.send(freeMsg);
+	}
+    }
+    
     function freeSynths(node){
 	var global = node.context().global;
 	var toDelete = global.get("synth_delete_sc") || [];
 	for(var i = 0; i < toDelete.length; i++){
-	    var freeMsg = {
-		topic: "/n_free",
-		payload: toDelete[i]
-	    }
+	    freeSynth(node, toDelete[i]);
 	}
-	node.send(freeMsg);
 	global.set("synth_delete_sc", []);
     }
 
@@ -32,6 +39,75 @@ module.exports = function(RED) {
 	toDelete.push(synth_id);
 	global.set("synth_delete_sc", toDelete);
     }
+
+    function createBuffer(node){
+	if(!node.bufnum){
+	    var global = node.context().global;
+	    var bufnum = Number(global.get("sampler_next_bufnum"));
+	    if(isNaN(bufnum)){
+		bufnum = 1; // hopefully no clashes with sclang
+	    }
+	    global.set("sampler_next_bufnum", bufnum + 1);
+	    node.bufnum = bufnum;
+	}
+	var fps = 44100;
+	if(node.synthtype){
+	    loadBuffer(node);
+	}
+	else{
+	    // create an empty buffer ready for recording
+	    var seconds = 20; //assumed max length for now
+	    var createMsg = {
+		topic: "/b_alloc",
+		payload: [node.bufnum, fps * seconds * 2, 2]
+	    }
+	    node.send(createMsg);
+	}
+    }
+
+    function loadBuffer(node){
+	var dir = __dirname + "/Dirt-Samples/" + node.synthtype;
+	var match = dir + "/*.wav";
+	var fname;
+	glob(match, {nocase: true}, function (er, files) {
+//	    var offset = node.soundoffset % files.length;
+	    fname = files[0];
+	    // create and load the buffer from file
+	    var createMsg = {
+		topic: "/b_allocRead",
+		payload: [node.bufnum, fname ]
+	    }
+	    node.send(createMsg);
+	});
+    }
+    
+    function freeBuffer(node){
+	if(node.bufnum){
+	    var freeMsg = {
+		topic: "/b_free",
+		payload: node.bufnum
+	    }
+	    node.send(freeMsg);
+	}
+    }
+
+    function sendSampleSynthDef(node){
+	var synthdefFile = __dirname +"/synthdefs/playSampleMono.scsyndef";
+	fs.readFile(synthdefFile, function (err,data){
+	    if(err){
+		node.warn(err);
+	    }
+	    else{
+		var synthMsg={
+		    topic: "/d_recv",
+		    payload: [data, 0]
+		}
+		node.send(synthMsg);
+	    }
+	});
+    }
+
+
 
     function SynthNode(config) {
 	
@@ -56,8 +132,12 @@ module.exports = function(RED) {
 		    
 		case "tick":
 		    configureTick(msg);
-		    handleTickSynth(msg);
-		    
+		    if(isSynth()){
+			handleTickSynth(msg);
+		    }
+		    else{
+			handleTickSample(msg);
+		    }
 		    break;
 		    
 		case "reset":
@@ -117,6 +197,56 @@ module.exports = function(RED) {
 		}
 	    }
 	}
+
+	function handleTickSample(msg){
+	    var action = "play";
+	    if(!node.bufnum){
+		node.warn("cannot create sampler synth without buffer");
+		return;
+	    }
+	    
+	    var synth = action + "_synth_id";
+	    if(node[synth]){
+		freeSynth(node, node[synth]);
+		node[synth] = null;
+	    }
+
+	    var global = node.context().global;
+	    var id = Number(global.get("synth_next_sc_node"));
+	    if(isNaN(id)){
+		id = 100000; // high to avoid nodes from sclang
+	    }
+	    
+	    global.set("synth_next_sc_node", id + 1);
+	    node[synth] = id;
+
+	    var payload = [action + "SampleMono", node[synth], 0, 0, "buffer", node.bufnum];
+	    
+	    var address = "/s_new";
+	    
+	    var createMsg;
+	    if(msg.timeTag){
+		createMsg  = {
+		    payload:{
+			timeTag: msg.timeTag,
+			packets: [
+			    {
+				address: address,
+				args: payload
+			    }
+			]
+		    }
+		};
+		
+		
+	    }
+	    else{
+		createMsg = {topic: address, payload:payload};
+	    }
+	    
+	    node.send(createMsg);
+	}
+
     
 	function sendNote(noteVal, msg){
 
@@ -259,6 +389,9 @@ module.exports = function(RED) {
 	    if(isSynth()){
 		resetSynth();
 	    }
+	    else{
+		resetSample();
+	    }
 
 	    
 	    if(isTuned()){
@@ -286,6 +419,15 @@ module.exports = function(RED) {
 		  
 	}
 
+	function resetSample(){
+	    setTimeout(function(){
+		freeBuffer(node);
+		createBuffer(node);
+		sendSampleSynthDef(node);
+	    }, 200);
+
+	}
+	
 	function resetTuned(){
 	    node.noteoffset = 0;
 	    node.octave = Number(config.octave) || 0;
@@ -485,6 +627,11 @@ module.exports = function(RED) {
 		setRoot(val);
 		break;
 
+	    case "synthtype":
+		node[config] = val;
+		reset();
+		break;
+		
 	    default:
 		node[config] = val;
 
