@@ -57,6 +57,7 @@ module.exports = function(RED) {
 		case "tick":
 		    configureTick(msg);
 		    handleTickSynth(msg);
+		    
 		    break;
 		    
 		case "reset":
@@ -247,7 +248,11 @@ module.exports = function(RED) {
 
 	function reset(){
 	    node.synthtype = config.synthtype || "piano";
-	    node.volume = Number(config.volume) || 50;
+	    node.volume = Number(config.volume);
+	    if(isNaN(node.volume)){
+		node.volume = 50;
+	    }
+	    
 	    node.parameters = {};
 	    node.synthtypes = config.synthtypes;
 	    
@@ -255,10 +260,10 @@ module.exports = function(RED) {
 		resetSynth();
 	    }
 
+	    
 	    if(isTuned()){
 		resetTuned();
 	    }
-	    
 	}
 
 	function resetSynth(){
@@ -283,8 +288,7 @@ module.exports = function(RED) {
 
 	function resetTuned(){
 	    node.noteoffset = 0;
-
-	    node.octave = config.octave || 0;
+	    node.octave = Number(config.octave) || 0;
 	    setRoot(config.root);
 	    node.scale = config.scale; // if not defined we will use the global value
 	}
@@ -428,7 +432,7 @@ module.exports = function(RED) {
 		note += offsets.length-1;
 		midi -= offsets[offsets.length-1];
 	    }
-	    
+
 	    midi += node.octave*12;
 
 	    if(negative){

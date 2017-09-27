@@ -1,36 +1,31 @@
 <script type="text/javascript">
+ 
  var synthtypes = {
-     piano: {tuned: true, synth:true},
-     bell: {tuned: true, synth:true},
-     dx: {tuned: true, synth:true},
-     marimba: {tuned: true, synth:true},
-     dulcimer: {tuned: true, synth:true},
-     prophet: {tuned: true, synth:true, sustained: true},
-     moog: {tuned: true, synth:true, sustained: true},
-     ghost: {tuned: true, synth:true, sustained: true},
-     kick: {synth:true},
-     snare: {synth:true},
-     crotale: {synth:true},
      arpy: {tuned: true},
-     bass: {tuned: true},
      bass0: {},
      bass2: {tuned: true},
      bass3: {tuned: true},
+     bass: {tuned: true},
      bd: {},
+     bell: {tuned: true, synth:true},
      birds3: {},
      blip: {tuned: true},
      bottle: {},
      can: {},
      cp: {},
      cr: {},
+     crotale: {synth:true},
      crow: {},
      diphone2: {},
      drum: {},
      drumtraks: {},
+     dulcimer: {tuned: true, synth:true},
+     dx: {tuned: true, synth:true},
      feel: {},
      flick: {tuned: true},
      future: {},
      gabba: {},
+     ghost: {tuned: true, synth:true, sustained: true},
      gretsch: {},
      h: {},
      hc: {},
@@ -40,25 +35,31 @@
      industrial: {},
      jazz: {},
      jvbass: {tuned: true},
+     kick: {synth:true},
      kurt: {tuned: true},
      latibro: {},
      less: {tuned: true},
      lighter: {},
      lt: {tuned: true},
+     marimba: {tuned: true, synth:true},
      metal: {},
+     moog: {tuned: true, synth:true, sustained: true},
      mouth: {},
      mt: {},
      newnotes: {tuned: true},
      odx: {},
      off: {tuned: true},
      perc: {},
+     piano: {tuned: true, synth:true},
      pluck: {tuned: true},
      print: {},
+     prophet: {tuned: true, synth:true, sustained: true},
      psr: {tuned: true},
      rm: {},
      "short": {},
      sid: {},
      sn: {},
+     snare: {synth:true},
      stab: {tuned: true},
      tabla: {},
      tink: {},
@@ -73,71 +74,153 @@
      defaults: {
 	 name: {value: "", required: false},
 	 synthtype: {value: "piano", required: true},
-	 volume: {value: 50, required: true},
+	 volume: {value: 50},
 	 octave: {value: 0},
 	 root: {value:"", required: false},
 	 scale: {value:"default", required: false},
 	 outBus: {value:0, required: true},
 	 synthtypes: {value:synthtypes, required: false}
      },
+     
      inputs:1,
      outputs:1,
      icon: "file.png",
      label: function() {
 	 return this.name || this.synthtype || "synth";
      },
+     
      oneditprepare: function(){
 	 node = this;
-	 for(var synthtype in synthtypes){
-	     var row = $("<option>" + synthtype + "</option>").appendTo($("#node-input-synthtype"));
-	 
+
+	 function populate(which){
+	     $("#node-input-synthtype").empty();
+
+	     for(var synthtype in synthtypes){
+		 var row = $("<option value='" + synthtype + "'>" + synthtype + "</option>");
+		 if(node.synthtype == synthtype){
+		     row.attr("selected", "selected");
+		 }
+		 var select = $("#node-input-synthtype");
+		 var tuned = synthtypes[synthtype].tuned;
+		 switch(which){
+		     case "all":
+			 select.append(row);
+			 break;
+
+		     case "tuned":
+			 if(tuned){
+			     select.append(row);
+			 }
+			 break;
+
+		     case "untuned":
+			 if(!tuned){
+			     select.append(row);
+			 }
+			 break;
+
+		 }
+	     }
 	 }
+
+	 populate("all");
+	 
+	 $('#node-input-synthtype').change(
+	     function (){
+		 var option = $(this).find('option:selected').val();
+		 var container = $('#node-input-tuned-container');
+		 if(synthtypes[option] && synthtypes[option].tuned){
+		     container.show();
+		 }
+		 else{
+		     container.hide();
+		 }
+	     }
+	 );
+	 
+	 function filterSynthtypes(which){
+	     $('#node-input-synthtype-selector-container span').addClass("muted");
+	     $('#node-input-synthtype-selector-' + which).removeClass("muted");
+	     populate(which);
+	 };
+
+	 var container = $('#node-input-tuned-container');
+	 
+	 $('#node-input-synthtype-selector-all').click(
+	     () =>  {filterSynthtypes('all')}
+	 );
+	 
+     	 $('#node-input-synthtype-selector-tuned').click(
+	     () => {filterSynthtypes('tuned'); container.show()}
+	 );
+	 
+	 $('#node-input-synthtype-selector-untuned').click(
+	     () => {filterSynthtypes('untuned'); container.hide()}
+	 );
+
      }
  });
 </script>
 
 <script type="text/x-red" data-template-name="synth">
     <div class="form-row">
-        <label for="node-input-name">Name</label>
-        <input type="text" id="node-input-name" placeholder="">
-    </div>
-    <div class="form-row">
-      <label for="node-input-synthtype"> synth type</label>
-      <select id="node-input-synthtype">
+	<label for="node-input-synthtype"> synth type</label>
+	<select id="node-input-synthtype">
 	</select>
+	<div id="node-input-synthtype-selector-container" style="float:right">
+	    <small>
+		<span id="node-input-synthtype-selector-all">all</span> |
+		<span id="node-input-synthtype-selector-untuned" class="muted">untuned</span> |
+		<span id="node-input-synthtype-selector-tuned" class="muted">tuned</span> 
+	    </small>
+	</div>
+    </div>
 
-    </div>
     <div class="form-row">
-        <label for="node-input-volume"> volume</label>
-        <input type="number" id="node-input-volume" placeholder="0-100">
+	<label for="node-input-volume"> volume</label>
+	<input type="number" min="0" max="100" id="node-input-volume" placeholder="0-100" style="width:7em">
     </div>
+    <!-- 
+	 <div class="form-row">
+	 <label for="node-input-outBus"> output bus </label>
+	 <input type="number" id="node-input-outBus" placeholder="0 for direct output">
+	 </div>
+       -->
+    <div id='node-input-tuned-container' style="display:none">
+
+	<div class="form-row">
+	    <label for="node-input-octave"> octave</label>
+	    <input type="number" min="-4" max="4" id="node-input-octave" placeholder="e.g. -1" style="width:7em">
+	</div>
+	
+	<div class="form-row">
+	    <label for="node-input-root"> root note of scale (if different from global) </label>
+	    <input type="text" id="node-input-root" placeholder="e.g. C4">
+	</div>
+	
+	<div class="form-row">
+	    <label for="node-input-scale"> scale type </label>
+	    <select id="node-input-scale">
+		<option>default</option>
+		<option>minor</option>
+		<option>major</option>
+		<option>dorian</option>
+		<option>mixolydian</option>
+		<option>major pentatonic</option>
+		<option>minor pentatonic</option>
+		<option>blues</option>
+		<option>chromatic</option>
+	    </select>
+	</div>
+	
+    </div>
+
     <div class="form-row">
-        <label for="node-input-octave"> octave</label>
-        <input type="text" id="node-input-octave" placeholder="e.g. -1">
+	<label for="node-input-name"><i class="icon-tag"></i>name</label>
+	<input type="text" id="node-input-name" placeholder="">
     </div>
-    <div class="form-row">
-        <label for="node-input-root"> root note of scale (if different from global) </label>
-        <input type="text" id="node-input-root" placeholder="e.g. C4">
-    </div>
-    <div class="form-row">
-        <label for="node-input-scale"><i class="icon-tag"></i> scale type </label>
-        <select id="node-input-scale">
-	  <option>default</option>
-	  <option>minor</option>
-	  <option>major</option>
-	  <option>dorian</option>
-	  <option>mixolydian</option>
-	  <option>major pentatonic</option>
-	  <option>minor pentatonic</option>
-	  <option>blues</option>
-	  <option>chromatic</option>
-	</select>
-    </div>
-    <div class="form-row">
-        <label for="node-input-outBus"> output bus </label>
-        <input type="number" id="node-input-outBus" placeholder="0 for direct output">
-    </div>
-    
+
+
 
 </script>
 
