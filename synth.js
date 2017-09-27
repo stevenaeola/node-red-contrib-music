@@ -199,6 +199,7 @@ module.exports = function(RED) {
 	}
 
 	function handleTickSample(msg){
+	    
 	    var action = "play";
 	    if(!node.bufnum){
 		node.warn("cannot create sampler synth without buffer");
@@ -220,8 +221,15 @@ module.exports = function(RED) {
 	    global.set("synth_next_sc_node", id + 1);
 	    node[synth] = id;
 
-	    var payload = [action + "SampleMono", node[synth], 0, 0, "buffer", node.bufnum];
-	    
+	    var amp = volume2amp(node.volume);
+
+	    var payload = [action + "SampleMono", node[synth], 0, 0, "amp", amp, "buffer", node.bufnum];
+
+	    if(isTuned()){
+		var midi = note2midi(msg.note);
+		// push speed to replay speed parameter
+	    }
+
 	    var address = "/s_new";
 	    
 	    var createMsg;
