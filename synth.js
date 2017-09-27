@@ -132,12 +132,7 @@ module.exports = function(RED) {
 		    
 		case "tick":
 		    configureTick(msg);
-		    if(isSynth()){
-			handleTickSynth(msg);
-		    }
-		    else{
-			handleTickSample(msg);
-		    }
+		    handleTickSynth(msg);
 		    break;
 		    
 		case "reset":
@@ -198,63 +193,6 @@ module.exports = function(RED) {
 	    }
 	}
 
-	function handleTickSample(msg){
-	    
-	    var action = "play";
-	    if(!node.bufnum){
-		node.warn("cannot create sampler synth without buffer");
-		return;
-	    }
-	    
-	    var synth = action + "_synth_id";
-	    if(node[synth]){
-		freeSynth(node, node[synth]);
-		node[synth] = null;
-	    }
-
-	    var global = node.context().global;
-	    var id = Number(global.get("synth_next_sc_node"));
-	    if(isNaN(id)){
-		id = 100000; // high to avoid nodes from sclang
-	    }
-	    
-	    global.set("synth_next_sc_node", id + 1);
-	    node[synth] = id;
-
-	    var amp = volume2amp(node.volume);
-
-	    var payload = [action + "SampleMono", node[synth], 0, 0, "amp", amp, "buffer", node.bufnum];
-
-	    if(isTuned()){
-		var midi = note2midi(msg.note);
-		// push speed to replay speed parameter
-	    }
-
-	    var address = "/s_new";
-	    
-	    var createMsg;
-	    if(msg.timeTag){
-		createMsg  = {
-		    payload:{
-			timeTag: msg.timeTag,
-			packets: [
-			    {
-				address: address,
-				args: payload
-			    }
-			]
-		    }
-		};
-		
-		
-	    }
-	    else{
-		createMsg = {topic: address, payload:payload};
-	    }
-	    
-	    node.send(createMsg);
-	}
-
     
 	function sendNote(noteVal, msg){
 
@@ -280,14 +218,36 @@ module.exports = function(RED) {
 		action = "/s_new";
 		synth_id = -1;
 
-		// add it to the head of the root group
-		payload = [node.synthtype, -1, 0, 0, "amp", amp, "out", node.outBus];
+		var synthname;
+		if(isSynth()){
+		    synthname = node.synthtype;
+		}
+		else{
+		    synthname = "playSampleMono";
+		}
 		
+		// add it to the head of the root group
+		payload = [synthname, -1, 0, 0, "amp", amp];
+
+		if(!isSynth()){
+		    if(!node.bufnum){
+			node.warn("cannot create sampler synth without buffer");
+			return;
+		    }
+		    payload.push("buffer", node.bufnum);
+		    var midibase = node.synthtypes[node.synthtype].midibase;
+		    if(midibase){
+			payload.push("midibase", midibase);
+		    }
+
+		}
 	    }
 	    
 	    if(midi){
 		payload.push("midi", midi);
 	    }
+
+	    
 
 	    for(var param in node.parameters){
 		payload.push(param);
