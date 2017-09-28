@@ -34,7 +34,8 @@ module.exports = function(RED) {
 
 			    for(var i = 0; i<node.controls.length; i++){
 				var control = node.controls[i];
-				control.value = null;
+				// use undefined instead of null so we can include null values in sequences
+				control.value = undefined; 
 				if(node.notesrand && node.loop){
 				    control.value = _.sample(control.values);
 				}
@@ -50,7 +51,7 @@ module.exports = function(RED) {
 					control.value = control.values[control.pos];
 				    }
 				}
-				if(control.value != null){
+				if(control.value !== undefined){
 				    controlSet = true;
 				}
 			    }
@@ -67,7 +68,7 @@ module.exports = function(RED) {
 			var playmsg = JSON.parse(JSON.stringify(msg));
 			for(var i = 0; i<node.controls.length; i++){
 			    var control = node.controls[i];
-			    if(control.value != null){
+			    if(control.value !== undefined){
 				playmsg[control.name] = control.value;
 			    }
 			}
