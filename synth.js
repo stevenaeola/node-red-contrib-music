@@ -345,7 +345,7 @@ module.exports = function(RED) {
 
 
 	function reset(){
-	    node.synthtype = config.synthtype || "piano";
+	    node.synthtype = config.synthtype || "kick";
 	    node.volume = Number(config.volume);
 	    if(isNaN(node.volume)){
 		node.volume = 50;
