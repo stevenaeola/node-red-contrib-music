@@ -22,30 +22,35 @@
 
 <script type="text/x-red" data-template-name="setting">
     <div class="form-row">
-        <label for="node-input-name"> Name</label>
-        <input type="text" id="node-input-name" placeholder="e.g. drums volume">
-    </div>
-    <div class="form-row">
         <label for="node-input-setting"> Setting</label>
         <input type="text" id="node-input-setting" placeholder="e.g. volume">
     </div>
+
     <div class="form-row">
         <label for="node-input-initial"> Initial Value</label>
         <input type="text" id="node-input-initial" placeholder="e.g. 50">
     </div>
+
     <div class="form-row">
-        <label for="node-input-initial"> Global</label>
-        <input type="checkbox" id="node-input-initial">
+        <label for="node-input-global"> Global</label>
+        <input type="checkbox" id="node-input-global">
     </div>
+
     <div class="form-row">
         <label for="node-input-min"> Minimum Value (if relevant)</label>
         <input type="text" id="node-input-min" placeholder="e.g. 0">
     </div>
+
     <div class="form-row">
         <label for="node-input-max"> Maximum Value (if relevant)</label>
         <input type="text" id="node-input-max" placeholder="e.g. 100">
     </div>
-    
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="e.g. drums volume">
+    </div>
+
 </script>
 
 <script type="text/x-red" data-help-name="setting">

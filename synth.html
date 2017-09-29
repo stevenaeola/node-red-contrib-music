@@ -76,8 +76,10 @@
 	 synthtype: {value: "kick", required: true},
 	 volume: {value: 50},
 	 octave: {value: 0},
+	 key:{value: "global"},
 	 root: {value:"", required: false},
-	 scale: {value:"default", required: false},
+	 scale: {value:"", required: false},
+	 degree: {value:"", required: false},
 	 outBus: {value:0, required: true},
 	 synthtypes: {value:synthtypes, required: false}
      },
@@ -125,15 +127,16 @@
 
 	 populate("all");
 	 
+	 var tunedContainer = $('#node-input-tuned-container');
+
 	 $('#node-input-synthtype').change(
 	     function (){
 		 var option = $(this).find('option:selected').val();
-		 var container = $('#node-input-tuned-container');
 		 if(synthtypes[option] && synthtypes[option].tuned){
-		     container.show();
+		     tunedContainer.show();
 		 }
 		 else{
-		     container.hide();
+		     tunedContainer.hide();
 		 }
 	     }
 	 );
@@ -143,28 +146,38 @@
 	     $('#node-input-synthtype-selector-' + which).removeClass("muted");
 	     populate(which);
 	 };
-
-	 var container = $('#node-input-tuned-container');
 	 
 	 $('#node-input-synthtype-selector-all').click(
 	     () =>  {filterSynthtypes('all')}
 	 );
 	 
      	 $('#node-input-synthtype-selector-tuned').click(
-	     () => {filterSynthtypes('tuned'); container.show()}
+	     () => {filterSynthtypes('tuned'); tunedContainer.show()}
 	 );
 	 
 	 $('#node-input-synthtype-selector-untuned').click(
-	     () => {filterSynthtypes('untuned'); container.hide()}
+	     () => {filterSynthtypes('untuned'); tunedContainer.hide()}
 	 );
 
+	 $('#node-input-key').change(
+	     function (){
+		 var option = $(this).find('option:selected').val();
+		 var keyContainer = $('#node-input-key-container');
+		 if(option=="local"){
+		     keyContainer.show();
+		 }
+		 else{
+		     keyContainer.hide();
+		 }
+	     }
+	 );
      }
  });
 </script>
 
 <script type="text/x-red" data-template-name="synth">
     <div class="form-row">
-	<label for="node-input-synthtype"> synth type</label>
+	<label for="node-input-synthtype"> Synth type</label>
 	<select id="node-input-synthtype">
 	</select>
 	<div id="node-input-synthtype-selector-container" style="float:right">
@@ -177,7 +190,7 @@
     </div>
 
     <div class="form-row">
-	<label for="node-input-volume"> volume</label>
+	<label for="node-input-volume"> Volume</label>
 	<input type="number" min="0" max="100" id="node-input-volume" placeholder="0-100" style="width:7em">
     </div>
     <!-- 
@@ -189,34 +202,56 @@
     <div id='node-input-tuned-container' style="display:none">
 
 	<div class="form-row">
-	    <label for="node-input-octave"> octave</label>
+	    <label for="node-input-octave"> Octave</label>
 	    <input type="number" min="-4" max="4" id="node-input-octave" placeholder="e.g. -1" style="width:7em">
 	</div>
-	
+
 	<div class="form-row">
-	    <label for="node-input-root"> root note of scale (if different from global) </label>
-	    <input type="text" id="node-input-root" placeholder="e.g. C4">
+	    <label for="node-input-key"> Key</label>
+	    <select id ="node-input-key">
+		<option value="global">Use global</option>
+		<option value="local">Local</option>
+	    </select>
+
 	</div>
 	
-	<div class="form-row">
-	    <label for="node-input-scale"> scale type </label>
-	    <select id="node-input-scale">
-		<option>default</option>
-		<option>minor</option>
-		<option>major</option>
-		<option>dorian</option>
-		<option>mixolydian</option>
-		<option>major pentatonic</option>
-		<option>minor pentatonic</option>
-		<option>blues</option>
-		<option>chromatic</option>
-	    </select>
+	<div id="node-input-key-container" style="display:none">
+	    <div class="form-row">
+		<label for="node-input-root"> Root</label>
+		<input type="text" id="node-input-root" placeholder="e.g. C4" style="width:7em">
+		<select id="node-input-scale">
+		    <option></option>
+		    <option>minor</option>
+		    <option>major</option>
+		    <option>dorian</option>
+		    <option>mixolydian</option>
+		    <option>major pentatonic</option>
+		    <option>minor pentatonic</option>
+		    <option>blues</option>
+		    <option>chromatic</option>
+		</select
+	    </div>
+
+	    <div class="form-row">
+		<label for="node-input-degree"> Degree</label>
+		<select id="node-input-degree">
+		    <option></option>
+		    <option>I</option>
+		    <option>II</option>
+		    <option>III</option>
+		    <option>IV</option>
+		    <option>V</option>
+		    <option>VI</option>
+		    <option>VII</option>
+		</select>
+	    </div>
+
 	</div>
 	
     </div>
 
     <div class="form-row">
-	<label for="node-input-name"><i class="icon-tag"></i> name</label>
+	<label for="node-input-name"><i class="icon-tag"></i> Name</label>
 	<input type="text" id="node-input-name" placeholder="">
     </div>
 

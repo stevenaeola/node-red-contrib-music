@@ -44,16 +44,30 @@ module.exports = function(RED) {
 	    }
         });
 
+	this.on('close', function(){
+	    if(node.global){
+		node.context().global.set(node.setting, null);
+	    }
+	});
+
 	function setSetting(newVal){
-	    if(Math.min || Math.max){
+	    if(node.min && node.max){
 		node.trackedVal = Math.min(node.max, Math.max(node.min, newVal));
 	    }
+	    else{
+		node.trackedVal = newVal;
+	    }
 	    var disp;
-	    if(node.trackedVal>=10){
-		disp = Math.round(node.trackedVal);
+	    if(isNaN(node.trackedVal)){
+		disp = node.trackedVal;
 	    }
 	    else{
-		disp = Math.round(node.trackedVal*10)/10;
+		if(node.trackedVal>=10){
+		disp = Math.round(node.trackedVal);
+		}
+		else{
+		    disp = Math.round(node.trackedVal*10)/10;
+		}
 	    }
 	    node.status({fill: "grey", shape: "ring", text: node.setting + ": " + disp});
 
@@ -69,10 +83,10 @@ module.exports = function(RED) {
 	function reset(){
 	    node.name = config.name || config.setting || "setting";
 	    node.setting = config.setting || "volume";
-	    node.initial = Number(config.initial) || 50;
+	    node.initial = config.initial || 50;
 	    node.global = config.global || false;
-	    node.min = Number(config.min) || 0;
-	    node.max = Number(config.max) || 100;
+	    node.min = Number(config.min);
+	    node.max = Number(config.max);
 
 	    // set the value a little later so other nodes are connected and ready to receive the message
 	    setTimeout(function(){

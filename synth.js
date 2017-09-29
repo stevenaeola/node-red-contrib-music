@@ -5,7 +5,15 @@ module.exports = function(RED) {
     var fs = require("fs");
     var glob = require("glob");
     
-    var configurables = ["root", "scale", "volume", "octave", "synthtype"];
+    var configurables =
+	{root: { "default": "C4"},
+	 scale: { "default": "minor"},
+	 volume: { "default": 50},
+	 octave: { "default": 0},
+	 synthtype: { "default": "kick"},
+	 key: { "default": "global"},
+	 degree: { "default": "I"}
+	};
 
     // exponential scale with 0->0 and 100->1
     function volume2amp(volume){
@@ -70,7 +78,6 @@ module.exports = function(RED) {
 	var match = dir + "/*.wav";
 	var fname;
 	glob(match, {nocase: true}, function (er, files) {
-//	    var offset = node.soundoffset % files.length;
 	    fname = files[0];
 	    // create and load the buffer from file
 	    var createMsg = {
@@ -147,7 +154,7 @@ module.exports = function(RED) {
 		case "start":
 		    // nothing to do
 		    break;
-		    
+
 		default:
 		    configureMsg(msg);
 		    // do nothing
@@ -196,6 +203,9 @@ module.exports = function(RED) {
     
 	function sendNote(noteVal, msg){
 
+	    if(isNaN(noteVal)){
+		noteVal = 1;
+	    }
 	    var midi = note2midi(noteVal);
 	    var payload;
 	    var action;
@@ -345,28 +355,16 @@ module.exports = function(RED) {
 
 
 	function reset(){
-	    node.synthtype = config.synthtype || "kick";
-	    node.volume = Number(config.volume);
-	    if(isNaN(node.volume)){
-		node.volume = 50;
-	    }
-	    
-	    node.parameters = {};
 	    node.synthtypes = config.synthtypes;
-	    
-	    if(isSynth()){
-		resetSynth();
-	    }
-	    else{
-		resetSample();
+
+	    for(var conf in configurables){
+		configure(conf, config[conf]);
 	    }
 
+	    node.parameters = {};
 	    
-	    if(isTuned()){
-		resetTuned();
-	    }
 	}
-
+	
 	function resetSynth(){
 	    node.next_voice = 0;
 	    node.outBus = Number(config.outBus) || 0;
@@ -396,14 +394,9 @@ module.exports = function(RED) {
 
 	}
 	
-	function resetTuned(){
-	    node.noteoffset = 0;
-	    node.octave = Number(config.octave) || 0;
-	    setRoot(config.root);
-	    node.scale = config.scale; // if not defined we will use the global value
-	}
 	
 	function isSynth(){
+
 	    if (node.synthtypes[node.synthtype] && node.synthtypes[node.synthtype].synth){
 		return true;
 	    }
@@ -417,44 +410,74 @@ module.exports = function(RED) {
 	    return node.synthtypes[node.synthtype] && node.synthtypes[node.synthtype].sustained;
 	}
 	
-
-	function setRoot(root){
-	    var global = node.context().global;
-	    root = root || global.get("root");
-	    root = root || 60;
-
-	    var roman = {
-		i: 1,
-		ii: 2,
-		iii: 3,
-		iv: 4,
-		v: 5,
-		vi: 6,
-		vii:7,
-		viii:8
+	// turn note number (degree of scale) into midi
+	function note2midi(note){
+	    if(Array.isArray(note)){
+		return _.map(note, note2midi);
 	    }
 
-	    if(_.isString(root) && roman[root.toLowerCase()]){
-		node.noteoffset = roman[root.toLowerCase()] -1;
-		node.root = global.get("root") || 60;
+	    if(!isTuned()){
 		return;
 	    }
+	    
+	    if(note === null){
+		return -1;
+	    }
 
-	    var midiroot = Number(root);
+	    var global = node.context().global;
 
-	    if(isNaN(midiroot)){
+	    var key = node.key;
+
+	    var root = node.root;
+	    
+	    var scale = node.scale
+
+	    var degree = node.degree;
+
+	    if(root == "" || key=="global"){
+		root = global.get("root") || configurables.root["default"];
+	    }
+
+	    if(scale == "" || key == "global"){
+		scale = global.get("scale") || configurables.scale["default"];
+	    }
+
+	    if(degree == "" || key == "global"){
+		degree = global.get("degree") || configurables.degree["default"];
+	    }
+
+	    // turn the degree into an offset
+	    
+	    var roman = {
+		I: 1,
+		II: 2,
+		III: 3,
+		IV: 4,
+		V: 5,
+		VI: 6,
+		VII:7,
+		VIII:8
+	    }
+
+	    var noteoffset = 0;
+	    if(_.isString(degree) && roman[degree.toUpperCase()]){
+		noteoffset = roman[degree.toUpperCase()] -1;
+	    }
+
+	    var midiroot;
+	    
+	    if(isNaN(root)){
 		var name2midi = {
-		    c: 60,
-		    d: 62,
-		    e: 64,
-		    f: 65,
-		    g: 67,
-		    a: 69,
-		    b: 71
+		    C: 60,
+		    D: 62,
+		    E: 64,
+		    F: 65,
+		    G: 67,
+		    A: 69,
+		    B: 71
 		}
-
 		
-		var rootbits = root.toLowerCase().split("");
+		var rootbits = root.toUpperCase().split("");
 		var base = rootbits.shift();
 		midiroot = name2midi[base];
 		if(midiroot === undefined){
@@ -474,34 +497,20 @@ module.exports = function(RED) {
 		if(rootbits.length > 0){
 		    var octave = Number(rootbits.join(""));
 		    if(!isNaN(octave)){
-			midiroot += (octave - 5)*12;
+			midiroot += (octave - 4)*12;
 		    }
 		}
-
 	    }
 	    else{
-		if(midiroot<0 && midiroot>127){
+		if(root<0 && root>127){
 		    node.warn("Scale root must be in range 0-127");
 		    return;
 		}
-	    }
-	    node.root = midiroot;
-	    
-	}
-
-	function note2midi(note){
-	    
-	    var global = node.context().global;
-
-	    if(Array.isArray(note)){
-		return _.map(note, note2midi);
-	    }
-	    
-	    if(note === null){
-		return -1;
+		midiroot = root;
 	    }
 
-	    note += node.noteoffset;
+	    
+	    note += noteoffset;
 
 	    var intervals = {
 		minor: [0,2,3,5,7,8,10,12],
@@ -514,21 +523,15 @@ module.exports = function(RED) {
 		chromatic: [0,1,2,3,4,5,6,7,8,9,10,11,12]
 	    }
 
-	    var scale = node.scale;
-	    if(scale == "default"){
-		scale = null;
-	    }
-	    scale = scale || global.get("scale") || "minor";
-
 	    var offsets = intervals[scale];
-	    var midi = node.root;
+	    var midi = midiroot;
 
 	    // work out notes above the offset values by shifting up an octave
 	    while(note > offsets.length){
 		note -= offsets.length-1;
 		midi += offsets[offsets.length-1];
 	    }
-
+	    
 	    // work out notes below the offset values by shifting down an octave
 	    // notes 0 and -1 are the same as +1
 
@@ -556,33 +559,46 @@ module.exports = function(RED) {
 	}
 	
 	function configureTick(msg){
-	    for(var i=0; i<configurables.length; i++){
-		var configurable = configurables[i];
-		if(msg[configurable] != null){
-		    configure(configurable, msg[configurable]);
+	    for(var configurable in configurables){
+		var val = msg[configurable];
+		if(val != null){
+		    configure(configurable, val);
+		    if(["root", "scale", "degree"].includes(configurable)){
+			configure("key", "local");
+		    }
 		}
 	    }
 	}
 
 	function configureMsg(msg){
-	    for(var i=0; i<configurables.length; i++){
-		var configurable = configurables[i];
+	    for(var configurable in configurables){
 		if(msg.topic == configurable){
 		    configure(configurable, msg.payload);
+		    if(["root", "scale", "degree"].includes(configurable)){
+			configure("key", "local");
+		    }
 		}
 	    }
 	}
 
 	function configure(config, val){
-	    if(!configurables.includes(config)){
+
+	    if(!Object.keys(configurables).includes(config)){
 		node.warn(config + " is not configurable");
 		return;
 	    }
-	    
+
+	    var def = configurables[config].default;
+
 	    switch(config){
 	    case "volume":
 		var newVol = Number(val);
-		if(!Number.isNaN(newVol)){
+		if(Number.isNaN(newVol)){
+		    if(Number.isNan(node.volume)){
+			node.volume = def;
+		    }
+		}
+		else{
 		    node.volume = newVol;
 		}
 		
@@ -591,15 +607,16 @@ module.exports = function(RED) {
 		setSynthVolume();
 		break;
 
-	    case "root":
-		setRoot(val);
-		break;
-
 	    case "synthtype":
 		node[config] = val;
-		reset();
+		if(isSynth()){
+		    resetSynth();
+		}
+		else{
+		    resetSample();
+		}
 		break;
-		
+
 	    default:
 		node[config] = val;
 
