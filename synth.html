@@ -126,6 +126,9 @@
 	 }
 
 	 function filterSynthtypes(which){
+	     if(!which){
+		 which = "all";
+	     }
 	     node.tuned = which;
 	     $('#node-input-synthtype-selector-container span').addClass("muted");
 	     $('#node-input-synthtype-selector-' + which).removeClass("muted");

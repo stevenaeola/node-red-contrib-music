@@ -597,7 +597,7 @@ module.exports = function(RED) {
 	    case "volume":
 		var newVol = Number(val);
 		if(Number.isNaN(newVol)){
-		    if(Number.isNan(node.volume)){
+		    if(Number.isNaN(node.volume)){
 			node.volume = def;
 		    }
 		}
