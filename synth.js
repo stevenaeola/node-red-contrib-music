@@ -11,7 +11,7 @@ module.exports = function(RED) {
 	 volume: { "default": 50},
 	 octave: { "default": 0},
 	 synthtype: { "default": "kick"},
-	 key: { "default": "global"},
+	 key: { "default": "C minor"},
 	 degree: { "default": "I"}
 	};
 
@@ -356,7 +356,8 @@ module.exports = function(RED) {
 
 	function reset(){
 	    node.synthtypes = config.synthtypes;
-
+	    node.tuned = config.tuned;
+	    
 	    for(var conf in configurables){
 		configure(conf, config[conf]);
 	    }
@@ -426,23 +427,31 @@ module.exports = function(RED) {
 
 	    var global = node.context().global;
 
-	    var key = node.key;
-
 	    var root = node.root;
 	    
 	    var scale = node.scale
 
 	    var degree = node.degree;
-
-	    if(root == "" || key=="global"){
-		root = global.get("root") || configurables.root["default"];
+	    var globalkey = global.get("key");
+	    var globalroot;
+	    var globalscale;
+	    if(typeof globalkey == "string"){
+		var bits = globalkey.split(" ");
+		globalroot = bits.shift();
+		globalscale = bits.shift();
 	    }
 
-	    if(scale == "" || key == "global"){
-		scale = global.get("scale") || configurables.scale["default"];
+	    if(root == ""){
+		root = global.get("root") || globalroot||
+		    configurables.root["default"];
 	    }
 
-	    if(degree == "" || key == "global"){
+	    if(scale == ""){
+		scale = global.get("scale") || globalscale ||
+		    configurables.scale["default"];
+	    }
+
+	    if(degree == ""){
 		degree = global.get("degree") || configurables.degree["default"];
 	    }
 
@@ -563,9 +572,6 @@ module.exports = function(RED) {
 		var val = msg[configurable];
 		if(val != null){
 		    configure(configurable, val);
-		    if(["root", "scale", "degree"].includes(configurable)){
-			configure("key", "local");
-		    }
 		}
 	    }
 	}
@@ -574,9 +580,6 @@ module.exports = function(RED) {
 	    for(var configurable in configurables){
 		if(msg.topic == configurable){
 		    configure(configurable, msg.payload);
-		    if(["root", "scale", "degree"].includes(configurable)){
-			configure("key", "local");
-		    }
 		}
 	    }
 	}
@@ -617,6 +620,14 @@ module.exports = function(RED) {
 		}
 		break;
 
+	    case "key":
+		if(bits){
+		    var bits = val.split(" ");
+		    configure("root", bits.shift());
+		    configure("scale", bits.shift());
+		}
+		break;
+		
 	    default:
 		node[config] = val;
 

@@ -74,9 +74,9 @@
      defaults: {
 	 name: {value: "", required: false},
 	 synthtype: {value: "kick", required: true},
+	 tuned: {value: "all", required: false},
 	 volume: {value: 50},
 	 octave: {value: 0},
-	 key:{value: "global"},
 	 root: {value:"", required: false},
 	 scale: {value:"", required: false},
 	 degree: {value:"", required: false},
@@ -125,7 +125,14 @@
 	     }
 	 }
 
-	 populate("all");
+	 function filterSynthtypes(which){
+	     node.tuned = which;
+	     $('#node-input-synthtype-selector-container span').addClass("muted");
+	     $('#node-input-synthtype-selector-' + which).removeClass("muted");
+	     populate(which);
+	 };
+	 
+	 filterSynthtypes(node.tuned);
 	 
 	 var tunedContainer = $('#node-input-tuned-container');
 
@@ -141,36 +148,26 @@
 	     }
 	 );
 	 
-	 function filterSynthtypes(which){
-	     $('#node-input-synthtype-selector-container span').addClass("muted");
-	     $('#node-input-synthtype-selector-' + which).removeClass("muted");
-	     populate(which);
-	 };
-	 
 	 $('#node-input-synthtype-selector-all').click(
-	     () =>  {filterSynthtypes('all')}
+	     () =>  {
+		 filterSynthtypes('all');
+	     }
 	 );
 	 
      	 $('#node-input-synthtype-selector-tuned').click(
-	     () => {filterSynthtypes('tuned'); tunedContainer.show()}
+	     () => {
+		 filterSynthtypes('tuned');
+		 tunedContainer.show();
+	     }
 	 );
 	 
 	 $('#node-input-synthtype-selector-untuned').click(
-	     () => {filterSynthtypes('untuned'); tunedContainer.hide()}
-	 );
-
-	 $('#node-input-key').change(
-	     function (){
-		 var option = $(this).find('option:selected').val();
-		 var keyContainer = $('#node-input-key-container');
-		 if(option=="local"){
-		     keyContainer.show();
-		 }
-		 else{
-		     keyContainer.hide();
-		 }
+	     () => {
+		 filterSynthtypes('untuned');
+		 tunedContainer.hide();
 	     }
 	 );
+
      }
  });
 </script>
@@ -206,16 +203,7 @@
 	    <input type="number" min="-4" max="4" id="node-input-octave" placeholder="e.g. -1" style="width:7em">
 	</div>
 
-	<div class="form-row">
-	    <label for="node-input-key"> Key</label>
-	    <select id ="node-input-key">
-		<option value="global">Use global</option>
-		<option value="local">Local</option>
-	    </select>
-
-	</div>
-	
-	<div id="node-input-key-container" style="display:none">
+	<div id="node-input-key-container">
 	    <div class="form-row">
 		<label for="node-input-root"> Root</label>
 		<input type="text" id="node-input-root" placeholder="e.g. C4" style="width:7em">
