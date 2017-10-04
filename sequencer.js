@@ -133,10 +133,15 @@ module.exports = function(RED) {
 		    control.values = JSON.parse(control.values);
 		}
 		catch(e){
-		    control.values = null;
+		    control.values = [1,4,5,4];
 		}
 		if(!Array.isArray(control.values)){
-		    control.values = [control.values];
+		    if(control.values){
+			control.values = [control.values];
+		    }
+		    else{
+			control.values = [1,4,5,4];
+		    }
 		}
 	    }
 
