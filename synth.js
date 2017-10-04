@@ -241,8 +241,7 @@ module.exports = function(RED) {
 
 		if(!isSynth()){
 		    if(!node.bufnum){
-			node.warn("cannot create sampler synth without buffer");
-			return;
+			createBuffer(node);
 		    }
 		    payload.push("buffer", node.bufnum);
 		    var midibase = node.synthtypes[node.synthtype].midibase;
@@ -355,6 +354,7 @@ module.exports = function(RED) {
 
 
 	function reset(){
+	    freeSynths(node);
 	    node.synthtypes = config.synthtypes;
 	    node.tuned = config.tuned;
 	    
