@@ -64,45 +64,52 @@
 
 <script type="text/x-red" data-template-name="sequencer">
  <div class="form-row">
- <label for="node-input-name"><i class="icon-tag"></i> name</label>
- <input type="text" id="node-input-name" placeholder="Name">
+     <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+     <input type="text" id="node-input-name" placeholder="Name">
  </div>
+ 
  <div class="form-row">
- <label for="node-input-input"> input event</label>
- <input type="text" id="node-input-input" placeholder="e.g. beat">
+     <label for="node-input-input"> Input event</label>
+     <input type="text" id="node-input-input" placeholder="e.g. beat">
  </div>
+
  <div class="form-row">
- <label for="node-input-start"> start event</label>
- <input type="text" id="node-input-start" placeholder="e.g. bar">
+     <label for="node-input-start"> Start event</label>
+     <input type="text" id="node-input-start" placeholder="e.g. bar">
  </div>
+
  <div class="form-row">
- <label for="node-input-rhythm"> list of lengths</label>
- <input type="text" id="node-input-rhythm" placeholder="e.g. [3,1]">
+     <label for="node-input-rhythm"> List of lengths</label>
+     <input type="text" id="node-input-rhythm" placeholder="e.g. [3,1]">
  </div>
+
  <div class="form-row">
- <label for="node-input-output"> output</label>
- <select id="node-input-output">
-     <option value="single">single tick including controls</option>
-     <option value="all">controls added to all ticks</option>
-     <option value="extra">extra control message</option>
- </select>
+     <label for="node-input-output"> Output</label>
+     <select id="node-input-output">
+	 <option value="single">single tick at sequence points</option>
+	 <option value="all">all ticks, with sequenced values added</option>
+	 <option value="extra">all ticks, with extra control message</option>
+     </select>
  </div>
+
  <div class="form-row">
- <label for="node-input-loop"> loop</label>
- <input type="checkbox" id="node-input-loop">
+     <label for="node-input-loop"> Loop</label>
+     <input type="checkbox" id="node-input-loop">
  </div>
+
  <div class="form-row">
- <label for="node-input-rhythmrand"> choose lengths randomly from list</label>
- <input type="checkbox" id="node-input-rhythmrand">
+     <label for="node-input-rhythmrand"> Choose lengths randomly from list</label>
+     <input type="checkbox" id="node-input-rhythmrand">
  </div>
+
  <div class="form-row">
- <label for="node-input-notesrand"> choose values randomly from list</label>
- <input type="checkbox" id="node-input-notesrand">
+     <label for="node-input-notesrand"> Choose values randomly from list</label>
+     <input type="checkbox" id="node-input-notesrand">
  </div>
 
  <div class="form-row node-input-control-container-row">
- <label><b>controls</b> Enter the name and list of values</label>
- <ol id="node-input-control-container"></ol>
+     <label><b>controls</b> Enter the name and list of values</label>
+     <ol id="node-input-control-container"></ol>
  </div>
 
 </script>
@@ -132,13 +139,13 @@
  <dl class='message-properties'>
 
  <dt>payload <span class='property-type'>(string)</span></dt>
- <dd>The string <code>play</code> is sent when enough <code>tick</code> inputs have been received, according to the <code>list of lengths</code> configuration</dd>
+ <dd>A <code>tick</code> is sent when enough <code>tick</code> inputs have been received, according to the <code>list of lengths</code> configuration</dd>
 
  <dt><span class='optional'>note</span> <span class='property-type'>(number)</span></dt>
- <dd>The sequencer moves through its <code>list of notes</code> with the rhythm specified and the values in the <code>list of notes</code> are added to the <code>note</code> property.</dd>
+ <dd>For each control specified he sequencer moves through its list of <code>values</code> with the rhythm specified and the values are added as a message property.</dd>
 
  <dt><span class='optional'>timeTag</span> <span class='property-type'>(number)</span></dt>
- <dd>If a <code>timeTag</code> property is given for the incoming <code>tick</code> message it is included in the outgoing <code>play</code> message.</dd>
+ <dd>If a <code>timeTag</code> property is given for the incoming <code>tick</code> message it is included in the outgoing <code>tick</code> message.</dd>
 
  </dl>
 

@@ -56,25 +56,27 @@
 <script type="text/x-red" data-template-name="beat">
 
   <div class="form-row">
-    <label for="node-input-name"><i class="icon-tag"></i> name</label>
-    <input type="text" id="node-input-name" placeholder="name">
-  </div>
-
-  <div class="form-row">
-    <label for="node-input-output"> output counter</label>
+    <label for="node-input-output"> Output counter</label>
     <input type="text" id="node-input-output" placeholder="e.g. beat)">
   </div>
 
   <div class="form-row">
-    <label for="node-input-bpm"> beats per minute (bpm)</label>
+    <label for="node-input-bpm"> Beats per minute (bpm)</label>
     <input type="number" id="node-input-bpm" placeholder="bpm (e.g. 200)">
   </div>
 
   <div class="form-row">
-    <label for="node-input-latency"> latency</label>
+    <label for="node-input-latency"> Latency</label>
     <input type="number" id="node-input-latency" placeholder="in milliseconds">
   </div>
 
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="name">
+  </div>
+
+
+  
   <div class="form-row node-input-sub-beat-container-row">
     <label><b>sub-beats</b> Enter the name and number per beat</label>
     <ol id="node-input-sub-beat-container"></ol>
