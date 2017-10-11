@@ -25,7 +25,7 @@
      flick: {tuned: true},
      future: {},
      gabba: {},
-     ghost: {tuned: true, synth:true, sustained: true},
+     ghost: {tuned: true, synth:true},
      gretsch: {},
      h: {},
      hc: {},
@@ -43,7 +43,7 @@
      lt: {tuned: true},
      marimba: {tuned: true, synth:true},
      metal: {},
-     moog: {tuned: true, synth:true, sustained: true},
+     moog: {tuned: true, synth:true},
      mouth: {},
      mt: {},
      newnotes: {tuned: true, midibase: 61},
@@ -53,7 +53,7 @@
      piano: {tuned: true, synth:true},
      pluck: {tuned: true, midibase: 58},
      print: {},
-     prophet: {tuned: true, synth:true, sustained: true},
+     prophet: {tuned: true, synth:true},
      psr: {tuned: true, midibase: 53},
      rm: {},
      "short": {},
@@ -269,7 +269,7 @@
     <dd>When <code>msg.topic</code> is empty<ul>
 	<li>If <code>msg.payload</code> is <code>play</code> or <code>tick</code> then instructions are output for playing a note.</li>
 	<li>If <code>msg.payload</code> is <code>reset</code> then the synth goes back to its starting state.</li>
-	<li>If <code>msg.payload</code> is <code>stop</code> then the synth is stopped. This only makes a difference is the synth has sustain (e.g. moog).</li>
+	<li>If <code>msg.payload</code> is <code>stop</code> then the synth is stopped. This only makes a difference is the synth has sustain</li>
     </ul></dd>
 
     <dt><span class='optional'>timeTag</span> <span class='property-type'>(number)</span></dt>

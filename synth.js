@@ -262,6 +262,11 @@ module.exports = function(RED) {
 		payload.push(param);
 		payload.push(node.parameters[param]);
 	    }
+
+	    if(msg.beats){
+		payload.push("beats");
+		payload.push(msg.beats);
+	    }
 	    
 	    if(msg.timeTag ){
 		var playmsg = {

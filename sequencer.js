@@ -66,6 +66,7 @@ module.exports = function(RED) {
 		case "single":
 		    if(controlSet){
 			var playmsg = JSON.parse(JSON.stringify(msg));
+			playmsg.beats = node.rhythmCount;
 			for(var i = 0; i<node.controls.length; i++){
 			    var control = node.controls[i];
 			    if(control.value !== undefined){
