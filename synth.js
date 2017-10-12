@@ -366,7 +366,14 @@ module.exports = function(RED) {
 	    for(var conf in configurables){
 		configure(conf, config[conf]);
 	    }
-
+	    
+	    if(isSynth()){
+		resetSynth();
+	    }
+	    else{
+		resetSample();
+	    }
+	    
 	    node.parameters = {};
 	    
 	}
@@ -613,16 +620,6 @@ module.exports = function(RED) {
 		node.volume = Math.min(100, Math.max(0, node.volume));
 
 		setSynthVolume();
-		break;
-
-	    case "synthtype":
-		node[config] = val;
-		if(isSynth()){
-		    resetSynth();
-		}
-		else{
-		    resetSample();
-		}
 		break;
 
 	    case "key":
