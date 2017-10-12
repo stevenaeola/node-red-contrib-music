@@ -65,6 +65,8 @@ module.exports = function(RED) {
 	}
 
 	function setBPM(bpm){
+	    bpm = bpm || node.context().global['bpm'] || 200;
+	    bpm = Number(bpm);
 	    if(!isNaN(bpm)){
 		if(bpm>10 && bpm <1000){
 		    node.interval = 60000.0/bpm;
@@ -78,7 +80,7 @@ module.exports = function(RED) {
 		}
 	    }
 	    else{
-		node.warn("BPM is not a number: " + bpm);
+		node.warn("BPM is not a number: " + bpm); 
 	    }
 	}
 
