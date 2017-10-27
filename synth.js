@@ -248,7 +248,6 @@ module.exports = function(RED) {
 		    if(midibase){
 			payload.push("midibase", midibase);
 		    }
-
 		}
 	    }
 	    
@@ -658,16 +657,27 @@ module.exports = function(RED) {
 		setFXParam("amp", volume2amp(node.volume));
 		
 		break;
+
+		// receiving a play message from a synth
+	    case "/s_new":
+		msg.payload.push("out", node.inBus);
+		node.send(msg);
+		break;
 		
 	    default:
-		    
+		if(msg.timeTag){
+		    msg.payload.push("out", node.inBus);
+		    node.send(msg);
+		    return;
+		}
 		if(msg.payload== "reset"){
 		    reset();
 		    // just this once the reset message is not propagated
 		    return;
 		}
 
-		setFXParam(msg.topic, msg.payload);
+		//		setFXParam(msg.topic, msg.payload);
+		node.send(msg);
 		
 	    }
         });
@@ -687,19 +697,12 @@ module.exports = function(RED) {
 	}
 
 	function createFX(){
-	    freeSynths(node);
-	    var global = node.context().global;
-	    var id = Number(global.get("synth_next_sc_node"));
-	    if(isNaN(id)){
-		id = 100000; // high to avoid nodes from sclang
-	    }
-	    global.set("synth_next_sc_node", id + 1);
-	    node.synth_id = id;
+	    freeSynth(node, node.synth_id);
 	    
 	    // add it to the tail of the root group
 	    var createMsg = {
 		topic: "/s_new",
-		payload: [node.fxtype, node.synth_id, 0, 0, "inBus", node.inBus]
+		payload: [node.fxtype, node.synth_id, 1, 0, "inBus", node.inBus]
 	    }
 	    node.send(createMsg);
 	    
@@ -709,20 +712,23 @@ module.exports = function(RED) {
 	function reset(){
 	    node.fxtype = config.fxtype || "reverb";
 	    node.name = config.name || node.fxtype;
-	    node.inBus = Number(config.inBus);
+	    node.inBus = config.fxtypes[node.fxtype].inBus;
 	    node.outBus = Number(config.outBus) || 0;
+	    // fix the synth_id according to the fxtype (via inBus number)
+	    // means we can only have one fx node per fx type
+	    // ... which is deliberate
+	    node.synth_id = 100000 - node.inBus/2;
+	    node.volume = 100;
 	    
 	    // wait a little while to allow wires to be created
 	    setTimeout(function(){
 		createFX();
 	    }, 200);
-	    
 	}
-
     }
 	
     RED.nodes.registerType("synth",SynthNode);
-//    RED.nodes.registerType("soundfx",SoundFXNode);
+    RED.nodes.registerType("soundfx",SoundFXNode);
 }
 
 

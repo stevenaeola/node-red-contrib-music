@@ -67,7 +67,13 @@
      ul: {tuned: true},
      voodoo: {}
  };
+
+ var fxtypes = {
+     reverb: {inBus: 4},
+     delay: {inBus: 6}
+ }
  
+
  RED.nodes.registerType('synth',{
      category: 'music',
      color: '#a6bbcf',
@@ -312,21 +318,18 @@
   
   <p>The synth node relies on there being a SuperCollider server running, to which the messages are sent via <code>osc</code> and (usually) <code>udp</code>. Synthdefs are sent to the SuperCollider server when the nodes are deployed.</p>
 
-  <p>It is possible to send synth instructions to servers on remote machines, but this will only work properly when the synths do not have sustain.</p>
 
   <p>Separate sound effects (soundfx) nodes can be defined which include a bus number to receive input from a synth. These will only work on local machines.</p>
   
 </script>
-<!--
+
 <script type="text/javascript">
-  RED.nodes.registerType('soundfx',{
-  category: 'music',
-  color: '#a6bbcf',
-  defaults: {
-  name: {required: "false"},
-  inBus: {value:2, required: "true"},
-  outBus: {value:0, required: "true"},
-  fxtype: {value: "reverb", required: "true"},
+ RED.nodes.registerType('soundfx',{
+     category: 'music',
+     color: '#a6bbcf',
+     defaults: {
+	 fxtype: {value: "reverb", required: "true"},
+	 fxtypes: {value: fxtypes, required: "false"}
         },
   inputs:1,
   outputs:1,
@@ -336,23 +339,14 @@
   }
   });
 </script>
--->
+
 <script type="text/x-red" data-template-name="soundfx">
     <div class="form-row">
-        <label for="node-input-name">Name</label>
-        <input type="text" id="node-input-name" placeholder="e.g. drums reverb">
-    </div>
-    <div class="form-row">
-        <label for="node-input-inBus">Input Bus</label>
-        <input type="number" id="node-input-inBus" placeholder="e.g. 2">
-    </div>
-    <div class="form-row">
-        <label for="node-input-outBus">Output Bus</label>
-        <input type="number" id="node-input-outBus" placeholder="e.g. 0">
-    </div>
-    <div class="form-row">
-        <label for="node-input-fxtype">Effect Type</label>
-        <input type="text" id="node-input-fxtype" placeholder="e.g. reverb">
+	<label for="node-input-fxtype">Effect Type</label>
+	<select id="node-input-fxtype">
+	    <option>reverb</option>
+	    <option>delay</option>
+	</select>
     </div>
 </script>
 
