@@ -665,8 +665,8 @@ module.exports = function(RED) {
 		break;
 		
 	    default:
-		if(msg.timeTag){
-		    msg.payload.push("out", node.inBus);
+		if(msg.payload.timeTag){
+		    msg.payload.packets[0].args.push("out", node.inBus);
 		    node.send(msg);
 		    return;
 		}
