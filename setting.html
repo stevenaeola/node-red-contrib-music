@@ -54,5 +54,34 @@
 </script>
 
 <script type="text/x-red" data-help-name="setting">
-    <p>Keeps track of a value that can change, e.g. volume, speed (bpm). If <code>global</code> is selected then this value is shared with other nodes, which is used for the default key and scale type.</p>
+  <p>Keeps track of a value that can change, e.g. volume, speed (bpm). If <code>global</code> is selected then this value is shared with other nodes.</p>
+
+  <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload
+            <span class="property-type">string</span>
+        </dt>
+        <dd> the new value to use (or change by, if <code>msg.topic</code> is <code>up</code> or <code>down</code>)</dd>
+        <dt class="optional">topic <span class="property-type">string</span></dt>
+        <dd> recognised topics are <code>up</code>, <code>down</code> and <code>set</code></dd>
+    </dl>
+
+    <h3>Outputs</h3>
+
+    <dl class="message-properties">
+      <dt>payload <span class="property-type">string</span></dt>
+      <dd>the new stored value, sent every time there is an update, and at deployment</dd>
+        <dt> topic <span class="property-type">string</span></dt>
+        <dd> the name of the stored variable</dd>
+    </dl>
+
+<h3>Details</h3>
+
+  <p> The <code>setting</code> node acts as a variable which can have its value changed. If the incoming <code>msg.topic</code> is <code>set</code> or empty,  the incoming <code>msg.payload</code> is taken as the new value.  </p>
+
+  <p> When the value used is numeric then it can be varied with incoming with <code>msg.topic</code> as <code>up</code> or <code>down</code>.</p>
+
+  <p> If the <code>Global</code> property is selected then the property  is shared with other nodes as their default. At the moment this can be used to control the key the music is playing in with values such as "G major". See the <code>Scale</code> setting of the <code>synth</code> node for a list of possible values.</p>
+
+  <p> The node is reset to its intitial configuration when an incoming <code>msg.payload</code> is <code>reset</code>.</p>
 </script>

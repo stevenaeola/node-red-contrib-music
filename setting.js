@@ -51,12 +51,17 @@ module.exports = function(RED) {
 	});
 
 	function setSetting(newVal){
-	    if(node.min && node.max){
-		node.trackedVal = Math.min(node.max, Math.max(node.min, newVal));
+	    if(!isNaN(newVal)){
+		if(!isNaN(node.min)){
+		    newVal = Math.max(newVal, node.min);
+		}
+
+		if(!isNaN(node.max)){
+		    newVal = Math.min(newVal, node.max);
+		}
 	    }
-	    else{
-		node.trackedVal = newVal;
-	    }
+	    node.trackedVal = newVal;
+
 	    var disp;
 	    if(isNaN(node.trackedVal)){
 		disp = node.trackedVal;
