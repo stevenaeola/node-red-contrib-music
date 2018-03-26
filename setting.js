@@ -38,7 +38,9 @@ module.exports = function(RED) {
 		    node.send(msg);
 		}
 		else{
-		    setSetting(msg.payload);
+		    if(msg.topic == node.setting){
+			setSetting(msg.payload);
+		    }
 		}
 		break;
 	    }

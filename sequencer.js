@@ -62,6 +62,19 @@ module.exports = function(RED) {
 		    }
 		}
 
+		// send control message to second output every time
+		if(controlSet){
+		    for(var i = 0; i<node.controls.length; i++){
+			var control = node.controls[i];
+			if(control.value != null){
+			    var controlMsg = {topic: control.name,
+					      payload: control.value,
+					     };
+			    node.send([null, controlMsg]);
+			}
+		    }
+		}
+
 		switch(node.output){
 		case "single":
 		    if(controlSet){
@@ -73,7 +86,7 @@ module.exports = function(RED) {
 				playmsg[control.name] = control.value;
 			    }
 			}
-			node.send(playmsg);
+			node.send([playmsg, null]);
 		    }
 		    break;
 		    
@@ -84,23 +97,8 @@ module.exports = function(RED) {
 			    msg[control.name] = control.value;
 			}
 		    }
-		    node.send(msg);
+		    node.send([msg, null]);
 
-		    break;
-
-		case "extra":
-		    if(controlSet){
-			for(var i = 0; i<node.controls.length; i++){
-			    var control = node.controls[i];
-			    if(control.value != null){
-				var controlMsg = {topic: control.name,
-						  payload: control.value,
-						 };
-				node.send(controlMsg);
-			    }
-			}
-		    }
-		    node.send(msg);
 		    break;
 		    
 		default:
@@ -113,11 +111,11 @@ module.exports = function(RED) {
 		
 	    case "reset":
 		reset();
-		node.send(msg);
+		node.send([msg, null]);
 		break;
 		
 	    default:
-		node.send(msg);
+		node.send([msg, null]);
 		break;
 	    }
         });

@@ -15,7 +15,9 @@
 	 controls: {value:[{name: "note", value: "[1,4,5,4]"}], required: true}
      },
      inputs:1,
-     outputs:1,
+     inputLabels: "ticks",
+     outputs:2,
+     outputLabels: ["ticks", "control"],
      icon: "file.png",
      label: function() {
 	 return this.name||"sequencer";
@@ -84,11 +86,10 @@
  </div>
 
  <div class="form-row">
-     <label for="node-input-output"> Output</label>
+     <label for="node-input-output">Tick output</label>
      <select id="node-input-output">
 	 <option value="single">single tick at sequence points</option>
 	 <option value="all">all ticks, with sequenced values added</option>
-	 <option value="extra">all ticks, with extra control message</option>
      </select>
  </div>
 
@@ -108,79 +109,62 @@
  </div>
 
  <div class="form-row node-input-control-container-row">
-     <label><b>controls</b> Enter the name and list of values</label>
+     <label><b>Controls</b> Enter the name and list of values</label>
      <ol id="node-input-control-container"></ol>
  </div>
 
 </script>
 
 <script type="text/x-red" data-help-name="sequencer">
- <p>Plays a sequence of notes with a given rhythm, which can be looped and randomised.</p>
+ <p>Plays a sequence of notes with a given rhythm, which can be looped and randomised. Can be configured to control arbitrary properties over time.</p>
 
  <h3>Inputs</h3>
 
  <p>A sequencer usually gets its input from a <code>beat</code> node or a <code>divider</code> node, possibly via a <code>link</code> node.</p>
  <dl class='message-properties'>
 
- <dt>payload <span class='property-type'>(string)</span></dt>
+ <dt>payload <span class='property-type'>string</span></dt>
  <dd>There are two relevant values for <code>msg.payload</code>:
 			 <ol>
  <li>a <code>tick</code> input is counted by the sequencer if <code>msg.start</code> includes the input event (usually <code>beat</code>)</li>
  <li>a <code>reset</code> input returns the sequencer to its starting state, and also forwards the message to the output.</li>
  </ol>
  Any other value for <code>msg.payload</code> is sent straight to the output.
-									</dd>
+								   </dd>
 
  </dl>
 
  <h3>Outputs</h3>
 
- <p>A sequencer usually sends its output to a <code>synth</code> node.</p>
+ <p>A sequencer usually sends ticks to a <code>synth</code> node, which turns them into sound controls. As well as sending ticks, the sequencer also sends control messages which can be sent to any other node type.</p>
+ <ol class="node-ports">
+ <li>ticks
  <dl class='message-properties'>
 
- <dt>payload <span class='property-type'>(string)</span></dt>
- <dd>A <code>tick</code> is sent when enough <code>tick</code> inputs have been received, according to the <code>list of lengths</code> configuration</dd>
+ <dt>payload <span class='property-type'>string</span></dt>
+ <dd>By default a <code>tick</code> is sent when enough <code>tick</code> inputs have been received, according to the <code>list of lengths</code> configuration. If the <code>Tick Output</code> property is change to <code>all ticks</code> then all input ticks are sent to the output, but with the current value for any sequenced property added as a message property</dd>
 
- <dt><span class='optional'>note</span> <span class='property-type'>(number)</span></dt>
- <dd>For each control specified he sequencer moves through its list of <code>values</code> with the rhythm specified and the values are added as a message property.</dd>
+ <dt><span class='optional'>note</span> <span class='property-type'>number</span></dt>
+ <dd>For each control specified he sequencer moves through its list of <code>values</code> with the rhythm specified and the values are added as a message property. Other sequenced properties can be added to the sequencer with the <code>Controls</code> configuration.</dd>
 
  <dt><span class='optional'>timeTag</span> <span class='property-type'>(number)</span></dt>
  <dd>If a <code>timeTag</code> property is given for the incoming <code>tick</code> message it is included in the outgoing <code>tick</code> message.</dd>
 
  </dl>
+ </li>
 
- <h3>Configuration</h3>
-
- <dl class='message-properties'>
-
- <dt><span class='optional'>name</span> <span class='property-type'>(string)</span></dt>
- <dd>The label for the node.</dd>
-
- <dt>input event <span class='property-type'>(string)</span></dt>
- <dd>The <code>tick</code> event (included in <code>msg.start</code>) that is counted by the sequencer. By default this is <code>beat</code>, but could be e.g. <code>bar</code></dd>
-
- <dt>start event <span class='property-type'>(string)</span></dt>
- <dd>After a reset (or reaching the end of a non-looping sequence) the sequencer will wait until this event (included in <code>msg.start</code>) to start the sequence. By default this is <code>bar</code>, but could be e.g. <code>section</code></dd>
- 
- <dt>loop <span class='property-type'>(boolean)</span></dt>
- <dd>If selected, the sequencer will loop straight back to the beginning again and continue. If not the sequencer will restart at the next <code>start event</code>.</dd>
-
- <dt>list of notes <span class='property-type'>(list,number)</span>
- <dd>A list of numbers representing the position in the scale of the note to be played. The list should be specified as a JSON array, with default <code>[1,4,5,4]</code> or a number can be used if a single note is to be repeated. If no note is to be played at some part of the sequence (i.e. a rest), the value <code>null</code> should be used.</dd>
-
- <dt>choose notes randomly from list <span class='property-type'>(boolean)</span>
- <dd>If selected, the list of notes is shuffled randomly each time the sequence starts.</dd>
-
- <dt>list of lengths <span class='property-type'>(list,number)</span>
- <dd>A list of numbers representing the number of ticks to be counted for a note. The list should be specified as a JSON array, with default <code>[3,1]</code> or a number can be used if all notes have the same length. The size of this list does not have to be the same as the size of the list of notes: the list will be repeated as many times as necessary.</dd>
-
- <dt>choose lengths randomly from list <span class='property-type'>(boolean)</span>
- <dd>If selected, the list of lengths is shuffled randomly each time the sequence starts.</dd>
+ <li>control
+     <p>As well as sending tick events to the ticks output, control signals are sent for each sequenced property as they are changed</p>
+     <dl class="message-properties">
+         <dt>topic <span class="property-type">string</span></dt>
+         <dd>the name of the sequenced property</dd>
+         <dt>payload <span class="property-type">string</span></dt>
+         <dd>the value of the sequenced property</dd>
+     </dl>
+ </li>
+ </ol>
 
 
- </dt>
-
- </dl>
  
  <h3>Details</h3>
  
@@ -189,6 +173,39 @@
  <p>Changing the list of notes to <code>[1,4,5,null]</code> has a rest on the eighth beat instead of another note 4.</p>
 
  <p>Using the <code>start event</code> means that a new sequencer node can be deployed or reconfigured during a piece and will line up with a bar (by default) so that the timing of the deployment does not have to be exact, as long as it is some time in the bar before it needs to start.</p>
+
+ <h3>Configuration</h3>
+
+ <dl class='message-properties'>
+
+ <dt><span class='optional'>Name</span> <span class='property-type'>string</span></dt>
+ <dd>The label for the node.</dd>
+
+ <dt>input event <span class='property-type'>string</span></dt>
+ <dd>The <code>tick</code> event (included in <code>msg.start</code>) that is counted by the sequencer. By default this is <code>beat</code>, but could be e.g. <code>bar</code></dd>
+
+ <dt>start event <span class='property-type'>string</span></dt>
+ <dd>After a reset (or reaching the end of a non-looping sequence) the sequencer will wait until this event (included in <code>msg.start</code>) to start the sequence. By default this is <code>bar</code>, but could be e.g. <code>section</code></dd>
+ 
+ <dt>loop <span class='property-type'>boolean</span></dt>
+ <dd>If selected, the sequencer will loop straight back to the beginning again and continue. If not the sequencer will restart at the next <code>start event</code>.</dd>
+
+ <dt>list of notes <span class='property-type'>list,number</span>
+ <dd>A list of numbers representing the position in the scale of the note to be played. The list should be specified as a JSON array, with default <code>[1,4,5,4]</code> or a number can be used if a single note is to be repeated. If no note is to be played at some part of the sequence (i.e. a rest), the value <code>null</code> should be used.</dd>
+
+ <dt>choose notes randomly from list <span class='property-type'>boolean</span>
+ <dd>If selected, the list of notes is shuffled randomly each time the sequence starts.</dd>
+
+ <dt>list of lengths <span class='property-type'>list,number</span>
+ <dd>A list of numbers representing the number of ticks to be counted for a note. The list should be specified as a JSON array, with default <code>[3,1]</code> or a number can be used if all notes have the same length. The size of this list does not have to be the same as the size of the list of notes: the list will be repeated as many times as necessary.</dd>
+
+ <dt>choose lengths randomly from list <span class='property-type'>boolean</span>
+ <dd>If selected, the list of lengths is shuffled randomly each time the sequence starts.</dd>
+
+
+ </dt>
+
+ </dl>
 
 
 </script>
