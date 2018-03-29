@@ -24,6 +24,7 @@
   "dependencies": {
     "glob": "^7.1.2",
     "mathjs": "^3.12.2",
+    "node-red-contrib-osc": "^1.0.0",
     "osc": "^2.2.0",
     "path": "^0.12.7",
     "underscore": "^1.8.3"

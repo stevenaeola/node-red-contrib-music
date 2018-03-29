@@ -646,6 +646,14 @@ module.exports = function(RED) {
 	reset();
 	
         this.on('input', function(msg) {
+	    if(msg.topic && msg.topic.startsWith("fxcontrol:")){
+		var fxcontrol = msg.topic.substring(10);
+		var controlval = Number(msg.payload);
+		node.parameters[fxcontrol] = controlval;
+		setFXParam(fxcontrol, controlval);
+		return;
+	    }
+	    	    
 	    switch(msg.topic){
 	    case "volume":
 		var newVol = Number(msg.payload);
@@ -719,7 +727,8 @@ module.exports = function(RED) {
 	    // ... which is deliberate
 	    node.synth_id = 100000 - node.inBus/2;
 	    node.volume = 100;
-	    
+
+	    node.parameters = {};
 	    // wait a little while to allow wires to be created
 	    setTimeout(function(){
 		createFX();

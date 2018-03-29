@@ -70,7 +70,10 @@
 
  var fxtypes = {
      reverb: {inBus: 4},
-     delay: {inBus: 6}
+     delay: {inBus: 6},
+     LPF: {inBus: 8},
+     HPF: {inBus: 10},
+
  }
  
 
@@ -91,7 +94,9 @@
      },
      
      inputs:1,
+     inputLabels:"tick or synthcontrol",
      outputs:1,
+     outputLabels:["supercollider instructions"],
      icon: "file.png",
      label: function() {
 	 return this.name || this.synthtype || "synth";
@@ -264,21 +269,21 @@
     <p>A synth usually gets its input from a <code>sequencer</code> node or a <code>beat</code> node, possibly via <code>divider</code>, <code>link</code> and <code>switch</code> nodes.</p>
   <dl class='message-properties'>
 
-    <dt class="optional">topic <span class="property-type">(string)</span></dt>
+    <dt class="optional">topic <span class="property-type">string</span></dt>
     <dd><p>If <code>msg.topic</code> is <code>volume</code> then <code>msg.payload</code> is used to set the volume of the sounds produced, in the range 0 to 100.</p>
     <p>If <code>msg.topic</code> starts with <code>synthcontrol:</code> then the rest of the <code>msg.topic</code> is interpreted as a SuperCollider synth parameter name, and the <code>msg.payload</code> is used as its value. The parameters that can be changed vary from synth to synth, and not all synths have paremeters.</p></dd>
 
-    <dt class="optional">note <span class="property-type">(number|array)</span></dt>
+    <dt class="optional">note <span class="property-type">number|array</span></dt>
     <dd>If <code>msg.note</code> is defined then it is used to set the <code>midi</code> note value of the output. If <code>msg.note</code> is an array then all the notes in the array are played at the same time to form a chord.</dd>
 
-    <dt>payload <span class='property-type'>(string|number)</span></dt>
+    <dt>payload <span class='property-type'>string|number</span></dt>
     <dd>When <code>msg.topic</code> is empty<ul>
 	<li>If <code>msg.payload</code> is <code>play</code> or <code>tick</code> then instructions are output for playing a note.</li>
 	<li>If <code>msg.payload</code> is <code>reset</code> then the synth goes back to its starting state.</li>
 	<li>If <code>msg.payload</code> is <code>stop</code> then the synth is stopped. This only makes a difference is the synth has sustain</li>
     </ul></dd>
 
-    <dt><span class='optional'>timeTag</span> <span class='property-type'>(number)</span></dt>
+    <dt><span class='optional'>timeTag</span> <span class='property-type'>number</span></dt>
     <dd>If a <code>timeTag</code> property is given for the incoming <code>play</code> message it is included in the outgoing message.</dd>
 
 
@@ -294,22 +299,22 @@
 
   <dl class='message-properties'>
 
-    <dt><span class='optional'>name</span> <span class='property-type'>(string)</span></dt>
+    <dt><span class='optional'>name</span> <span class='property-type'>string</span></dt>
     <dd>The name of the synthesiser type to use. Some types of synthesiser have sustain, which means that the note continues playing until the synthiseser receives a <code>stop</code> or <code>reset</code> value in <code>msg.payload</code> or a <code>null</code> value for <code>msg.note</code></dd>
 
-    <dt>start volume <span class='property-type'>(number)</span></dt>
+    <dt>start volume <span class='property-type'>number</span></dt>
     <dd>A value in the range 0 to 100 to specify the volume that the synth uses after deployment or reset.</dd>
 
-    <dt>octave <span class='property-type'>(number)</span></dt>
+    <dt>octave <span class='property-type'>number</span></dt>
     <dd>A number, usually in the range -3 to +3, to shift the pitch relative to the root note, with negative numbers used to lower the pitch.</dd>
     
-    <dt>root note of scale <span class='property-type'>string)</span></dt>
+    <dt>root note of scale <span class='property-type'>string</span></dt>
     <dd>If defined, this gives the name and octave of the start of the scale, which corresponds to a <code>msg.note</code> of 1. If not defined, the global or default value is used.</dd>
 
-    <dt>scale type <span class='property-type'>(string)</span></dt>
+    <dt>scale type <span class='property-type'>string</span></dt>
     <dd>The midi pitch value that is output depends on the value of <code>msg.note</code> and the scale root and the scale type. If not defined, the global or default value is used.</dd>
 
-    <dt>output bus <span class='property-type'>(number)</span></dt>
+    <dt>output bus <span class='property-type'>number</span></dt>
     <dd>Can be used to select an effect bus to send the synthesiser output to instead of the default bus 0.</dd>
 
   </dl>
@@ -331,8 +336,10 @@
 	 fxtype: {value: "reverb", required: "true"},
 	 fxtypes: {value: fxtypes, required: "false"}
         },
-  inputs:1,
-  outputs:1,
+     inputs:1,
+     inputLabels:"supercollider instructions or fxcontrol",
+     outputs:1,
+     outputLabels:["supercollider instructions"],
   icon: "file.png",
   label: function() {
   return this.name || this.fxtype || "soundfx";
@@ -341,13 +348,15 @@
 </script>
 
 <script type="text/x-red" data-template-name="soundfx">
-    <div class="form-row">
-	<label for="node-input-fxtype">Effect Type</label>
-	<select id="node-input-fxtype">
-	    <option>reverb</option>
-	    <option>delay</option>
-	</select>
-    </div>
+ <div class="form-row">
+ <label for="node-input-fxtype">Effect Type</label>
+ <select id="node-input-fxtype">
+ <option>reverb</option>
+ <option>delay</option>
+ <option>LPF</option>
+ <option>HPF</option>
+ </select>
+ </div>
 </script>
 
 <script type="text/x-red" data-help-name="soundfx">
