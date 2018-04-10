@@ -5,7 +5,7 @@
      defaults: {
 	 name: {value:""},
 	 output: {value:"beat"},
-	 bpm: {value: 200},
+	 bpm: {value: ""},
 	 latency: {value: 0},
 	 subBeats: {value: []}
      },
@@ -90,7 +90,7 @@
   <dl class='message-properties'>
 
     <dt class="optional">topic <span class="property-type">(string)</span></dt>
-    <dd>If <code>msg.topic</code> is <code>bpm</code> then <code>msg.payload</code> is used to set the number of beats-per-minute for the ticks that are output</dd>
+    <dd>If <code>msg.topic</code> is <code>bpm</code> then <code>msg.payload</code> is used to set the number of beats-per-minute for the ticks that are output. </dd>
 
     <dt>payload <span class='property-type'>(string)</span></dt>
     <dd>If the input <code>msg.topic</code> is not <code>bpm</code> then <code>msg.payload</code> is used to control the beats with <code>start</code>, <code>stop</code> or <code>reset</code>. </dd>
@@ -137,7 +137,7 @@
   
   <h3>Details</h3>
   
-  <p>Initially the number of beats per minute is set by the <code>bpm</code> property, with a default of 200. This can be altered by sending a message to the beat generator with a <code>msg.topic</code> of <code>bpm</code> and the required beats-per-minute in <code>msg.payload</code></p>
+  <p>Initially the number of beats per minute is set by the <code>bpm</code> property, or if none is specified then the global beat setting is used. This can be altered by sending a message to the beat generator with a <code>msg.topic</code> of <code>bpm</code> and the required beats-per-minute in <code>msg.payload</code></p>
   <p>To start the beat generator, send it a message with a <code>msg.payload</code> of <code>start</code>.</p>
   <p>A message with a <code>msg.payload</code> of <code>stop</code> will stop (pause) the generator. If the generator is started again then the beat count will continue from where it left off.</p>
   <p>To start counting from 0 again, send a message with a payload of <code>reset</code>. Any reset messages will also be forwarded to the output of the node, as will any other input messages that do not have the topic <code>bpm</code>.</p>

@@ -15,7 +15,8 @@ module.exports = function(RED) {
         this.on('input', function(msg) {
 	    switch(msg.topic){
 	    case "bpm":
-		setBPM(msg.payload);
+		node.bpm = msg.payload;
+		setBPM();
 		break;
 
 	    default:
@@ -58,22 +59,28 @@ module.exports = function(RED) {
 	    
 	    setFractionalBeats(node.subBeats);
 	    
-	    setBPM(config.bpm);
+	    setBPM();
 	    
 	    node.started = false;
 	    node.beatNum = 0;
 	}
 
-	function setBPM(bpm){
-	    bpm = bpm || node.context().global['bpm'] || 200;
-	    bpm = Number(bpm);
+	function getBPM(){
+	    return node.bpm || config.bpm || node.context().global['bpm'] || 200;
+	}
+	
+	function setBPM(){
+	    if(getBPM() == node.current_bpm){
+		return;
+	    }
+	    var bpm = Number(getBPM());
 	    if(!isNaN(bpm)){
 		if(bpm>10 && bpm <1000){
 		    node.interval = 60000.0/bpm;
-		    
 		    node.fractionalIntervals = _.map(
 			node.fractionalBeats,
 		    	function(event){ return {names: event.names, pos: event.pos*node.interval}});
+		    node.current_bpm = bpm;
 		}
 		else{
 		    node.warn("BPM not in range 10-1000");
@@ -85,6 +92,7 @@ module.exports = function(RED) {
 	}
 
 	function setFractionalBeats(subBeats){
+	    node.subBeatCounts = new Object();
 	    if(subBeats.length > 0){
 
 		// find the LCM of the subBeat counts
@@ -106,10 +114,14 @@ module.exports = function(RED) {
 		// generate a list of lists of all the subBeats with their position in the list
 		var allEvents = [{name:node.output, pos:0}];
 
+		
 		for(var i = 0; i<subBeatList.length; i++){
 		    var subBeat = subBeatList[i];
+		    node.subBeatCounts[subBeat.name] = subBeat.count;
+		    
 		    for(var j=0; j<subBeat.count; j++){
-			allEvents.push({name:subBeat.name, pos:j*lcm/subBeat.count});
+			allEvents.push({name:subBeat.name,
+					pos:j*lcm/subBeat.count});
 		    }
 		}
 
@@ -148,6 +160,7 @@ module.exports = function(RED) {
 	}
 
 	function beat(){
+	    setBPM();
 	    node.beatCounter = node.beatCounter || new Object();
 	    node.subBeatNum = node.subBeatNum || 0;
 	    node.thisBeatStart = node.thisBeatStart || Date.now();
@@ -159,15 +172,18 @@ module.exports = function(RED) {
 		node.beatCounter[subName] = node.beatCounter[subName] || 0;
 		node.beatCounter[subName]++;
 	    }
-
+	    
 	    var msg = {payload: "tick",
-		       start: _.clone(subBeat.names)
+		       start: _.clone(subBeat.names),
+		       bpm: node.current_bpm
 		       };
-
 
 	    for(var j = 0; j<node.allSubBeatNames.length; j++){
 		var subName = node.allSubBeatNames[j];
 		msg[subName] = node.beatCounter[subName];
+		if(node.subBeatCounts[subName] >0){
+		    msg["beats_per_" + subName] = 1.0/node.subBeatCounts[subName];
+		}
 	    }
 
 	    if(node.latency){

@@ -24,6 +24,16 @@ module.exports = function(RED) {
 		msg.start = start;
 
 		var counter = node.input + "_of_" + node.output;
+		var beats_per_name = "beats_per_" + node.output;
+		var beats_per_val;
+		if(node.input == "beat"){
+		    beats_per_val = node.ratio;
+		}
+		else{
+		    beats_per_val = node.ratio * msg["beats_per_" + node.input];
+		}
+		msg[beats_per_name] = beats_per_val;
+		
 		msg[counter] = node.inputCount;
 
 		msg[node.output] = node.outputCount;

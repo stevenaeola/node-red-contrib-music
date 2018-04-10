@@ -79,7 +79,11 @@ module.exports = function(RED) {
 		case "single":
 		    if(controlSet){
 			var playmsg = JSON.parse(JSON.stringify(msg));
-			playmsg.beats = node.rhythmCount;
+			var beatRatio = 1;
+			if(node.input != "beat"){
+			    beatRatio = msg["beats_per_" + node.input];
+			}
+			playmsg.beats = node.rhythmCount * beatRatio;
 			for(var i = 0; i<node.controls.length; i++){
 			    var control = node.controls[i];
 			    if(control.value !== undefined){

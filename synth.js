@@ -265,6 +265,11 @@ module.exports = function(RED) {
 	    if(msg.beats){
 		payload.push("beats");
 		payload.push(msg.beats);
+		var bpm = msg.bpm || node.context().global['bpm'];
+		if(bpm){
+		    payload.push("bpm");
+		    payload.push(bpm);
+		}
 	    }
 	    
 	    if(msg.timeTag ){
@@ -466,6 +471,12 @@ module.exports = function(RED) {
 		degree = global.get("degree") || configurables.degree["default"];
 	    }
 
+	    /*
+	    node.warn("degree " + degree);
+	    node.warn("scale " + scale);
+	    node.warn("root " + root);
+	    */
+	    
 	    // turn the degree into an offset
 	    
 	    var roman = {
@@ -543,6 +554,12 @@ module.exports = function(RED) {
 		chromatic: [0,1,2,3,4,5,6,7,8,9,10,11,12]
 	    }
 
+	    if(!intervals[scale]){
+		node.warn("Unrecognised scale: " + scale);
+		scale = configurables.scale["default"];
+		node.warn("Using: " + scale);
+		scale
+	    }
 	    var offsets = intervals[scale];
 	    var midi = midiroot;
 

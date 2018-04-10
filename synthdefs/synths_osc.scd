@@ -293,8 +293,9 @@ SynthDef("moog", {
 
 (
 SynthDef("sinebass", {
-	| out = 0, pan = 0, midi=60, amp = 0.5, bpm=100, beats = 1 |
+	| out = 0, pan = 0, midi=60, amp = 0.5, bpm=200, beats = 1 |
 	var env, osc, panned;
+	var playTime = beats*60/bpm;
 
 	env = EnvGen.ar(
 		envelope: Env.linen(0.001, playTime, 0.2),
@@ -501,7 +502,7 @@ x = Synth(\bubblebub);
 x.set("t_trig", 1);
 
 
-d = Synth("Drop");
+d = Synth("drop");
 
 
 d.set("t_trig",1);
