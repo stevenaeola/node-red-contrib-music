@@ -177,7 +177,7 @@ SynthDef("prophetdrone", {
 
 (
 SynthDef("prophet", {
-	| out = 0, pan = 0.0, midi=60, amp = 0.5, beats = 1, bpm = 200, att = 0.01,  dec = 0.5, lforate = 10, lfowidth = 0.5, cutoff = 12000, rq = 0.5 |
+	| out = 0, pan = 0.0, midi=60, amp = 0.5, beats = 1, bpm = 100, att = 0.01,  dec = 0.5, lforate = 10, lfowidth = 0.5, cutoff = 12000, rq = 0.5 |
 
 	var lfo, pulse, filter, env;
 	var freq = midicps(midi.clip(0,128));
@@ -245,7 +245,7 @@ SynthDef("moogdrone", {
 
 (
 SynthDef("moog", {
-	| out = 0, pan = 0, midi=60, amp = 0.5, bpm=200, beats = 1, cutoff = 1000, gain = 2.0, latt = 0.001, dec = 0.3, sus = 0.9, rel = 0.2, chorus = 0.7 |
+	| out = 0, pan = 0, midi=60, amp = 0.5, bpm=100, beats = 1, cutoff = 1000, gain = 2.0, latt = 0.001, dec = 0.3, sus = 0.9, rel = 0.2, chorus = 0.7 |
 	var freq= midicps(midi.clip(0,128));
 	var osc, filter, env, filterenv, snd, chorusfx, playTime;
 
@@ -293,7 +293,7 @@ SynthDef("moog", {
 
 (
 SynthDef("sinebass", {
-	| out = 0, pan = 0, midi=60, amp = 0.5, bpm=200, beats = 1 |
+	| out = 0, pan = 0, midi=60, amp = 0.5, bpm = 100, beats = 1 |
 	var env, osc, panned;
 	var playTime = beats*60/bpm;
 
@@ -350,7 +350,7 @@ SynthDef("ghostdrone",
 
 (
 SynthDef("ghost",
-	{|amp = 0.5, out=0, midi=40, bpm = 200, beats = 1, resonance=70, lag = 1.0|
+	{|amp = 0.5, out=0, midi=40, bpm = 100, beats = 1, resonance=70, lag = 1.0|
 
 		var noise=WhiteNoise.ar(mul:amp);
 		var freq = midicps(midi.clip(0,128));
@@ -431,8 +431,10 @@ r = Synth("reverb", ["outBus", 0, inBus,3],0, "addToTail")
 )
 
 (
-SynthDef("delay", {| out = 0, inBus, time = 0.5|
-	var input, delayed;
+SynthDef("delay", {| out = 0, inBus, bpm = 100, beats = 1|
+	var input, delayed, time;
+	time = beats*60/bpm;
+
 	input = In.ar(inBus, 2);
 
 	delayed = CombN.ar(input, time, time, time*10);

@@ -267,8 +267,7 @@ module.exports = function(RED) {
 		payload.push(msg.beats);
 		var bpm = msg.bpm || node.context().global['bpm'];
 		if(bpm){
-		    payload.push("bpm");
-		    payload.push(bpm);
+		    payload.push("bpm", bpm);
 		}
 	    }
 	    
@@ -686,10 +685,15 @@ module.exports = function(RED) {
 		// receiving a play message from a synth
 	    case "/s_new":
 		msg.payload.push("out", node.inBus);
+		var bpm = msg.bpm || node.context().global['bpm'];
+		if(bpm){
+		    setFXParam("bpm", bpm);
+		}
 		node.send(msg);
 		break;
 		
 	    default:
+
 		if(msg.payload.timeTag){
 		    msg.payload.packets[0].args.push("out", node.inBus);
 		    node.send(msg);
