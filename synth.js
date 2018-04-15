@@ -412,10 +412,14 @@ module.exports = function(RED) {
 	
 	
 	function isSynth(){
-
+	    node.warn("Checking isSynth for " + node.synthtype);
+	    console.log(node.synthtypes);
+	    console.log(node.synthtypes[node.synthtype]);
 	    if (node.synthtypes[node.synthtype] && node.synthtypes[node.synthtype].synth){
+		node.warn("Yess!!");
 		return true;
 	    }
+	    node.warn("Noo!!");
 	}
 	
 	function isTuned(){

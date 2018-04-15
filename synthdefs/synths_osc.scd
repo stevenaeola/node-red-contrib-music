@@ -365,6 +365,35 @@ SynthDef("ghost",
 }).store
 )
 
+
+(
+SynthDef("fmtanh",
+	{|out = 0, amp = 0.5, midi = 60, bpm = 100, beats = 8, dist = 10|
+		var freq = midicps(midi.clip(0,128));
+		var detune = 0.01;
+		var baseFreq = Array.fill(4,{|i| freq*LFNoise2.ar(5,mul:detune, add:1)});
+		var playTime = beats*60/bpm;
+
+		var env = EnvGen.ar(
+		envelope: Env.linen(playTime*0.33, playTime*0.67, playTime*0.33),
+		doneAction: 2);
+		var modindex = env*LFNoise2.ar(1,mul:0.1,add:1);
+		var modfreq = freq*0.5*LFNoise2.ar(1,mul:0.01,add:1);
+		var fm = modindex*modfreq*SinOsc.ar(modfreq);
+
+		var srcFM = (SinOsc.ar(baseFreq+ fm, 0, dist).tanh * amp*env).tanh.tanh;
+		Out.ar(out, srcFM);
+}).store
+)
+
+
+
+
+(
+b = Buffer.alloc(s, 512, 1, {arg buf; buf.sine1Msg(1.0/[1,2,3,4,5,6,7,8,9,10])});
+{ COsc.ar(b.bufnum, 200, 0.7, 0.25) }.play;
+)
+
 (
 SynthDef("recordSample", {
 	| buffer, recLevel=1, preLevel=1 |
@@ -405,30 +434,8 @@ SynthDef("reverb", { |outBus = 0, inBus|
 	}).store;
 )
 
-(
-{
-	SinOsc.ar([225, 450, 900], 0, 0.2)
-	+ LPF.ar(
-		LFPulse.ar(226 * [1, 2, 5],[0,0.1,0.1],0.2, 0.2),
-		MouseX.kr(20, 10000, 1)
-		)
-}.scope;
-)
-
-r = Synth("reverb", ["outBus", 0, inBus,3],0, "addToTail")
-
-(
-{
-	Out.ar(0,3*FreeVerb.ar(In.ar(2,1),room:0.5))
-}.play
-)
 
 
-(
-{
-	p = Out.ar(0,2*In.ar(3,1))
-}.play
-)
 
 (
 SynthDef("delay", {| out = 0, inBus, bpm = 100, beats = 1|
