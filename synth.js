@@ -74,18 +74,35 @@ module.exports = function(RED) {
     }
 
     function loadBuffer(node){
-	var dir = __dirname + "/Dirt-Samples/" + node.synthtype;
-	var match = dir + "/*.wav";
+	var match1 = __dirname + "/Dirt-Samples/" + node.synthtype + "/*.wav";
+	var match2 = __dirname + "/SonicPi-Samples/" + node.synthtype + ".flac";
 	var fname;
-	glob(match, {nocase: true}, function (er, files) {
+	glob(match1, {nocase: true}, function (er, files) {
 	    fname = files[0];
-	    // create and load the buffer from file
-	    var createMsg = {
-		topic: "/b_allocRead",
-		payload: [node.bufnum, fname ]
+	    if(fname){
+		// create and load the buffer from file
+		var createMsg = {
+		    topic: "/b_allocRead",
+		    payload: [node.bufnum, fname ]
+		}
+		node.send(createMsg);
 	    }
-	    node.send(createMsg);
 	});
+
+	glob(match2, {nocase: true}, function (er, files) {
+	    fname = files[0];
+	    if(fname){
+		// create and load the buffer from file
+		var createMsg = {
+		    topic: "/b_allocRead",
+		    payload: [node.bufnum, fname ]
+		}
+		node.send(createMsg);
+	    }
+	});
+
+
+
     }
     
     function freeBuffer(node){
@@ -412,14 +429,9 @@ module.exports = function(RED) {
 	
 	
 	function isSynth(){
-	    node.warn("Checking isSynth for " + node.synthtype);
-	    console.log(node.synthtypes);
-	    console.log(node.synthtypes[node.synthtype]);
 	    if (node.synthtypes[node.synthtype] && node.synthtypes[node.synthtype].synth){
-		node.warn("Yess!!");
 		return true;
 	    }
-	    node.warn("Noo!!");
 	}
 	
 	function isTuned(){
@@ -474,11 +486,11 @@ module.exports = function(RED) {
 		degree = global.get("degree") || configurables.degree["default"];
 	    }
 
-	    /*
+/*
 	    node.warn("degree " + degree);
 	    node.warn("scale " + scale);
 	    node.warn("root " + root);
-	    */
+*/
 	    
 	    // turn the degree into an offset
 	    
