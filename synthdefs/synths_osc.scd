@@ -375,7 +375,7 @@ SynthDef("fmtanh",
 		var playTime = beats*60/bpm;
 
 		var env = EnvGen.ar(
-		envelope: Env.linen(playTime*0.33, playTime*0.67, playTime*0.33),
+		envelope: Env.linen(playTime*0.33, playTime*0.33, playTime*0.33),
 		doneAction: 2);
 		var modindex = env*LFNoise2.ar(1,mul:0.1,add:1);
 		var modfreq = freq*0.5*LFNoise2.ar(1,mul:0.01,add:1);
