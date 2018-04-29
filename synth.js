@@ -74,35 +74,27 @@ module.exports = function(RED) {
     }
 
     function loadBuffer(node){
-	var match1 = __dirname + "/Dirt-Samples/" + node.synthtype + "/*.wav";
-	var match2 = __dirname + "/SonicPi-Samples/" + node.synthtype + ".flac";
-	var fname;
-	glob(match1, {nocase: true}, function (er, files) {
-	    fname = files[0];
-	    if(fname){
-		// create and load the buffer from file
-		var createMsg = {
-		    topic: "/b_allocRead",
-		    payload: [node.bufnum, fname ]
+	var sampdir = __dirname + "/samples/";
+	var matches = Array();
+	matches.push( sampdir + "Dirt/" + node.synthtype + "/*.wav" );
+	matches.push( sampdir + "SonicPi/" + node.synthtype + ".flac" );
+	matches.push( sampdir + "Freesound/" + node.synthtype + ".wav" );
+
+	for(let match of matches){
+	    glob(match, {nocase: true}, function (er, files) {
+		var fname;
+		fname = files[0];
+		if(fname){
+		    // create and load the buffer from file
+		    var createMsg = {
+			topic: "/b_allocRead",
+			payload: [node.bufnum, fname ]
+		    }
+		    node.send(createMsg);
 		}
-		node.send(createMsg);
-	    }
-	});
+	    });
 
-	glob(match2, {nocase: true}, function (er, files) {
-	    fname = files[0];
-	    if(fname){
-		// create and load the buffer from file
-		var createMsg = {
-		    topic: "/b_allocRead",
-		    payload: [node.bufnum, fname ]
-		}
-		node.send(createMsg);
-	    }
-	});
-
-
-
+	}
     }
     
     function freeBuffer(node){
