@@ -119,7 +119,29 @@ module.exports = function(RED) {
 		break;
 		
 	    default:
-		node.send([msg, null]);
+		// see if the topic is one of the sequenced values
+		var foundTopic = false;
+		for(var i = 0; i<node.controls.length; i++){
+		    var control = node.controls[i];
+		    if(control.name == msg.topic){
+			try{
+			    if(Array.isArray(msg.payload)){
+				control.values = msg.payload;
+			    }
+			    else{
+				control.values = JSON.parse(msg.payload);
+			    }
+			    foundTopic = true;
+			}
+			catch(e){
+			    // do nothing
+			}
+		    }
+		}
+
+		if(!foundTopic){
+		    node.send([msg, null]);
+		}
 		break;
 	    }
         });
