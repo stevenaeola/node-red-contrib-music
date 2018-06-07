@@ -1,0 +1,54 @@
+<script type="text/javascript">
+ RED.nodes.registerType('berkeley-slave',{
+     category: 'synchronisation',
+     color: '#a6bbcf',
+     defaults: {
+	 name: {value:""},
+	 port: {value: 41235},
+	 masterIPAddress: {value: ""},
+	 masterPort: {value: ""}
+     },
+     inputs:1,
+     outputs:0,
+     icon: "file.png",
+     label: function() {
+		return this.name||"berkeley-slave";
+     },
+
+     oneditprepare: function(){
+		 var node = this;
+     },
+
+     oneditsave: function(){
+		 var node = this;
+     }
+ });
+</script>
+
+<script type="text/x-red" data-template-name="berkeley-slave">
+  <div class="form-row">
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-latency"><i class="icon-tag"></i> Port</label>
+    <input type="number" id="node-input-port" placeholder="41235">
+  </div>
+  <div class="form-row">
+    <label for="node-input-latency"><i class="icon-tag"></i> Master IP Address</label>
+    <input type="string" id="node-input-masterIPAddress" placeholder="127.0.0.1">
+  </div>
+  <div class="form-row">
+    <label for="node-input-latency"><i class="icon-tag"></i> Master Port</label>
+    <input type="number" id="node-input-masterPort" placeholder="41236">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="berkeley-slave">
+	<p>This node sets the global context "clock" variable. </p>
+	<p>The node uses UDP to communicate with a berkeley-master node and you can set the port that this UDP server will run on.</p>
+	<p>You can set the IP address associated with a berkeley-master node.</p>
+	<p>You can set the port of the IP address associated with a berkeley-master node</p>
+	<p>Inject a "start" message to start the synchronisation with all associated berkeley-slave nodes.</p>
+	<p>Inject a "stop" message to stop the synchronisation.</p>
+</script>
