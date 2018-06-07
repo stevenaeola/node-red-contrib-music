@@ -129,6 +129,10 @@ module.exports = function(RED) {
 	
         RED.nodes.createNode(this,config);
         var node = this;
+	
+	for(var conf in configurables){
+	    configure(conf, config[conf]);
+	}
 
 	reset();
 	
@@ -152,6 +156,9 @@ module.exports = function(RED) {
 		    break;
 		    
 		case "reset":
+		    for(var conf in configurables){
+			configure(conf, config[conf]);
+		    }
 		    reset();
 		    // just this once the reset message is not propagated
 		    break;
@@ -166,7 +173,6 @@ module.exports = function(RED) {
 
 		default:
 		    configureMsg(msg);
-		    // do nothing
 		}
 		
 	    }
@@ -374,11 +380,7 @@ module.exports = function(RED) {
 	    freeSynths(node);
 	    node.synthtypes = config.synthtypes;
 	    node.tuned = config.tuned;
-	    
-	    for(var conf in configurables){
-		configure(conf, config[conf]);
-	    }
-	    
+	    	    
 	    if(isSynth()){
 		resetSynth();
 	    }
@@ -651,6 +653,11 @@ module.exports = function(RED) {
 		    configure("root", bits.shift());
 		    configure("scale", bits.shift());
 		}
+		break;
+
+	    case "synthtype":
+		node[config] = val;
+		reset();
 		break;
 		
 	    default:
