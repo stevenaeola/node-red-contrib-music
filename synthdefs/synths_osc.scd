@@ -485,11 +485,11 @@ SynthDef("drop", {| out = 0,  inBus, t_trig = 0|
 	env = EnvGen.kr(Env.perc(0.1, 0.5, 2000, -1), t_trig, 2, 10);
 	kickenv = EnvGen.kr(Env.perc(0.01, 0.1, 1, -1), t_trig);
 
-	filtered = Mix.new([
-		HPF.ar(input, env),
-		LPF.ar(kick*kickenv*100,50).dup;
-
-	]);
+	filtered = HPF.ar(input, env);
+//	Mix.new([
+//		HPF.ar(input, env),
+//		LPF.ar(kick*kickenv*100,50).dup;
+//	]);
 	Out.ar(out, filtered);
 }).store;
 )
