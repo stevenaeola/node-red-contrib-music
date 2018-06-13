@@ -6,7 +6,7 @@ been placed in the public domain via the Creative Commons 0 License:
 http://creativecommons.org/publicdomain/zero/1.0/
 
 Many of the samples have been slightly modified and trimmed for use with
-Sonic Pi. The curating and naming of the samples was done by Sam Aaron as part of the [Sonic Pi project](https://sonic-pi.net/)
+Sonic Pi. The curating and naming of the samples was done by Sam Aaron <https://twitter.com/samaaron> as part of the [Sonic Pi project](https://sonic-pi.net/)
 
 Links to original samples:
 
