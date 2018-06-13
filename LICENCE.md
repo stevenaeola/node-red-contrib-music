@@ -1,0 +1,26 @@
+# Licence
+
+## Main Source 
+
+(contents of all directories apart from `samples` and `examples`)
+
+The ISC License
+
+Copyright 2017 Steven Bradley <s.p.bradley@durham.ac.uk>
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+## Samples
+
+(contents of `samples`)
+
+The subdirectories contain their own README.md files which describe the source and license, typically [CC0 1.0 Universal Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/)
+
+## Examples
+
+(contents of `examples`)
+
+All the examples are copyright by Steven Bradley (2018)  and the content is released under the [CC BY-SA 4.0 license](http://creativecommons.org/licenses/by-sa/4.0/)
+
