@@ -107,8 +107,8 @@ module.exports = function(RED) {
 	}
     }
 
-    function sendSampleSynthDef(node){
-	var synthdefFile = __dirname +"/synthdefs/playSampleMono.scsyndef";
+    function sendSynthDef(node, synthdefName){
+	var synthdefFile = __dirname +"/synthdefs/" + synthdefName + ".scsyndef";
 	fs.readFile(synthdefFile, function (err,data){
 	    if(err){
 		node.warn(err);
@@ -335,19 +335,7 @@ module.exports = function(RED) {
 	
 	function createSynth(){
 	    freeSynths(node);
-	    var synthdefFile = __dirname +"/synthdefs/" + node.synthtype + ".scsyndef";
-	    fs.readFile(synthdefFile, function (err,data){
-		if(err){
-		    node.warn(err);
-		}
-		else{
-		    var synthMsg={
-			topic: "/d_recv",
-			payload: [data, 0]
-		    }
-		    node.send(synthMsg);
-		}
-	    });
+	    sendSynthDef(node, node.synthtype);
 
 
 	    // leave some time for the synthdef to be sent
@@ -416,9 +404,8 @@ module.exports = function(RED) {
 	    setTimeout(function(){
 		freeBuffer(node);
 		createBuffer(node);
-		sendSampleSynthDef(node);
+		sendSynthDef(node, "playSampleMono");
 	    }, 200);
-
 	}
 	
 	
@@ -741,16 +728,21 @@ module.exports = function(RED) {
 	}
 
 	function createFX(){
-	    freeSynth(node, node.synth_id);
-	    
-	    // add it to the tail of the root group
-	    var createMsg = {
-		topic: "/s_new",
-		payload: [node.fxtype, node.synth_id, 1, 0, "inBus", node.inBus]
-	    }
-	    node.send(createMsg);
-	    
-	    setFXParam("amp", volume2amp(node.volume));
+	    sendSynthDef(node, node.fxtype);
+	    // leave some time for the synthdef to be sent
+
+	    setTimeout(function(){
+		freeSynth(node, node.synth_id);
+		
+		// add it to the tail of the root group
+		var createMsg = {
+		    topic: "/s_new",
+		    payload: [node.fxtype, node.synth_id, 1, 0, "inBus", node.inBus]
+		}
+		node.send(createMsg);
+		
+		setFXParam("amp", volume2amp(node.volume));
+	    }, 200);
 	}
 
 	function reset(){

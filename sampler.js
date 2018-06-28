@@ -57,6 +57,22 @@ module.exports = function(RED) {
 
     }
 
+    function sendSynthDef(node, synthdefName){
+	var synthdefFile = __dirname +"/synthdefs/" + synthdefName + ".scsyndef";
+	fs.readFile(synthdefFile, function (err,data){
+	    if(err){
+		node.warn(err);
+	    }
+	    else{
+		var synthMsg={
+		    topic: "/d_recv",
+		    payload: [data, 0]
+		}
+		node.send(synthMsg);
+	    }
+	});
+    }
+
     function sendSynthDef(node){
 	var synthdefFile = __dirname +"/synthdefs/playSampleMono.scsyndef";
 	fs.readFile(synthdefFile, function (err,data){
@@ -179,7 +195,8 @@ module.exports = function(RED) {
 	    setTimeout(function(){
 		freeBuffer(node);
 		createBuffer(node);
-		sendSynthDef(node);
+		sendSynthDef(node, "playSampleMono");
+		sendSynthDef(node, "recordSample");
 	    }, 200);
 	}
 	
