@@ -4,77 +4,9 @@ module.exports = function(RED) {
     var glob = require("glob");
     var fs = require("fs");
     
-    function SampleNode(config) {
-        RED.nodes.createNode(this,config);
-        var node = this;
-
-	reset();
-	
-        this.on('input', function(msg) {
-	    switch(msg.topic){
-
-	    case "sound":
-		node.sound = msg.payload;
-		loadBuffer(node);
-		break;
-		
-	    case "offset":
-		node.soundoffset = Number(msg.payload);
-		loadBuffer(node);
-		break;
-		
-	    default:
-		switch(msg.payload){
-		case "tick":
-		    createSynth(node, msg, "play");
-		    break;
-		    
-		case "reset":
-		    reset();
-		    // do not send on message
-		    break;
-
-		default:
-		// do nothing
-		break;
-
-		}
-	    }
-        });
-
-	function reset(){
-
-	    node.sound = config.sound || "";
-	    node.soundoffset = Number(config.soundoffset) || 0;
-
-	    setTimeout(function(){
-		freeBuffer(node);
-		createBuffer(node);
-		sendSynthDef(node);
-	    }, 200);
-
-	}
-
-    }
 
     function sendSynthDef(node, synthdefName){
 	var synthdefFile = __dirname +"/synthdefs/" + synthdefName + ".scsyndef";
-	fs.readFile(synthdefFile, function (err,data){
-	    if(err){
-		node.warn(err);
-	    }
-	    else{
-		var synthMsg={
-		    topic: "/d_recv",
-		    payload: [data, 0]
-		}
-		node.send(synthMsg);
-	    }
-	});
-    }
-
-    function sendSynthDef(node){
-	var synthdefFile = __dirname +"/synthdefs/playSampleMono.scsyndef";
 	fs.readFile(synthdefFile, function (err,data){
 	    if(err){
 		node.warn(err);
@@ -372,7 +304,6 @@ module.exports = function(RED) {
 	freeSynth(node, node[action + "_synth_id"]);
     }
 	
-    RED.nodes.registerType("sample", SampleNode);
     RED.nodes.registerType("looper", LooperNode);
 }
 
