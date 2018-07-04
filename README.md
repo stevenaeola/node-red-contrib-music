@@ -26,7 +26,12 @@ For video demonstration(s) see <https://www.youtube.com/playlist?list=PL5Tj84YnQ
 * Although node-red is bundled with Raspbian, it's not a very recent version, so you probably want to follow the instructions at <https://nodered.org/docs/hardware/raspberrypi>
 * If you are working on a Raspberry Pi then scsynth (the part of SuperCollider that we need) is already installed with [Sonic Pi](https://sonic-pi.net/) and so is bundled with Raspbian. You will probably want to use a separate sound card with a RPi, a cheap USB one is fine, or you can use an expensive HiFi one if you wish.
 
-* To start scsynth (part of SuperCollider) you need to run a shell script via the command line. Step-by-step instructions are at <https://stevenaeola.github.io/node-red-contrib-music/getting-started>. These instructions were written for use with school groups - you don't need a network cable or a speaker if you want to work by yourself with headphones.
+* To start scsynth (part of SuperCollider) you need to run a shell script via the command line. Step-by-step instructions are at <https://stevenaeola.github.io/node-red-contrib-music/getting-started>. The shell script is included in the home directory of the `node-red-contrib-music` (versions for USB and non-USB audio). You may wish to make a symbolic link to run it from yor home directory
+
+```
+ln -s ~/.node-red/node_modules/node-red-contrib-music/start-rpi-usb.sh ~/startsc.sh 
+```
+
 * You can use an [IQAudio sound card](http://www.iqaudio.com/downloads/IQaudIO.pdf) but you will need to edit your `/boot/config.txt` to comment out `#dtparam=audio=on` and add
 
 ```
