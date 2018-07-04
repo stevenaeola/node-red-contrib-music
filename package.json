@@ -13,7 +13,7 @@
 						"nodes": {
 									"beat": "beat.js",
 									"divider": "divider.js",
-									"sampler": "sampler.js",
+									"looper": "looper.js",
 									"sequencer": "sequencer.js",
 									"setting": "setting.js",
 									"synth": "synth.js"
