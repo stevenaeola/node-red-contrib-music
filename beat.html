@@ -7,6 +7,7 @@
 	 output: {value:"beat"},
 	 bpm: {value: ""},
 	 latency: {value: 0},
+	 sharing: {value: "standalone"},
 	 subBeats: {value: []}
      },
      inputs:1,
@@ -68,6 +69,16 @@
   <div class="form-row">
     <label for="node-input-latency"> Latency</label>
     <input type="number" id="node-input-latency" placeholder="in milliseconds">
+  </div>
+
+  <div class="form-row">
+    <label for="node-input-sharing"> Sharing</label>
+    <select id ="node-input-sharing">
+      <option>standalone</option>
+      <option>conductor</option>
+      <option>follower</option>
+    </select>
+
   </div>
 
   <div class="form-row">

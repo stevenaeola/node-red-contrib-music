@@ -1,9 +1,13 @@
 module.exports = function(RED) {
     "use strict";
 
-    var mathjs = require("mathjs");
-    var _ = require("underscore");
-
+    const mathjs = require("mathjs");
+    const _ = require("underscore");
+    const WebSocket = require("ws");
+    const wsIP = "127.0.0.1";
+    const wsPort = 2880; // seems to be unused and is reminiscent of node-red port 1880
+    const wsPath = "beat";
+    
     function BeatNode(config) {
 	
         RED.nodes.createNode(this,config);
@@ -49,6 +53,13 @@ module.exports = function(RED) {
 
 	this.on('close', function(){
 	    clearTimeout(node.tick);
+	    if(node.wss){
+		node.wss.close();
+	    }
+	    if(node.ws){
+		node.ws.close();
+	    }
+
 	});
 		
 	function reset(){
@@ -56,7 +67,30 @@ module.exports = function(RED) {
 	    node.output = config.output;
 	    node.subBeats = config.subBeats || [];
 	    node.latency = Number(config.latency) || 0;
-	    
+	    node.sharing = config.sharing || "standalone";
+
+	    // get rid of old sockets if already there
+
+	    if(node.wss){
+		node.wss.close();
+	    }
+	    if(node.ws){
+		node.ws.close();
+	    }
+
+	    switch(node.sharing){
+
+	    case "conductor":
+		resetConductor();
+		break;
+		
+	    case "follower":
+		resetFollower();
+		break;
+
+	    default:
+		// do nothing
+	    }
 	    setFractionalBeats(node.subBeats);
 	    
 	    setBPM();
@@ -159,14 +193,142 @@ module.exports = function(RED) {
 	    node.thisBeatStart = null;
 	}
 
+	function resetConductor(){
+	    // set up web socket server
+	    // get rid of old one if already there
+
+	    console.log("reset conductor");
+	    node.wss = new WebSocket.Server({
+		port: wsPort,
+		perMessageDeflate: false,
+		clientTracking: true
+	    });
+
+	    node.followers = {}; // client IP addressess are keys. Values are ojbects holding the socket connections, and details of the clock offsets
+	    // offsets holds (up to) the last 9 estimated clock offsets
+	    // offset is the best estimate
+
+	    // when a follower registers
+	    // * send an 'empty' beat (beatCount=-1) to elicit initial response for estimating clock offset
+
+	    node.wss.on('connection', function connection(ws, req){
+		var remoteIP = req.connection.remoteAddress;
+		if(!node.followers[remoteIP]){
+		    node.followers[remoteIP] = {ws: [], offsets: []};
+		}
+		node.followers[remoteIP].ws.push(ws);
+
+		console.log("Received saocket connection from " + remoteIP);
+		ws.on('message', function incoming(msg){
+		    updateOffsets(remoteIP, msg);
+		});
+
+		var bmsg = {conductorSent: Date.now(),
+			    beatCount: -1};
+		ws.send(JSON.stringify(bmsg));
+	    });
+	    
+	    
+	    // when a beat happens,
+	    // * send it to all followers
+	    // * wait for response for updating offset estimate
+	    // can have more than one follower per machine?
+	    
+	    // for offsets keep 9 most recent, ignore the fastest and slowest 2, average other five
+	}
+	
+	function updateOffsets(remoteIP, msg){
+	    console.log("updating offsets with " + msg);
+	    var creceived = Date.now();
+	    var jmsg = JSON.parse(msg);
+	    console.log(jmsg);
+	    console.log(typeof jmsg);
+	    var csent = jmsg['conductorSent'];
+	    console.log("conductorSent " + csent + "conductorRecevied " + creceived);
+	    var rtt = creceived - csent;
+	    var fsent = jmsg.followerSent;
+	    var offset = fsent - csent - rtt/2;
+	    console.log("fsent " + fsent + " rtt " + rtt);
+	    var follow = node.followers[remoteIP];
+	    follow.offsets.push(offset);
+	    if(follow.offsets.length > 9){
+		follow.offsets.shift();
+	    }
+	    console.log("Offsets for " + remoteIP);
+	    console.log(follow.offsets);
+
+	    var sortedOffsets = follow.offsets.slice().sort();
+	    // remove the two largest
+	    while(sortedOffsets.length >7 ){
+		sortedOffsets.pop();
+	    }
+	    // and the two smallest
+	    while(sortedOffsets.length >5 ){
+		sortedOffsets.shift();
+	    }
+	    // then take the median
+	    var medIndex = Math.floor(sortedOffsets.length /2);
+	    var medOffset = sortedOffsets[medIndex];
+	    console.log("Estimated offset for " + remoteIP + ": " + medOffset);
+	    follow.offset = medOffset;
+	}
+	
+	function resetFollower(){
+	    
+	    // set up web socket connection
+	    
+	    node.ws = new WebSocket("ws://" + wsIP +":" + wsPort + "/" + wsPath);
+	    node.ws.on('open', function (){
+		console.log("Opened client side web socket");
+	    });
+	    
+	    node.ws.on('message', function incoming(msg){
+		console.log("client received " + msg);
+		var rcvd = Date.now();
+		var jmsg = JSON.parse(msg);
+		jmsg.followerSent = rcvd;
+		var tmsg = JSON.stringify(jmsg);
+		node.ws.send(tmsg);
+		console.log("client sent " + tmsg);
+	    });
+
+	    // register with server
+	    // * wait for response with time
+	    // * send another response for updating latency/offset estimate
+
+
+	    // wait for beat if it doesn't arrive, do it anyway and wait for the next one
+	    // add sub-beats locally
+	}
+	    
 	function beat(){
 	    setBPM();
 	    node.beatCounter = node.beatCounter || new Object();
 	    node.subBeatNum = node.subBeatNum || 0;
 	    node.thisBeatStart = node.thisBeatStart || Date.now();
+
 	    
 	    var subBeat = node.fractionalIntervals[node.subBeatNum];
 
+	    if(node.sharing == "conductor" && node.subBeatNum == 0){
+		for(var ip in node.followers){
+		    var connections = node.followers[ip].ws;
+		    var offset = node.followers[ip].offset;
+		    var followerBeatTime = node.thisBeatStart + offset + node.latency;
+
+		    for(var i = 0; i<connections.length; i++){
+			var bmsg = {conductorSent: Date.now(),
+				    followerBeatTime: followerBeatTime,
+				    bpm: getBPM()};
+			// this will normally be something like beat: 45
+			bmsg.beat = node.beatCounter['beat'];
+			
+			connections[i].send(JSON.stringify(bmsg));
+		    }
+		}
+	    }
+
+	    
 	    for(var i = 0; i<subBeat.names.length; i++){
 		var subName = subBeat.names[i];
 		node.beatCounter[subName] = node.beatCounter[subName] || 0;
