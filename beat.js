@@ -31,6 +31,7 @@ module.exports = function(RED) {
 			beat();
 			node.started = true;
 		    }
+		    node.warn('started ' + node.sharing);
 		    node.send(msg);
 		    break;
 
@@ -96,7 +97,7 @@ module.exports = function(RED) {
 		break;
 		
 	    case "follower":
-		resetFollower();
+		setTimeout(resetFollower, 100);
 		break;
 
 	    default:
@@ -111,6 +112,8 @@ module.exports = function(RED) {
 	function stopBeat(){
 	    clearTimeout(node.tick);
 	    node.thisBeatStart = null;
+	    node.nextBeatStart = null;
+	    node.beatCounter = new Object();
 	    node.started = false;
 	    if(node.followers){
 		for(var ip in node.followers){
@@ -214,6 +217,7 @@ module.exports = function(RED) {
 	    node.beatCounter = new Object();
 	    node.subBeatNum = 0;
 	    node.thisBeatStart = null;
+	    node.nextBeatStart = null;
 	}
 
 	function resetConductor(){
@@ -225,7 +229,7 @@ module.exports = function(RED) {
 		port: wsPort,
 		perMessageDeflate: false,
 		clientTracking: true
-	    });
+	    }, () => console.log("Web socket server created "));
 
 	    node.followers = {}; // client IP addressess are keys. Values are ojbects holding the socket connections, and details of the clock offsets
 	    // offsets holds (up to) the last 9 estimated clock offsets
@@ -235,7 +239,9 @@ module.exports = function(RED) {
 	    // * send an 'empty' beat (beatCount=-1) to elicit initial response for estimating clock offset
 
 	    node.wss.on('connection', function connection(ws, req){
-		var remoteIP = req.connection.remoteAddress;
+		// problem with this for some reason
+		//		var remoteIP = req.connection.remoteAddress;
+		const remoteIP = 'A.B.C.D';
 		if(!node.followers[remoteIP]){
 		    node.followers[remoteIP] = {ws: [], offsets: []};
 		}
@@ -300,8 +306,9 @@ module.exports = function(RED) {
 	function resetFollower(){
 	    
 	    // set up web socket connection
+	    node.warn("resetfollower start");
 	    node.connected = false;
-	    let wsURL = "ws://" + wsIP +":" + wsPort + "/" + wsPath;
+	    const wsURL = "ws://" + wsIP +":" + wsPort + "/" + wsPath;
 	    try{
 		node.ws = new WebSocket(wsURL);
 		node.connected = true;
@@ -319,6 +326,7 @@ module.exports = function(RED) {
 	    
 	    node.ws.on('open', function open (){
 		console.log("Opened client side web socket");
+		console.log("connected " + node.connected);
 	    });
 	    
 	    node.ws.on('message', function incoming(msg){
@@ -328,23 +336,49 @@ module.exports = function(RED) {
 		jmsg.followerSent = rcvd;
 		var tmsg = JSON.stringify(jmsg);
 		node.ws.send(tmsg, function ack(error){
-		    node.connected = false;
+		    if(error){
+			node.warn("error sending message " + error);
+			node.connected = false;
+		    }
 		    return;
 		});
 
 		switch(jmsg.payload){
 		case "tick":
+		    // update the bpm if necessary
+		    node.bpm = jmsg.bpm;
+
 		    if(node.started){
-			console.log("beat already started");
-			// see if the clock is in sync
-			// update the bpm if necessary
+
+			node.warn("beat already started");
+			let incomingBeat = Number(jmsg.beat);
+			node.warn("incomingBeat " + incomingBeat + " " + jmsg.beat);
+			node.warn("this beat " + node.beatCounter['beat']);
+			node.warn("incoming bpm " + jmsg.bpm);
+			node.bpm = jmsg.bpm;
+			if(incomingBeat == node.beatCounter['beat']){
+			    node.warn("Equal: late");
+			    // the message from the conductor has come too late for the current beat
+			    // update the beat appropriately
+			}
+
+			else if(incomingBeat == node.beatCounter['beat'] + 1){
+			    node.warn("less: before (on time)");
+			    node.nextBeatStart = jmsg.timeTag;
+			}
+
+			else{
+			    node.warn("Funny beat number " );
+			    console.log(jmsg);
+			}
 		    }
 		    else{
-			console.log(" starting follower beat");
+			node.warn(" starting follower beat");
 			node.bpm = jmsg.bpm;
-			node.beatCounter['beat'] = jmsg.beat;
+			node.beatCounter = new Object();
+			node.beatCounter['beat'] = jmsg.beat - 1;
 			node.thisBeatStart = jmsg.timeTag;
-			node.latency = jmsg.latency;
+//			node.latency = jmsg.latency;
 			beat();
 			node.started = true;
 		    }
@@ -368,7 +402,10 @@ module.exports = function(RED) {
 		if(node.connected){
 		    console.log("ping");
 		    node.ws.send("ping", function ack(error){
-			node.connected = false;
+			if(error){
+			    console.log("ping error " + error);
+			    node.connected = false;
+			}
 		    });
 		}
 		else{
@@ -392,22 +429,41 @@ module.exports = function(RED) {
 	}
 	    
 	function beat(){
-	    setBPM();
+
+	    node.warn("calling beat() for " + node.sharing + " subBeatNum " + node.subBeatNum);
+	    node.warn("time " + Date.now());
 	    node.beatCounter = node.beatCounter || new Object();
 	    node.subBeatNum = node.subBeatNum || 0;
 	    node.thisBeatStart = node.thisBeatStart || Date.now();
 
-	    
+	    if(node.subBeatNum === 0){
+		setBPM();
+	    }
+
+	    node.warn("bpm " + node.bpm + " current_bpm " + node.current_bpm + " interval " + node.interval);
+
+	    // node.interval is set in setBPM()
+	    node.nextBeatStart = Math.round(node.nextBeatStart || node.thisBeatStart + node.interval);
+
 	    var subBeat = node.fractionalIntervals[node.subBeatNum];
+
+	    for(var i = 0; i<subBeat.names.length; i++){
+		var subName = subBeat.names[i];
+		node.beatCounter[subName] = node.beatCounter[subName] || 0;
+		node.warn("Incrementing counter " + subName + " on " + node.sharing + " i " + i);
+		node.beatCounter[subName]++;
+		node.warn("New value is "  + node.beatCounter[subName]);
+	    }
 
 	    if(node.sharing == "conductor" && node.subBeatNum == 0){
 		for(let ip in node.followers){
 		    let connections = node.followers[ip].ws;
 		    let offset = node.followers[ip].offset;
-		    let followerBeatTime = node.thisBeatStart + offset + node.latency;
+		    let followerBeatTime = Math.round(node.thisBeatStart + offset);
 
 		    
 		    for(let i = 0; i<connections.length; i++){
+			node.warn("Sending beat to connection " + i);
 			let bmsg = {payload: "tick",
 				    start: ["beat"],
 				    beat:node.beatCounter['beat'],
@@ -425,11 +481,6 @@ module.exports = function(RED) {
 	    }
 
 	    
-	    for(var i = 0; i<subBeat.names.length; i++){
-		var subName = subBeat.names[i];
-		node.beatCounter[subName] = node.beatCounter[subName] || 0;
-		node.beatCounter[subName]++;
-	    }
 	    
 	    var msg = {payload: "tick",
 		       start: _.clone(subBeat.names),
@@ -445,7 +496,7 @@ module.exports = function(RED) {
 	    }
 
 	    if(node.latency){
-		msg.timeTag = node.thisBeatStart + subBeat.pos + node.latency;
+		msg.timeTag = node.thisBeatStart + subBeat.pos;
 	    }
 	    
 	    node.send(msg);
@@ -460,17 +511,21 @@ module.exports = function(RED) {
 			node.beatCounter[subName] = 0;
 		    }
 		}
-		node.thisBeatStart += node.interval;
+		node.thisBeatStart = node.nextBeatStart;
+		// save next beat now - if a late beat arrives from a follower then it will be taken into account
+		node.nextBeatStart = node.thisBeatStart + node.interval;
 	    }
 
 	    var nextSubBeat = node.fractionalIntervals[node.subBeatNum];
 	    var nextSubBeatStart = node.thisBeatStart + nextSubBeat.pos;
-	    var interval = nextSubBeatStart - Date.now();
-	    node.tick = setTimeout(beat, interval);
+	    var interval = nextSubBeatStart - Date.now() - node.latency;
+	    node.warn(node.sharing + " thisBeatStart " + node.thisBeatStart + " nextBeatStart " + node.nextBeatStart + " interval " + interval + " nextSubBeatStart " + nextSubBeatStart + " latency " + node.latency);
+	    
+	    node.tick = setTimeout(function(){ node.warn("timeout calling beat() on " + node.sharing); beat()}, interval);
 	}
     }
     
 	
-    RED.nodes.registerType("beat",BeatNode);
+    RED.nodes.registerType("beat", BeatNode);
 }
 
