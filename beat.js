@@ -474,7 +474,9 @@ module.exports = function(RED) {
 				   };
 			
 			connections[i].send(JSON.stringify(bmsg), function ack(error){
-			    console.log("Problem sending to connection " + i);
+			    if(error){
+				console.log(error +" Problem sending to connection " + i);
+			    }
 			});
 		    }
 		}

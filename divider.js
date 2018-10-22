@@ -11,12 +11,15 @@ module.exports = function(RED) {
         this.on('input', function(msg) {
 	    switch(msg.payload){
 	    case "tick":
-		var start = msg.start || [];
+		const start = msg.start || [];
+		let inputVal, inputCount, outputCount;
 		if(start.indexOf(node.input)>=0){
-		    node.inputCount++;
-		    if(node.inputCount > node.ratio || node.outputCount === 0){
-			node.inputCount = 1;
-			node.outputCount ++;
+		    console.log("divider found " + node.input);
+		    inputVal = msg[node.input];
+		    inputCount = (inputVal -1) % node.ratio + 1;
+		    outputCount = Math.floor(inputVal / node.ratio) + 1;
+		    console.log("inputVal " + inputVal + " inputCount " + inputCount + "  outputCount " + outputCount);
+		    if(inputCount == 1){
 			start.push(node.output);
 		    }
 		}
@@ -34,9 +37,9 @@ module.exports = function(RED) {
 		}
 		msg[beats_per_name] = beats_per_val;
 		
-		msg[counter] = node.inputCount;
+		msg[counter] = inputCount;
 
-		msg[node.output] = node.outputCount;
+		msg[node.output] = outputCount;
 
 		node.send(msg);
 
@@ -57,8 +60,6 @@ module.exports = function(RED) {
 	    node.input = config.input || "beat";
 	    node.output = config.output || "bar";
 	    node.ratio = config.ratio || 4;
-	    node.inputCount = 0;
-	    node.outputCount = 0;
 	    node.name = config.name;
 	}
 
