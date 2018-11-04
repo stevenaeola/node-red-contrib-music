@@ -14,11 +14,9 @@ module.exports = function(RED) {
 		const start = msg.start || [];
 		let inputVal, inputCount, outputCount;
 		if(start.indexOf(node.input)>=0){
-		    console.log("divider found " + node.input);
 		    inputVal = msg[node.input];
 		    inputCount = (inputVal -1) % node.ratio + 1;
 		    outputCount = Math.floor(inputVal / node.ratio) + 1;
-		    console.log("inputVal " + inputVal + " inputCount " + inputCount + "  outputCount " + outputCount);
 		    if(inputCount == 1){
 			start.push(node.output);
 		    }
