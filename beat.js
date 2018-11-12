@@ -226,7 +226,7 @@ module.exports = function(RED) {
 		port: wsPort,
 		perMessageDeflate: false,
 		clientTracking: true
-	    }, () => console.log("Web socket server created "));
+	    }, () => node.log("Web socket server created for beat conductor"));
 
 
 	    node.wss.on('connection', function connection(ws, req){
@@ -307,12 +307,10 @@ module.exports = function(RED) {
 	    node.ws.on('message', function incoming(msg){
 		const rcvd = Date.now();
 		const jmsg = JSON.parse(msg);
-		const localBeatStart = Number(jmsg.conductorBeatStart) + Number(node.offset);
-		
+		const localThisBeatStart = Number(jmsg.thisBeatStart) + Number(node.offset);
+		const localNextBeatStart = Number(jmsg.nextBeatStart) + Number(node.offset);
 		switch(jmsg.payload){
 		case "tick":
-		    console.log(jmsg);
-		    node.warn("conductorBeatStart  " + jmsg.conductorBeatStart + " offset " + node.offset);
 		    // update the bpm if necessary
 		    node.bpm = jmsg.bpm;
 		    if(node.started){
@@ -320,21 +318,21 @@ module.exports = function(RED) {
 			node.bpm = jmsg.bpm;
 			const beatCount = node.beatCounter['beat'];
 			if(incomingBeat == beatCount + 1){
-			    node.warn("less: before (on time)");
-			    node.warn("Current nextBeatStart " + node.nextBeatStart);
-			    node.warn("setting nextBeatStart to " + localBeatStart);
-			    node.nextBeatStart = localBeatStart;
+			    // beat is on time (conductor is ahead of follower)
+			    node.nextBeatStart = localThisBeatStart;
 			}
-
 			else if(incomingBeat == beatCount){
-			    node.warn("incomg beat is late " + incomingBeat + " beatCount " + beatCount );
-			    node.nextBeatStart = localBeatStart;
+			    // beat is slightly late (follower ahead of conductor)
+			    node.nextBeatStart = localNextBeatStart;
 			}
 			else if(incomingBeat < beatCount){
-			    node.nextBeatStart = localBeatStart;
-			    node.warn("incomg beat is late " + incomingBeat + " beatCount " + beatCount );
+			    // more than one beat late (follower ahead of conductor)
+			    node.nextBeatStart = localNextBeatStart;
 			}
 			else{
+			    // more than one beat early (conductor ahead of follower)
+			    // should maybe set next beatStart to now
+			    // or just reset the follower beatNum if a long way out
 			    node.warn("incomg beat is early " + incomingBeat + " beatCount " + beatCount );
 			}
 		    }
@@ -342,7 +340,7 @@ module.exports = function(RED) {
 			node.bpm = jmsg.bpm;
 			node.beatCounter = new Object();
 			node.beatCounter['beat'] = jmsg.beat - 1;
-			node.thisBeatStart = localBeatStart;
+			node.thisBeatStart = localThisBeatStart;
 			beat();
 			node.started = true;
 		    }
@@ -357,7 +355,7 @@ module.exports = function(RED) {
 		    break;
 		    
 		default:
-		    console.log("unrecognised message in websocket client " + msg);
+		    node.warn("unrecognised message in websocket client " + msg);
 		}
 	    });
 
@@ -368,7 +366,7 @@ module.exports = function(RED) {
 			       followerSent: now}
 		    node.ws.send(JSON.stringify(msg), function ack(error){
 			if(error){
-			    console.log("heartbeat sync error " + error);
+			    node.warn("heartbeat sync error " + error);
 			    node.connected = false;
 			}
 		    });
@@ -389,9 +387,6 @@ module.exports = function(RED) {
 	}
 	    
 	function beat(){
-
-	    node.warn("starting beat() for " + node.sharing + " subBeatNum " + node.subBeatNum);
-	    node.warn("time " + Date.now() + " beatCounter.beat " + node.beatCounter.beat);
 	    node.beatCounter = node.beatCounter || new Object();
 	    node.subBeatNum = node.subBeatNum || 0;
 	    node.thisBeatStart = node.thisBeatStart || Date.now();
@@ -401,10 +396,7 @@ module.exports = function(RED) {
 	    }
 
 	    // node.interval is set in setBPM()
-	    node.warn("setting nextBeatStart for " + node.sharing + " current " + node.nextBeatStart + " interval " + node.interval);
 	    node.nextBeatStart = Math.round(node.nextBeatStart || node.thisBeatStart + node.interval);
-	    node.warn("new value is " + node.nextBeatStart);
-		      
 	    var subBeat = node.fractionalIntervals[node.subBeatNum];
 
 	    for(var i = 0; i<subBeat.names.length; i++){
@@ -418,7 +410,8 @@ module.exports = function(RED) {
 			      start: ["beat"],
 			      beat:node.beatCounter['beat'],
 			      bpm: node.current_bpm,
-			      conductorBeatStart: node.nextBeatStart
+			      thisBeatStart: node.nextBeatStart,
+			      nextBeatStart: node.nextBeatStart + node.interval
 			     };
 		const jbmsg = JSON.stringify(bmsg);
 		
@@ -426,7 +419,7 @@ module.exports = function(RED) {
 		    if (client.readyState === WebSocket.OPEN) {
 			client.send(jbmsg, function ack(error){
 			    if(error){
-				console.log(error +" Problem sending beat to follower" );
+				node.warn(error +" Problem sending beat to follower" );
 			    }
 			});
 		    }
@@ -470,9 +463,8 @@ module.exports = function(RED) {
 	    var nextSubBeat = node.fractionalIntervals[node.subBeatNum];
 	    var nextSubBeatStart = node.thisBeatStart + nextSubBeat.pos;
 	    var interval = Number(nextSubBeatStart) - Number(Date.now()) - Number(node.latency);
-//	    node.warn(node.sharing + " thisBeatStart " + node.thisBeatStart + " nextBeatStart " + node.nextBeatStart + " interval " + interval + " nextSubBeatStart " + nextSubBeatStart );
 	    
-	    node.tick = setTimeout(function(){ node.warn("setting timeout calling beat() on " + node.sharing + " in " + interval + " at " + (Number(Date.now() + interval))); beat()}, interval);
+	    node.tick = setTimeout(beat, interval);
 	}
     }
     
