@@ -4,7 +4,6 @@ module.exports = function(RED) {
     const mathjs = require("mathjs");
     const _ = require("underscore");
     const WebSocket = require("ws");
-    const wsIP = "127.0.0.1";
     const wsPort = 2880; // seems to be unused and is reminiscent of node-red port 1880
     const wsPath = "beat";
     const heartbeatInterval = 5000;
@@ -79,6 +78,7 @@ module.exports = function(RED) {
 	    node.subBeats = config.subBeats || [];
 	    node.latency = Number(config.latency) || 0;
 	    node.sharing = config.sharing || "standalone";
+	    node.conductorIP = config.conductorIP || "127.0.0.1";
 
 	    // get rid of old sockets if already there
 
@@ -281,7 +281,7 @@ module.exports = function(RED) {
 	    node.connected = false;
 	    node.offsets = [];
 	    
-	    const wsURL = "ws://" + wsIP +":" + wsPort + "/" + wsPath;
+	    const wsURL = "ws://" + node.conductorIP +":" + wsPort + "/" + wsPath;
 	    try{
 		node.ws = new WebSocket(wsURL);
 		node.connected = true;
