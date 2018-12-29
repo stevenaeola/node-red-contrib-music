@@ -13,10 +13,10 @@ module.exports = function(RED) {
 	    case "tick":
 		const start = msg.start || [];
 		let inputVal, inputCount, outputCount;
+		inputVal = msg[node.input];
+		inputCount = (inputVal -1) % node.ratio + 1;
+		outputCount = Math.floor(inputVal / node.ratio) + 1;
 		if(start.indexOf(node.input)>=0){
-		    inputVal = msg[node.input];
-		    inputCount = (inputVal -1) % node.ratio + 1;
-		    outputCount = Math.floor(inputVal / node.ratio) + 1;
 		    if(inputCount == 1){
 			start.push(node.output);
 		    }

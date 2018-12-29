@@ -170,6 +170,9 @@
  <dt><span class='optional'>latency</span> <span class='property-type'>(number)</span></dt>
  <dd>If specified, this many milliseconds will be added to the current time when ticks are generated, and included in <code>msg.timeTag</code>. This can be useful for dealing with jitter between beats or sub-beats.</dd>
 
+ <dt><span class='optional'>sharing</span> </dt>
+ <dd>normally standalone. To synchronise beats across a network, one instance should be a <code>conductor</code> node. Then other instances should define a <code>follower</code> that gets the beat from the conductor specified by its IP address.</dd>
+
  <dt><span class='optional'>sub-beats</span> <span class='property-type'>(string,number)</span></dt>
  <dd>Named sub-beats (e.g. quaver, triplet) can be added, including how many should be included in the dandard beat. Each sub-beat will add a proerty to tick messages to give the position of the sub-beat within the beat, and the name of the sub-beat will also be included in the <code>msg.start</code> array when relevant. </dd>
 

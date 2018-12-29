@@ -333,7 +333,7 @@ module.exports = function(RED) {
 			    // more than one beat early (conductor ahead of follower)
 			    // should maybe set next beatStart to now
 			    // or just reset the follower beatNum if a long way out
-			    node.warn("incomg beat is early " + incomingBeat + " beatCount " + beatCount );
+			    node.warn("incoming beat is early " + incomingBeat + " beatCount " + beatCount );
 			}
 		    }
 		    else{
@@ -446,6 +446,7 @@ module.exports = function(RED) {
 	    node.send(msg);
 
 	    node.subBeatNum++;
+
 	    if(node.subBeatNum >= node.fractionalIntervals.length){
 		node.subBeatNum = 0;
 		var firstSubBeat = node.fractionalIntervals[0];
