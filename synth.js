@@ -217,11 +217,16 @@ module.exports = function(RED) {
 
     
 	function sendNote(noteVal, msg){
-
-	    if(isNaN(noteVal)){
-		noteVal = 1;
+	    var midi;
+	    if(isNaN(msg.midi)){
+		if(isNaN(noteVal)){
+		    noteVal = 1;
+		}
+		midi = note2midi(noteVal);
 	    }
-	    var midi = note2midi(noteVal);
+	    else{
+		midi = msg.midi;
+	    }
 	    var payload;
 	    var action;
 	    var synth_id;
