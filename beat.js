@@ -72,6 +72,8 @@ module.exports = function(RED) {
 	function reset(){
 	    node.started = node.started || false;
 	    clearTimeout(node.tick);
+	    clearTimeout(node.heartbeat);
+
 	    node.started = false;
 	    node.beatNum = 0;
 	    node.output = config.output;
@@ -247,32 +249,37 @@ module.exports = function(RED) {
 	    // * wait for response for updating offset estimate
 	    // can have more than one follower per machine?
 	    
-	    // for offsets keep 9 most recent, ignore the fastest and slowest 2, average other five
+	    // for offsets keep 20 most recent
+	    // replace randomly to allow for change in offset
+	    // use minumum offset, as they seem to be the most accurate
+	    // make wieghted changes to offset
 	}
 	
 	function updateOffsets(msg, fRcvd){
 	    const fSent = msg.followerSent;
 	    const cSent = msg.conductorSent;
 	    const rtt = fRcvd - fSent;
-	    const offset = fSent - cSent - rtt/2;
-	    node.offsets.push(offset);
-	    if(node.offsets.length > 9){
-		node.offsets.shift();
+	    const offset = cSent - fSent - rtt/2;
+	    console.log(`updating offsets fSent ${fSent} cSent ${cSent} fRcvs ${fRcvd} rtt ${rtt} offset ${offset}`);
+	    const ol = node.offsets.length;
+	    if(ol < 20){
+		node.offsets.push(offset);
+	    }
+	    else{
+		node.offsets[_.random(ol-1)] = offset;
 	    }
 
-	    let sortedOffsets = node.offsets.slice().sort();
-	    // remove the two largest
-	    while(sortedOffsets.length >7 ){
-		sortedOffsets.pop();
+	    // then take the minimum
+	    const minOffset = Math.min(...node.offsets);
+
+	    // update weighted according to how many we have collected: starts fast
+	    if(ol>1){
+		node.offset = (minOffset + (ol-1)*node.offset)/ol;
 	    }
-	    // and the two smallest
-	    while(sortedOffsets.length >5 ){
-		sortedOffsets.shift();
+	    else{
+		node.offset = minOffset;
 	    }
-	    // then take the median
-	    const medIndex = Math.floor(sortedOffsets.length /2);
-	    const medOffset = sortedOffsets[medIndex];
-	    node.offset = medOffset;
+	    console.log("node.offset " + node.offset);
 	}
 	
 	function resetFollower(){
@@ -307,37 +314,40 @@ module.exports = function(RED) {
 	    node.ws.on('message', function incoming(msg){
 		const rcvd = Date.now();
 		const jmsg = JSON.parse(msg);
-		const localThisBeatStart = Number(jmsg.thisBeatStart) + Number(node.offset);
-		const localNextBeatStart = Number(jmsg.nextBeatStart) + Number(node.offset);
 		switch(jmsg.payload){
 		case "tick":
+		    const localThisBeatStart = Number(jmsg.thisBeatStart) + Number(node.offset);
+		    const localNextBeatStart = Number(jmsg.nextBeatStart) + Number(node.offset);
+		    const incomingBeat = Number(jmsg.beat);
+		    const beatCount = node.beatCounter['beat'];
+		    console.log(`localThisBeatStart ${localThisBeatStart} remotethisbeatstart ${jmsg.thisBeatStart} incomingBeat ${incomingBeat} beatCount ${beatCount} node.thisBeatStart ${node.thisBeatStart} node.nextBeatStart ${node.nextBeatStart}`);
 		    // update the bpm if necessary
 		    node.bpm = jmsg.bpm;
 		    if(node.started){
-			let incomingBeat = Number(jmsg.beat);
-			node.bpm = jmsg.bpm;
-			const beatCount = node.beatCounter['beat'];
 			if(incomingBeat == beatCount + 1){
 			    // beat is on time (conductor is ahead of follower)
+			    console.log( "beat is on time (conductor is ahead of follower)");
 			    node.nextBeatStart = localThisBeatStart;
 			}
 			else if(incomingBeat == beatCount){
 			    // beat is slightly late (follower ahead of conductor)
+			    console.log("beat is slightly late (follower ahead of conductor)");
 			    node.nextBeatStart = localNextBeatStart;
 			}
 			else if(incomingBeat < beatCount){
 			    // more than one beat late (follower ahead of conductor)
-			    node.nextBeatStart = localNextBeatStart;
+			    console.log(" more than one beat late (follower ahead of conductor)");
+			    node.nextBeatStart = localNextBeatStart + node.interval;
 			}
 			else{
 			    // more than one beat early (conductor ahead of follower)
 			    // should maybe set next beatStart to now
 			    // or just reset the follower beatNum if a long way out
+			    //			    tick();
 			    node.warn("incoming beat is early " + incomingBeat + " beatCount " + beatCount );
 			}
 		    }
 		    else{
-			node.bpm = jmsg.bpm;
 			node.beatCounter = new Object();
 			node.beatCounter['beat'] = jmsg.beat - 1;
 			node.thisBeatStart = localThisBeatStart;
@@ -385,8 +395,17 @@ module.exports = function(RED) {
 	    // wait for beat if it doesn't arrive, do it anyway and wait for the next one
 	    // add sub-beats locally
 	}
-	    
+	 
 	function beat(){
+	    tick();
+	    var nextSubBeat = node.fractionalIntervals[node.subBeatNum];
+	    var nextSubBeatStart = node.thisBeatStart + nextSubBeat.pos;
+	    var interval = Number(nextSubBeatStart) - Number(Date.now()) - Number(node.latency);
+	    
+	    node.tick = setTimeout(beat, Math.max(interval,0));
+	}
+
+	function tick(){
 	    node.beatCounter = node.beatCounter || new Object();
 	    node.subBeatNum = node.subBeatNum || 0;
 	    node.thisBeatStart = node.thisBeatStart || Date.now();
@@ -460,12 +479,6 @@ module.exports = function(RED) {
 		// save next beat now - if a late beat arrives from a follower then it will be taken into account
 		node.nextBeatStart = node.thisBeatStart + node.interval;
 	    }
-
-	    var nextSubBeat = node.fractionalIntervals[node.subBeatNum];
-	    var nextSubBeatStart = node.thisBeatStart + nextSubBeat.pos;
-	    var interval = Number(nextSubBeatStart) - Number(Date.now()) - Number(node.latency);
-	    
-	    node.tick = setTimeout(beat, interval);
 	}
     }
     
