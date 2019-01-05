@@ -260,7 +260,6 @@ module.exports = function(RED) {
 	    const cSent = msg.conductorSent;
 	    const rtt = fRcvd - fSent;
 	    const offset = cSent - fSent - rtt/2;
-	    console.log(`updating offsets fSent ${fSent} cSent ${cSent} fRcvs ${fRcvd} rtt ${rtt} offset ${offset}`);
 	    const ol = node.offsets.length;
 	    if(ol < 20){
 		node.offsets.push(offset);
@@ -279,7 +278,6 @@ module.exports = function(RED) {
 	    else{
 		node.offset = minOffset;
 	    }
-	    console.log("node.offset " + node.offset);
 	}
 	
 	function resetFollower(){
@@ -319,38 +317,35 @@ module.exports = function(RED) {
 		    const localThisBeatStart = Number(jmsg.thisBeatStart) + Number(node.offset);
 		    const localNextBeatStart = Number(jmsg.nextBeatStart) + Number(node.offset);
 		    const incomingBeat = Number(jmsg.beat);
-		    const beatCount = node.beatCounter['beat'];
-		    console.log(`localThisBeatStart ${localThisBeatStart} remotethisbeatstart ${jmsg.thisBeatStart} incomingBeat ${incomingBeat} beatCount ${beatCount} node.thisBeatStart ${node.thisBeatStart} node.nextBeatStart ${node.nextBeatStart}`);
+		    let beatCount = node.beatCounter['beat'];
+//		    console.log(`localThisBeatStart ${localThisBeatStart} remotethisbeatstart ${jmsg.thisBeatStart} incomingBeat ${incomingBeat} beatCount ${beatCount} node.thisBeatStart ${node.thisBeatStart} node.nextBeatStart ${node.nextBeatStart}`);
 		    // update the bpm if necessary
 		    node.bpm = jmsg.bpm;
 		    if(node.started){
 			if(incomingBeat == beatCount + 1){
 			    // beat is on time (conductor is ahead of follower)
-			    console.log( "beat is on time (conductor is ahead of follower)");
 			    node.nextBeatStart = localThisBeatStart;
 			}
 			else if(incomingBeat == beatCount){
 			    // beat is slightly late (follower ahead of conductor)
-			    console.log("beat is slightly late (follower ahead of conductor)");
 			    node.nextBeatStart = localNextBeatStart;
 			}
 			else if(incomingBeat < beatCount){
 			    // more than one beat late (follower ahead of conductor)
-			    console.log(" more than one beat late (follower ahead of conductor)");
 			    node.nextBeatStart = localNextBeatStart + node.interval;
 			}
 			else{
 			    // more than one beat early (conductor ahead of follower)
 			    // should maybe set next beatStart to now
 			    // or just reset the follower beatNum if a long way out
-			    //			    tick();
-			    node.warn("incoming beat is early " + incomingBeat + " beatCount " + beatCount );
+			    node.nextBeatStart = localThisBeatStart;
+			    beat();
 			}
 		    }
 		    else{
 			node.beatCounter = new Object();
 			node.beatCounter['beat'] = jmsg.beat - 1;
-			node.thisBeatStart = localThisBeatStart;
+			node.nextBeatStart = localThisBeatStart;
 			beat();
 			node.started = true;
 		    }
