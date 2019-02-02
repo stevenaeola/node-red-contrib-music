@@ -127,7 +127,7 @@ module.exports = function(RED) {
 	    setTimeout(function(){
 		freeBuffer(node);
 		createBuffer(node);
-		sendSynthDef(node, "playSampleMono");
+		sendSynthDef(node, "playSample");
 		sendSynthDef(node, "recordSample");
 	    }, 200);
 	}
@@ -182,6 +182,7 @@ module.exports = function(RED) {
     }
 	
     function createBuffer(node){
+	node.warn("Creating buffer");
 	if(!node.bufnum){
 	    var global = node.context().global;
 	    var bufnum = Number(global.get("sampler_next_bufnum"));
@@ -190,6 +191,7 @@ module.exports = function(RED) {
 	    }
 	    global.set("sampler_next_bufnum", bufnum + 1);
 	    node.bufnum = bufnum;
+	    node.warn(`new bufnum ${bufnum}`);
 	}
 	var fps = 44100;
 	if(node.sound){
@@ -263,7 +265,7 @@ module.exports = function(RED) {
 	global.set("synth_next_sc_node", id + 1);
 	node[synth] = id;
 
-	var payload = [action + "SampleMono", node[synth], 0, 0, "buffer", node.bufnum];
+	var payload = [action + "Sample", node[synth], 0, 0, "buffer", node.bufnum];
 
 	var address = "/s_new";
 
