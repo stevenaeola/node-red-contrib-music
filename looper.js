@@ -1,29 +1,15 @@
+const sc = require("./supercollider");
+
 module.exports = function(RED) {
     "use strict";
 
-    var glob = require("glob");
-    var fs = require("fs");
+    const glob = require("glob");
+    const fs = require("fs");
     
-
-    function sendSynthDef(node, synthdefName){
-	var synthdefFile = __dirname +"/synthdefs/" + synthdefName + ".scsyndef";
-	fs.readFile(synthdefFile, function (err,data){
-	    if(err){
-		node.warn(err);
-	    }
-	    else{
-		var synthMsg={
-		    topic: "/d_recv",
-		    payload: [data, 0]
-		}
-		node.send(synthMsg);
-	    }
-	});
-    }
 
     function LooperNode(config) {
         RED.nodes.createNode(this,config);
-        var node = this;
+        const node = this;
 
 	reset();
 	
@@ -83,7 +69,7 @@ module.exports = function(RED) {
 		
 	    case "play": // the state
 	    case "record": // the state
-		var start = msg.start || [];
+		let start = msg.start || [];
 		if(node.count <= 0){
 		    if(start.includes(node.start)){
 			node.count = node.length;
@@ -125,10 +111,10 @@ module.exports = function(RED) {
 	    // wait a little while to allow wires to be created
 
 	    setTimeout(function(){
-		freeBuffer(node);
-		createBuffer(node);
-		sendSynthDef(node, "playSample");
-		sendSynthDef(node, "recordSample");
+		sc.freeBuffer(node);
+		sc.createBuffer(node);
+		sc.sendSynthDef(node, "playSample");
+		sc.sendSynthDef(node, "recordSample");
 	    }, 200);
 	}
 	
@@ -150,7 +136,7 @@ module.exports = function(RED) {
 	    // "play"; although if beatCount is -1 it is not actually play yet
 	    // "record"; ditto
 
-	    var text, shape, colour;
+	    let text, shape, colour;
 	    node.state = state;
 	    text = state;
 
@@ -177,64 +163,8 @@ module.exports = function(RED) {
 	    
 	    node.status({fill: colour, shape: shape, text: state});
 	}
-
-	
-    }
-	
-    function createBuffer(node){
-	node.warn("Creating buffer");
-	if(!node.bufnum){
-	    var global = node.context().global;
-	    var bufnum = Number(global.get("sampler_next_bufnum"));
-	    if(isNaN(bufnum)){
-		bufnum = 1; // hopefully no clashes with sclang
-	    }
-	    global.set("sampler_next_bufnum", bufnum + 1);
-	    node.bufnum = bufnum;
-	    node.warn(`new bufnum ${bufnum}`);
-	}
-	var fps = 44100;
-	if(node.sound){
-	    loadBuffer(node);
-	}
-	else{
-	    // create an empty buffer ready for recording
-	    var seconds = 20; //assumed max length for now
-	    var createMsg = {
-		topic: "/b_alloc",
-		payload: [node.bufnum, fps * seconds * 2, 2]
-	    }
-	    node.send(createMsg);
-	}
-
-    }
-
-    function loadBuffer(node){
-	var dir = __dirname + "/Dirt-Samples/" + node.sound;
-	var match = dir + "/*.wav";
-	var fname;
-	glob(match, {nocase: true}, function (er, files) {
-	    var offset = node.soundoffset % files.length;
-	    fname = files[offset];
-	    // create and load the buffer from file
-	    var createMsg = {
-		topic: "/b_allocRead",
-		payload: [node.bufnum, fname ]
-	    }
-	    node.send(createMsg);
-	});
     }
     
-    function freeBuffer(node){
-	if(node.bufnum){
-	    var freeMsg = {
-		topic: "/b_free",
-		payload: node.bufnum
-	    }
-	    node.send(freeMsg);
-	}
-    }
-
     function createSynth(node, msg, action){
 	if(!["play", "record"].includes(action)){
 	    node.warn("no synth for action " + action);
@@ -246,30 +176,25 @@ module.exports = function(RED) {
 	    return;
 	}
 
-	if(msg.sound){
-	    node.sound = msg.sound;
-	    loadBuffer(node);
-	}
-	
-	var synth = action + "_synth_id";
+	const synth = action + "_synth_id";
 	if(node[synth]){
-	    freeSynth(node, node[synth]);
+	    sc.freeSynth(node, node[synth]);
 	    node[synth] = null;
 	}
 
-	var global = node.context().global;
-	var id = Number(global.get("synth_next_sc_node"));
+	const global = node.context().global;
+	const id = Number(global.get("synth_next_sc_node"));
 	if(isNaN(id)){
 	    id = 100000; // high to avoid nodes from sclang
 	}
 	global.set("synth_next_sc_node", id + 1);
 	node[synth] = id;
 
-	var payload = [action + "Sample", node[synth], 0, 0, "buffer", node.bufnum];
+	const payload = [action + "Sample", node[synth], 0, 0, "buffer", node.bufnum];
 
-	var address = "/s_new";
+	const address = "/s_new";
 
-	var createMsg;
+	let createMsg;
 	if(msg.timeTag){
 	    createMsg  = {
 		    payload:{
@@ -282,8 +207,6 @@ module.exports = function(RED) {
 			]
 		    }
 		};
-
-
 	}
 	else{
 	    createMsg = {topic: address, payload:payload};
@@ -292,18 +215,10 @@ module.exports = function(RED) {
 	node.send(createMsg);
     }
 
-    function freeSynth(node, synth_id){
-	if(synth_id){
-	    var freeMsg = {
-		topic: "/n_free",
-		payload: synth_id
-	    }
-	    node.send(freeMsg);
-	}
-    }
-
     function stopSynth(node, action){
-	freeSynth(node, node[action + "_synth_id"]);
+	const synth = action + "_synth_id";
+	sc.freeSynth(node, node[synth]);
+	node[synth] = null;
     }
 	
     RED.nodes.registerType("looper", LooperNode);
