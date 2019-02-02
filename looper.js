@@ -38,10 +38,8 @@ module.exports = function (RED) {
         case 'play':
         case 'record':
           stopSynth(node, node.state);
-          if (!node.sound) {
-            node.count = -1;
-            setState('waiting');
-          };
+          node.count = -1;
+          setState('waiting');
         }
         break;
 
@@ -78,7 +76,7 @@ module.exports = function (RED) {
             node.count--;
           }
           if (node.count <= 0) {
-            stopSynth(node, node.state);
+            stopSynth(node, node.state, msg.timeTag);
             if (node.loop) {
               // whether we are recording or looping we carry on to play
               setState('play');
@@ -186,9 +184,13 @@ module.exports = function (RED) {
 
     let createMsg;
     if (msg.timeTag) {
+      let timeTag = msg.timeTag;
+      if (msg.latency) {
+        timeTag -= msg.latency / 2;
+      }
       createMsg = {
         payload: {
-          timeTag: msg.timeTag,
+          timeTag,
           packets: [
             {
               address: address,
@@ -204,9 +206,9 @@ module.exports = function (RED) {
     node.send(createMsg);
   }
 
-  function stopSynth (node, action) {
+  function stopSynth (node, action, timeTag) {
     const synth = action + '_synth_id';
-    sc.freeSynth(node, node[synth]);
+    sc.freeSynth(node, node[synth], timeTag);
     node[synth] = null;
   }
 

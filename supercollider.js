@@ -4,12 +4,30 @@ const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 
-function freeSynth (node, synthID) {
+function freeSynth (node, synthID, timeTag) {
+  let freeMsg;
+  const address = '/n_free';
+  const payload = synthID;
+
   if (synthID) {
-    const freeMsg = {
-      topic: '/n_free',
-      payload: synthID
-    };
+    if (timeTag) {
+      freeMsg = {
+        payload: {
+          timeTag: timeTag,
+          packets: [
+            {
+              address,
+              args: payload
+            }
+          ]
+        }
+      };
+    } else {
+      freeMsg = {
+        topic: address,
+        payload
+      };
+    }
     node.send(freeMsg);
   }
 }
