@@ -1,6 +1,7 @@
 // commonly used functions, imported by synth.js, soundfx.js, looper.js
 
 const fs = require("fs");
+const glob = require("glob");
 
 function freeSynth(node, synth_id){
     if(synth_id){
@@ -63,8 +64,33 @@ function freeBuffer(node){
     }
 }
 
+    function loadBuffer(node){
+	var sampdir = __dirname + "/samples/";
+	var matches = Array();
+	matches.push( sampdir + "Dirt/" + node.synthtype + "/*.wav" );
+	matches.push( sampdir + "SonicPi/" + node.synthtype + ".flac" );
+	matches.push( sampdir + "Freesound/" + node.synthtype + ".wav" );
+
+	for(let match of matches){
+	    glob(match, {nocase: true}, function (er, files) {
+		var fname;
+		fname = files[0];
+		if(fname){
+		    // create and load the buffer from file
+		    var createMsg = {
+			topic: "/b_allocRead",
+			payload: [node.bufnum, fname ]
+		    }
+		    node.send(createMsg);
+		}
+	    });
+
+	}
+    }
+
 
 module.exports = { createBuffer,
 		   freeBuffer,
 		   freeSynth,
+		   loadBuffer,
 		   sendSynthDef};

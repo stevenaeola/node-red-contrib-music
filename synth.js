@@ -1,9 +1,9 @@
+const sc = require("./supercollider");
+
 module.exports = function(RED) {
     "use strict";
 
     var _ = require("underscore");
-    var fs = require("fs");
-    var glob = require("glob");
     
     var configurables =
 	{root: { "default": "C4"},
@@ -22,21 +22,11 @@ module.exports = function(RED) {
 	return (Math.pow(base, volume)-1)/(Math.pow(base,100)-1);
     }
 
-    function freeSynth(node, synth_id){
-	if(synth_id){
-	    var freeMsg = {
-		topic: "/n_free",
-		payload: synth_id
-	    }
-	    node.send(freeMsg);
-	}
-    }
-    
     function freeSynths(node){
 	var global = node.context().global;
 	var toDelete = global.get("synth_delete_sc") || [];
 	for(var i = 0; i < toDelete.length; i++){
-	    freeSynth(node, toDelete[i]);
+	    sc.freeSynth(node, toDelete[i]);
 	}
 	global.set("synth_delete_sc", []);
     }
@@ -47,83 +37,6 @@ module.exports = function(RED) {
 	toDelete.push(synth_id);
 	global.set("synth_delete_sc", toDelete);
     }
-
-    function createBuffer(node){
-	if(!node.bufnum){
-	    var global = node.context().global;
-	    var bufnum = Number(global.get("sampler_next_bufnum"));
-	    if(isNaN(bufnum)){
-		bufnum = 1; // hopefully no clashes with sclang
-	    }
-	    global.set("sampler_next_bufnum", bufnum + 1);
-	    node.bufnum = bufnum;
-	}
-	var fps = 44100;
-	if(node.synthtype){
-	    loadBuffer(node);
-	}
-	else{
-	    // create an empty buffer ready for recording
-	    var seconds = 20; //assumed max length for now
-	    var createMsg = {
-		topic: "/b_alloc",
-		payload: [node.bufnum, fps * seconds * 2, 2]
-	    }
-	    node.send(createMsg);
-	}
-    }
-
-    function loadBuffer(node){
-	var sampdir = __dirname + "/samples/";
-	var matches = Array();
-	matches.push( sampdir + "Dirt/" + node.synthtype + "/*.wav" );
-	matches.push( sampdir + "SonicPi/" + node.synthtype + ".flac" );
-	matches.push( sampdir + "Freesound/" + node.synthtype + ".wav" );
-
-	for(let match of matches){
-	    glob(match, {nocase: true}, function (er, files) {
-		var fname;
-		fname = files[0];
-		if(fname){
-		    // create and load the buffer from file
-		    var createMsg = {
-			topic: "/b_allocRead",
-			payload: [node.bufnum, fname ]
-		    }
-		    node.send(createMsg);
-		}
-	    });
-
-	}
-    }
-    
-    function freeBuffer(node){
-	if(node.bufnum){
-	    var freeMsg = {
-		topic: "/b_free",
-		payload: node.bufnum
-	    }
-	    node.send(freeMsg);
-	}
-    }
-
-    function sendSynthDef(node, synthdefName){
-	var synthdefFile = __dirname +"/synthdefs/" + synthdefName + ".scsyndef";
-	fs.readFile(synthdefFile, function (err,data){
-	    if(err){
-		node.warn(err);
-	    }
-	    else{
-		var synthMsg={
-		    topic: "/d_recv",
-		    payload: [data, 0]
-		}
-		node.send(synthMsg);
-	    }
-	});
-    }
-
-
 
     function SynthNode(config) {
 	
@@ -261,7 +174,7 @@ module.exports = function(RED) {
 
 		if(!isSynth()){
 		    if(!node.bufnum){
-			createBuffer(node);
+			sc.createBuffer(node);
 		    }
 		    payload.push("buffer", node.bufnum);
 		    var midibase = node.synthtypes[node.synthtype].midibase;
@@ -340,7 +253,7 @@ module.exports = function(RED) {
 	
 	function createSynth(){
 	    freeSynths(node);
-	    sendSynthDef(node, node.synthtype);
+	    sc.sendSynthDef(node, node.synthtype);
 
 
 	    // leave some time for the synthdef to be sent
@@ -407,9 +320,9 @@ module.exports = function(RED) {
 
 	function resetSample(){
 	    setTimeout(function(){
-		freeBuffer(node);
-		createBuffer(node);
-		sendSynthDef(node, "playSampleMono");
+		sc.freeBuffer(node);
+		sc.createBuffer(node);
+		sc.sendSynthDef(node, "playSampleMono");
 	    }, 200);
 	}
 	
@@ -733,11 +646,11 @@ module.exports = function(RED) {
 	}
 
 	function createFX(){
-	    sendSynthDef(node, node.fxtype);
+	    sc.sendSynthDef(node, node.fxtype);
 	    // leave some time for the synthdef to be sent
 
 	    setTimeout(function(){
-		freeSynth(node, node.synth_id);
+		sc.freeSynth(node, node.synth_id);
 		
 		// add it to the tail of the root group
 		var createMsg = {
