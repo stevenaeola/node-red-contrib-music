@@ -178,7 +178,7 @@ module.exports = function (RED) {
     global.set('synth_next_sc_node', id + 1);
     node[synth] = id;
 
-    const payload = [action + 'Sample', node[synth], 0, 0, 'buffer', node.bufnum];
+    var payload = [action + 'Sample', node[synth], 0, 0, 'buffer', node.bufnum];
 
     const address = '/s_new';
 
