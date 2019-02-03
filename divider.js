@@ -1,69 +1,64 @@
-module.exports = function(RED) {
-    "use strict";
-    
-    function DividerNode(config) {
-	
-        RED.nodes.createNode(this,config);
-        var node = this;
+module.exports = function (RED) {
+  'use strict';
 
-	reset();
-	
-        this.on('input', function(msg) {
-	    switch(msg.payload){
-	    case "tick":
-		const start = msg.start || [];
-		let inputVal, inputCount, outputCount;
-		inputVal = msg[node.input];
-		inputCount = (inputVal -1) % node.ratio + 1;
-		outputCount = Math.floor(inputVal / node.ratio) + 1;
-		if(start.indexOf(node.input)>=0){
-		    if(inputCount == 1){
-			start.push(node.output);
-		    }
-		}
+  function DividerNode (config) {
+    RED.nodes.createNode(this, config);
+    var node = this;
 
-		msg.start = start;
+    reset();
 
-		var counter = node.input + "_of_" + node.output;
-		var beats_per_name = "beats_per_" + node.output;
-		var beats_per_val;
-		if(node.input == "beat"){
-		    beats_per_val = node.ratio;
-		}
-		else{
-		    beats_per_val = node.ratio * msg["beats_per_" + node.input];
-		}
-		msg[beats_per_name] = beats_per_val;
-		
-		msg[counter] = inputCount;
+    this.on('input', function (msg) {
+      switch (msg.payload) {
+      case 'tick':
+        const start = msg.start || [];
+        let inputVal, inputCount, outputCount;
+        inputVal = msg[node.input];
+        inputCount = (inputVal - 1) % node.ratio + 1;
+        outputCount = Math.floor(inputVal / node.ratio) + 1;
+        if (start.indexOf(node.input) >= 0) {
+          if (inputCount === 1) {
+            start.push(node.output);
+          }
+        }
 
-		msg[node.output] = outputCount;
+        msg.start = start;
 
-		node.send(msg);
+        var counter = node.input + '_of_' + node.output;
+        var beatsPerName = 'beats_per_' + node.output;
+        var beatsPerVal;
+        if (node.input === 'beat') {
+          beatsPerVal = node.ratio;
+        } else {
+          beatsPerVal = node.ratio * msg['beats_per_' + node.input];
+        }
+        msg[beatsPerName] = beatsPerVal;
 
-		break;
+        msg[counter] = inputCount;
 
-	    case "reset":
-		reset();
-		node.send(msg);
-		break;
-		
-	    default:
-		node.send(msg);
-		break;
-	    }
-        });
+        msg[node.output] = outputCount;
 
-	function reset(){
-	    node.input = config.input || "beat";
-	    node.output = config.output || "bar";
-	    node.ratio = config.ratio || 4;
-	    node.name = config.name;
-	}
+        node.send(msg);
 
+        break;
+
+      case 'reset':
+        reset();
+        node.send(msg);
+        break;
+
+      default:
+        node.send(msg);
+        break;
+      }
+    });
+
+    function reset () {
+      node.input = config.input || 'beat';
+      node.output = config.output || 'bar';
+      node.ratio = config.ratio || 4;
+      node.name = config.name;
     }
-    
-    
-    RED.nodes.registerType("divider",DividerNode);
-}
+  }
 
+  RED.nodes.registerType('divider', DividerNode);
+};
