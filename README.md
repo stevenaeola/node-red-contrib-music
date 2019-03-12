@@ -80,3 +80,4 @@ NRM has the following aims:
   services. Physical devices can be controlled by or used to control
   NRM code, and many gadgets have contributed support via
   dedicated node types.
+* To be open source. It builds on the work of others that have made their work freely available, and the node-red community is constantly building new ways of interacting. We often overlook the positive societal benefits of the open source movement, and model it offers for human progress through sharing and collaboration.
