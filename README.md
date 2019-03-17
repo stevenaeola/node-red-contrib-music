@@ -17,7 +17,7 @@ Designed for live-coding, this package offers a range of nodes to generate beats
 
 # Create
 
-There are some setp-by-step instructions, including getting going on a Raspberry Pi at <https://stevenaeola.github.io/node-red-contrib-music/>.  If you're not on a raspberry Pi you can skip the first two sections. Then there's a section with a brief introduction to node-red if you don't already know. The specific details on node-red-contrib-music are at <https://stevenaeola.github.io/node-red-contrib-music/making-music> and onwards.
+There are some step-by-step instructions, including getting going on a Raspberry Pi at <https://stevenaeola.github.io/node-red-contrib-music/>.  If you're not on a raspberry Pi you can skip the first two sections. Then there's a section with a brief introduction to node-red if you don't already know. The specific details on node-red-contrib-music are at <https://stevenaeola.github.io/node-red-contrib-music/making-music> and onwards.
 
 For video demonstration(s) see <https://www.youtube.com/playlist?list=PL5Tj84YnQVdIMXqM-mX85yGdWqBepwAIP>
 
@@ -54,3 +54,30 @@ node-red-contrib-music has been tested with
 
 If you get it working on some other combination then do let us know
 
+# Why node-red-music (NRM)?
+
+NRM has the following aims:
+
+* To be accessible. It has been tried it out with success in quite a few UK schools, both secondary (11-) and primary (-11).
+* To be transferable, both in the tech and musical domains. Learning
+  from NRM should be able to translate out of its own context. It sits
+  on top of node-red, which itself sits on top of JavaScript. The
+  basic syntax is graphical, but digging deeper the syntax relies on
+  JSON. Snippets of pure JavaScript can be used, but are not
+  necessary. From the musical perspective it tries to use standard
+  musical notation e.g. scales start at 1, not 0. There are excellent
+  domain-specific languages out there e.g. tidal, sonic-pi, but we
+  emphasise transferability above brevity.
+* To encourage collaboration. It is easy to synchronise across
+  different instances. Many people see tech as an isolating and
+  uncreative domain, we hope to address that misconception.
+* To inter-work with other musical systems. Live sampling and replay is
+  supported, it is also to easy to interact with other
+  programs/systems via OSC, MIDI, WebSockets, UDP or whatever.
+* To support alternative interfaces. Node-red is targeted at IoT
+  applications. Using this support it is easy to control music
+  via virtual interfaces such as twitter, or other web
+  services. Physical devices can be controlled by or used to control
+  NRM code, and many gadgets have contributed support via
+  dedicated node types.
+* To be open source. It builds on the work of others that have made their work freely available, and the node-red community is constantly building new ways of interacting. We often overlook the positive societal benefits of the open source movement, and model it offers for human progress through sharing and collaboration.
