@@ -1,0 +1,7 @@
+{
+    "dataSource": "commits",
+    "prefix": "y",
+    "onlyMilestones": false,
+    "groupBy": "label",
+    "changelogFilename": "CHANGELOG.md"
+}
