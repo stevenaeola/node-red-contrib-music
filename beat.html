@@ -133,7 +133,7 @@
  <dd>If <code>msg.topic</code> is <code>bpm</code> then <code>msg.payload</code> is used to set the number of beats-per-minute for the ticks that are output. </dd>
 
  <dt>payload <span class='property-type'>(string)</span></dt>
- <dd>If the input <code>msg.topic</code> is not <code>bpm</code> then <code>msg.payload</code> is used to control the beats with <code>start</code>, <code>stop</code> or <code>reset</code>. </dd>
+ <dd>If the input <code>msg.topic</code> is not <code>bpm</code> then <code>msg.payload</code> is used to control the beats with <code>start</code>, <code>stop</code>, <code>tap</code> or <code>reset</code>. </dd>
 
  </dl>
 
@@ -165,16 +165,16 @@
  <dd>The name of the counter property used for ticks: this is usually <code>beat</code>, but could be e.g. <code>crotchet</code></dd>
 
  <dt><span class='optional'>initial beats per minute</span> <span class='property-type'>(number)</span></dt>
- <dd>Which can be altered by input messages with a <code>msg.topic</code> of <code>bpm</code></dd>
+ <dd>Which can be altered by input messages with a <code>msg.topic</code> of <code>bpm</code>, or with a payload of <code>tap</code></dd>
  
  <dt><span class='optional'>latency</span> <span class='property-type'>(number)</span></dt>
  <dd>If specified, this many milliseconds will be added to the current time when ticks are generated, and included in <code>msg.timeTag</code>. This can be useful for dealing with jitter between beats or sub-beats.</dd>
 
- <dt><span class='optional'>sharing</span> </dt>
- <dd>normally standalone. To synchronise beats across a network, one instance should be a <code>conductor</code> node. Then other instances should define a <code>follower</code> that gets the beat from the conductor specified by its IP address.</dd>
+ <dt><span class='optional'>sharing</span> <span class='property-type'>('standalone'|'conductor'|'follower')</span></dt>
+ <dd>By default this is <code>standalone</code>, which means no synchronisation. To synchronise beats across a network, one instance should be a <code>conductor</code> node. Then other instances should define a <code>follower</code> that gets the beat from the conductor specified by its IP address.</dd>
 
  <dt><span class='optional'>sub-beats</span> <span class='property-type'>(string,number)</span></dt>
- <dd>Named sub-beats (e.g. quaver, triplet) can be added, including how many should be included in the dandard beat. Each sub-beat will add a proerty to tick messages to give the position of the sub-beat within the beat, and the name of the sub-beat will also be included in the <code>msg.start</code> array when relevant. </dd>
+ <dd>Named sub-beats (e.g. quaver, triplet) can be added, including how many should be included in the standard beat. Each sub-beat will add a property to tick messages to give the position of the sub-beat within the beat, and the name of the sub-beat will also be included in the <code>msg.start</code> array when relevant. </dd>
 
  </dl>
  
@@ -182,6 +182,8 @@
  
  <p>Initially the number of beats per minute is set by the <code>bpm</code> property, or if none is specified then the global beat setting is used. This can be altered by sending a message to the beat generator with a <code>msg.topic</code> of <code>bpm</code> and the required beats-per-minute in <code>msg.payload</code></p>
  <p>To start the beat generator, send it a message with a <code>msg.payload</code> of <code>start</code>.</p>
+ <p>Alternatively the beat can be started by a series of messages with a <code>msg.payload</code> of <code>tap</code>. If four <code>tap</code>s arrive together then the beat will be started at the place the fifth <code>tap</code> is expected, and the <code>bpm</code> will be set according to the speed of the arriving <code>tap</code>s. This can be used to set the tempo manually, or to synchronise with other inputs, such as a MIDI beat generated elsewhere.</p>
+ <p>Once the beat has started, an incoming stream of four <code>tap</code> messages will change the <code>bpm</code>.</p>
  <p>A message with a <code>msg.payload</code> of <code>stop</code> will stop (pause) the generator. If the generator is started again then the beat count will continue from where it left off.</p>
  <p>To start counting from 0 again, send a message with a payload of <code>reset</code>. Any reset messages will also be forwarded to the output of the node, as will any other input messages that do not have the topic <code>bpm</code>.</p>
 

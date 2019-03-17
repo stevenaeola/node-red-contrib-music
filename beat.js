@@ -4,9 +4,17 @@ module.exports = function (RED) {
   const mathjs = require('mathjs');
   const _ = require('underscore');
   const WebSocket = require('ws');
+
   const wsPort = 2880; // seems to be unused and is reminiscent of node-red port 1880
   const wsPath = 'beat';
+
   const heartbeatInterval = 5000;
+
+  const minBPM = 10;
+  const maxBPM = 1000;
+  const defaultBPM = 200;
+
+  const tapsToStart = 4;
 
   function BeatNode (config) {
     RED.nodes.createNode(this, config);
@@ -41,6 +49,11 @@ module.exports = function (RED) {
           stopBeat();
           reset();
           node.send(msg);
+          break;
+
+          // tap is used to set the tempo and autostart
+        case 'tap':
+          tap();
           break;
 
         default:
@@ -121,7 +134,7 @@ module.exports = function (RED) {
     }
 
     function getBPM () {
-      return node.bpm || config.bpm || node.context().global['bpm'] || 200;
+      return node.bpm || config.bpm || node.context().global['bpm'] || defaultBPM;
     }
 
     function setBPM () {
@@ -130,14 +143,14 @@ module.exports = function (RED) {
       }
       var bpm = Number(getBPM());
       if (!isNaN(bpm)) {
-        if (bpm > 10 && bpm < 1000) {
+        if (bpm > minBPM && bpm < maxBPM) {
           node.interval = 60000.0 / bpm;
           node.fractionalIntervals = _.map(
             node.fractionalBeats,
             function (event) { return { names: event.names, pos: event.pos * node.interval }; });
           node.current_bpm = bpm;
         } else {
-          node.warn('BPM not in range 10-1000');
+          node.warn(`BPM not in range ${minBPM}-${maxBPM}`);
         }
       } else {
         node.warn('BPM is not a number: ' + bpm);
@@ -449,6 +462,42 @@ console.log(`localThisBeatStart ${localThisBeatStart} remotethisbeatstart ${jmsg
         node.thisBeatStart = node.nextBeatStart;
         // save next beat now - if a late beat arrives from a follower then it will be taken into account
         node.nextBeatStart = node.thisBeatStart + node.interval;
+      }
+    }
+
+    // tap is used to set the tempo and potentially autostart
+    // taps at less than the minimum beat rate start counting again
+    function tap () {
+      const now = Date.now();
+      if (node.sharing == 'follower') {
+        return;
+      }
+
+      if (!Array.isArray(node.taps) || node.taps.length < 1) {
+        node.taps = [now];
+        return;
+      }
+
+      const timeSinceLastTap = now - node.taps[0];
+      const minBeatSeparation = 60000.0 / minBPM;
+
+      if (timeSinceLastTap > minBeatSeparation) {
+        node.taps = [now];
+        return;
+      }
+
+      if (node.taps.unshift(now) >= tapsToStart) {
+        let taps = node.taps;
+        let totalSeparation = taps[0] - taps[taps.length - 1];
+        let averageSeparation = totalSeparation / (taps.length - 1);
+        node.bpm = 60000.0 / averageSeparation;
+
+        if (!node.started) {
+          node.started = true;
+          setTimeout(beat, averageSeparation - node.latency);
+        }
+
+        node.taps = [];
       }
     }
   }
