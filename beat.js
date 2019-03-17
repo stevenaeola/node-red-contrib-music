@@ -469,7 +469,7 @@ console.log(`localThisBeatStart ${localThisBeatStart} remotethisbeatstart ${jmsg
     // taps at less than the minimum beat rate start counting again
     function tap () {
       const now = Date.now();
-      if (node.sharing == 'follower') {
+      if (node.sharing === 'follower') {
         return;
       }
 
