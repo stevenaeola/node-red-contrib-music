@@ -1,5 +1,5 @@
 {
-    "dataSource": "commits",
+    "dataSource": "issues",
     "prefix": "y",
     "onlyMilestones": false,
     "groupBy": "label",
