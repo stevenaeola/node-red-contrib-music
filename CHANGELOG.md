@@ -1,6 +1,23 @@
 # Changelog
 
-## yv1.2.0 (17/03/2019)
+## yv1.2.1 (31/03/2019)
+
+#### bug
+
+- [**bug**] beat latency doesn't work outside London time zone [#30](https://github.com/stevenaeola/node-red-contrib-music/issues/30)
+
+#### closed
+
+- [**closed**] Bars start one beat out [#54](https://github.com/stevenaeola/node-red-contrib-music/issues/54)
+- [**closed**] Update node help for sequencer [#13](https://github.com/stevenaeola/node-red-contrib-music/issues/13)
+
+#### enhancement
+
+- [**enhancement**] Beat synchronization using arbitrary data via tap-tempo input [#50](https://github.com/stevenaeola/node-red-contrib-music/issues/50)
+
+---
+
+## yv1.2.0 (18/03/2019)
 - [beat can be started with 'tap' messages, allowing synchronisation. closes #50](https://github.com/stevenaeola/node-red-contrib-music/commit/1f5adfc3c1701534ec96861897b35bc7f69e7429) - @stevenaeola
 - [Update manifesto](https://github.com/stevenaeola/node-red-contrib-music/commit/49837a3062a37b0dd4ab0ca024d2a93e8cc71600) - undefined
 - [Added rationale/manifesto](https://github.com/stevenaeola/node-red-contrib-music/commit/d5489df2cea4543c9973d9d6b5817a87a521010a) - undefined
