@@ -14,7 +14,7 @@ module.exports = function (RED) {
         let inputVal, inputCount, outputCount;
         inputVal = msg[node.input];
         inputCount = (inputVal - 1) % node.ratio + 1;
-        outputCount = Math.floor(inputVal / node.ratio) + 1;
+        outputCount = Math.floor((inputVal - 1) / node.ratio) + 1;
         if (start.indexOf(node.input) >= 0) {
           if (inputCount === 1) {
             start.push(node.output);
