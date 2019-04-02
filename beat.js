@@ -134,7 +134,7 @@ module.exports = function (RED) {
     }
 
     function getBPM () {
-      return node.bpm || config.bpm || node.context().global['bpm'] || defaultBPM;
+      return node.bpm || config.bpm || node.context().global.get('bpm') || defaultBPM;
     }
 
     function setBPM () {

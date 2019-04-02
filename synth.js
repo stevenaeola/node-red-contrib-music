@@ -3,9 +3,9 @@ const sc = require('./supercollider');
 module.exports = function (RED) {
   'use strict';
 
-  var _ = require('underscore');
+  const _ = require('underscore');
 
-  var configurables =
+  const configurables =
       { root: { 'default': 'C4' },
         scale: { 'default': 'minor' },
         volume: { 'default': 50 },
@@ -18,13 +18,13 @@ module.exports = function (RED) {
   // exponential scale with 0->0 and 100->1
   function volume2amp (volume) {
     volume = Math.max(0, volume);
-    var base = 1.02;
+    const base = 1.02;
     return (Math.pow(base, volume) - 1) / (Math.pow(base, 100) - 1);
   }
 
   function freeSynths (node) {
-    var global = node.context().global;
-    var toDelete = global.get('synth_delete_sc') || [];
+    const global = node.context().global;
+    const toDelete = global.get('synth_delete_sc') || [];
     for (var i = 0; i < toDelete.length; i++) {
       sc.freeSynth(node, toDelete[i]);
     }
@@ -32,17 +32,17 @@ module.exports = function (RED) {
   }
 
   function deleteSynth (node, synthID) {
-    var global = node.context().global;
-    var toDelete = global.get('synth_delete_sc') || [];
+    const global = node.context().global;
+    const toDelete = global.get('synth_delete_sc') || [];
     toDelete.push(synthID);
     global.set('synth_delete_sc', toDelete);
   }
 
   function SynthNode (config) {
     RED.nodes.createNode(this, config);
-    var node = this;
+    const node = this;
 
-    for (var conf in configurables) {
+    for (let conf in configurables) {
       configure(conf, config[conf]);
     }
 
@@ -50,8 +50,8 @@ module.exports = function (RED) {
 
     this.on('input', function (msg) {
       if (msg.topic && msg.topic.startsWith('synthcontrol:')) {
-        var synthcontrol = msg.topic.substring(13);
-        var controlval = Number(msg.payload);
+        const synthcontrol = msg.topic.substring(13);
+        const controlval = Number(msg.payload);
         node.parameters[synthcontrol] = controlval;
         setSynthParam(synthcontrol, controlval);
         return;
@@ -166,7 +166,7 @@ module.exports = function (RED) {
             sc.createBuffer(node);
           }
           payload.push('buffer', node.bufnum);
-          var midibase = node.synthtypes[node.synthtype].midibase;
+          const midibase = node.synthtypes[node.synthtype].midibase;
           if (midibase) {
             payload.push('midibase', midibase);
           }
@@ -182,10 +182,11 @@ module.exports = function (RED) {
         payload.push(node.parameters[param]);
       }
 
+      const bpm = msg.bpm || node.context().global.get('bpm');
+
       if (msg.beats) {
         payload.push('beats');
         payload.push(msg.beats);
-        var bpm = msg.bpm || node.context().global['bpm'];
         if (bpm) {
           payload.push('bpm', bpm);
         }
@@ -202,12 +203,14 @@ module.exports = function (RED) {
                 args: payload
               }
             ]
-          }
+          },
+          bpm: bpm  // this one is to be picked up by any fx on the way
         };
       } else {
         playmsg = {
           topic: action,
-          payload: payload
+          payload: payload,
+          bpm: bpm
         };
       }
 
@@ -244,9 +247,9 @@ module.exports = function (RED) {
       // check for sustained synths: should do this by seeing if they've got a gate parameter
       if (node.voices > 0) {
         setTimeout(function () {
-          var global = node.context().global;
+          const global = node.context().global;
           for (var voice = 0; voice < node.voices; voice++) {
-            var id = Number(global.get('synth_next_sc_node'));
+            const id = Number(global.get('synth_next_sc_node'));
             if (isNaN(id)) {
               id = 100000; // high to avoid nodes from sclang
             }
@@ -254,7 +257,7 @@ module.exports = function (RED) {
             node.synthIDs[voice] = id;
 
             // add it to the head of the root group
-            var createMsg = {
+            const createMsg = {
               topic: '/s_new',
               payload: [node.synthtype, node.synthIDs[voice], 0, 0, 'out', node.outBus]
             };
@@ -333,7 +336,7 @@ module.exports = function (RED) {
         return -1;
       }
 
-      var global = node.context().global;
+      const global = node.context().global;
 
       var root = node.root;
 
@@ -371,7 +374,7 @@ module.exports = function (RED) {
 
       // turn the degree into an offset
 
-      var roman = {
+      const roman = {
         I: 1,
         II: 2,
         III: 3,
@@ -390,7 +393,7 @@ module.exports = function (RED) {
       var midiroot;
 
       if (isNaN(root)) {
-        var name2midi = {
+        const name2midi = {
           C: 60,
           D: 62,
           E: 64,
@@ -431,7 +434,7 @@ module.exports = function (RED) {
 
       note += noteoffset;
 
-      var intervals = {
+      const intervals = {
         minor: [0, 2, 3, 5, 7, 8, 10, 12],
         major: [0, 2, 4, 5, 7, 9, 11, 12],
         dorian: [0, 2, 3, 5, 7, 9, 10, 12],
@@ -543,14 +546,15 @@ module.exports = function (RED) {
 
   function SoundFXNode (config) {
     RED.nodes.createNode(this, config);
-    var node = this;
+    const node = this;
 
     reset();
 
     this.on('input', function (msg) {
+
       if (msg.topic && msg.topic.startsWith('fxcontrol:')) {
-        var fxcontrol = msg.topic.substring(10);
-        var controlval = Number(msg.payload);
+        const fxcontrol = msg.topic.substring(10);
+        const controlval = Number(msg.payload);
         node.parameters[fxcontrol] = controlval;
         setFXParam(fxcontrol, controlval);
         return;
@@ -571,10 +575,9 @@ module.exports = function (RED) {
         // receiving a play message from a synth
       case '/s_new':
         msg.payload.push('out', node.inBus);
-        var bpm = msg.bpm || node.context().global['bpm'];
-        if (bpm) {
-          setFXParam('bpm', bpm);
-        }
+        
+        setFXbpm(msg);
+        
         node.send(msg);
         break;
 
@@ -584,6 +587,9 @@ module.exports = function (RED) {
           if (Array.isArray(args)) {
             args.push('out', node.inBus);
           }
+          
+          setFXbpm(msg);
+          
           node.send(msg);
           return;
         }
@@ -604,13 +610,21 @@ module.exports = function (RED) {
     });
 
     function setFXParam (param, val) {
-      var parammsg = {
+      const parammsg = {
         'topic': '/n_set',
         'payload': [node.synthID, param, val]
       };
       node.send(parammsg);
     }
 
+    function setFXbpm(msg) {
+      const bpm = msg.bpm;
+
+      if (bpm) {
+        setFXParam('bpm', bpm);
+      }
+    }
+    
     function createFX () {
       sc.sendSynthDef(node, node.fxtype);
       // leave some time for the synthdef to be sent
@@ -619,7 +633,7 @@ module.exports = function (RED) {
         sc.freeSynth(node, node.synthID);
 
         // add it to the tail of the root group
-        var createMsg = {
+        const createMsg = {
           topic: '/s_new',
           payload: [node.fxtype, node.synthID, 1, 0, 'inBus', node.inBus]
         };

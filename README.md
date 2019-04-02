@@ -45,12 +45,13 @@ dtoverlay=i2s-mmap
 node-red-contrib-music has been tested with
 
 * OSX 10.13.4 on a MacBook Pro
+* Windows 10
 * PiTop OS release 2018-05-25 on a [pi-top](https://pi-top.com/) with RPi3 and a bog standard USB sound card
 * A standalone RPi3 with an [IQAudio sound card](http://www.iqaudio.com/downloads/IQaudIO.pdf)
-* SuperCollider 3.8.0
-* node-red 0.18.3
-* node v8.11.3
-* npm 5.6.0
+* SuperCollider 3.8.0 - 3.10.2
+* node-red 0.18.3 - 0.20.3
+* node v8.11.3 - v11.11.0
+* npm 5.6.0 - 6.9.0
 
 If you get it working on some other combination then do let us know
 

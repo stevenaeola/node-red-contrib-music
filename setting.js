@@ -3,24 +3,24 @@ module.exports = function (RED) {
 
   function SettingNode (config) {
     RED.nodes.createNode(this, config);
-    var node = this;
+    const node = this;
 
     reset();
 
-    var newVal;
+    let newVal;
 
     this.on('input', function (msg) {
       switch (msg.topic) {
       case 'up':
       case 'down':
-        var oldVal = Number(node.trackedVal);
+        const oldVal = Number(node.trackedVal);
 
         if (Number.isNaN(oldVal)) {
           node.warn('To change a setting up or down the value must be a number');
           return;
         }
 
-        var change = numberFrom(msg.payload, 1);
+        let change = numberFrom(msg.payload, 1);
         if (msg.topic === 'down') {
           change = -change;
         }
@@ -56,13 +56,13 @@ module.exports = function (RED) {
           newVal = Math.max(newVal, node.min);
         }
 
-        if (!isNaN(node.max)) {
+        if (node.max && !isNaN(node.max)) {
           newVal = Math.min(newVal, node.max);
         }
       }
       node.trackedVal = newVal;
 
-      var disp;
+      let disp;
       if (isNaN(node.trackedVal)) {
         disp = node.trackedVal;
       } else {
@@ -77,6 +77,7 @@ module.exports = function (RED) {
       if (node.global) {
         node.context().global.set(node.setting, node.trackedVal);
       }
+
       node.send({
         topic: node.setting,
         payload: node.trackedVal
@@ -99,7 +100,7 @@ module.exports = function (RED) {
   }
 
   function numberFrom (val, undef) {
-    var num = Number(val);
+    let num = Number(val);
     if (val.length === 0 || Number.isNaN(num)) {
       num = undef;
     }
