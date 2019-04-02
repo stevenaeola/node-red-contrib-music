@@ -16,8 +16,14 @@ module.exports = function (RED) {
       };
 
   // exponential scale with 0->0 and 100->1
-  function volume2amp (volume) {
-    volume = Math.max(0, volume);
+  function volume2amp (node) {
+    let volume = Math.max(0, node.volume);
+    
+    const globalVolume = node.context().global.get('volume');
+    if (globalVolume !== null && globalVolume >= 0) {
+      volume = volume * globalVolume / 100;
+    }
+    
     const base = 1.02;
     return (Math.pow(base, volume) - 1) / (Math.pow(base, 100) - 1);
   }
@@ -136,7 +142,7 @@ module.exports = function (RED) {
       var action;
       var synthID;
 
-      var amp = volume2amp(node.volume);
+      var amp = volume2amp(node);
 
       if (node.voices > 0) {
         action = '/n_set';
@@ -204,7 +210,8 @@ module.exports = function (RED) {
               }
             ]
           },
-          bpm: bpm  // this one is to be picked up by any fx on the way
+          // this one is to be picked up by any fx on the way
+          bpm: bpm
         };
       } else {
         playmsg = {
@@ -236,7 +243,7 @@ module.exports = function (RED) {
     }
 
     function setSynthVolume () {
-      setSynthParam('amp', volume2amp(node.volume));
+      setSynthParam('amp', volume2amp(node));
     }
 
     function createSynth () {
@@ -249,7 +256,7 @@ module.exports = function (RED) {
         setTimeout(function () {
           const global = node.context().global;
           for (var voice = 0; voice < node.voices; voice++) {
-            const id = Number(global.get('synth_next_sc_node'));
+            let id = Number(global.get('synth_next_sc_node'));
             if (isNaN(id)) {
               id = 100000; // high to avoid nodes from sclang
             }
@@ -551,7 +558,6 @@ module.exports = function (RED) {
     reset();
 
     this.on('input', function (msg) {
-
       if (msg.topic && msg.topic.startsWith('fxcontrol:')) {
         const fxcontrol = msg.topic.substring(10);
         const controlval = Number(msg.payload);
@@ -568,16 +574,16 @@ module.exports = function (RED) {
         }
         // 100 should be neutral volume, not max
 
-        setFXParam('amp', volume2amp(node.volume));
+        setFXParam('amp', volume2amp(node));
 
         break;
 
         // receiving a play message from a synth
       case '/s_new':
         msg.payload.push('out', node.inBus);
-        
+
         setFXbpm(msg);
-        
+
         node.send(msg);
         break;
 
@@ -587,9 +593,9 @@ module.exports = function (RED) {
           if (Array.isArray(args)) {
             args.push('out', node.inBus);
           }
-          
+
           setFXbpm(msg);
-          
+
           node.send(msg);
           return;
         }
@@ -617,14 +623,14 @@ module.exports = function (RED) {
       node.send(parammsg);
     }
 
-    function setFXbpm(msg) {
+    function setFXbpm (msg) {
       const bpm = msg.bpm;
 
       if (bpm) {
         setFXParam('bpm', bpm);
       }
     }
-    
+
     function createFX () {
       sc.sendSynthDef(node, node.fxtype);
       // leave some time for the synthdef to be sent
@@ -639,7 +645,7 @@ module.exports = function (RED) {
         };
         node.send(createMsg);
 
-        setFXParam('amp', volume2amp(node.volume));
+        setFXParam('amp', volume2amp(node));
       }, 200);
     }
 
