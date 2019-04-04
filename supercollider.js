@@ -32,8 +32,14 @@ function freeSynth (node, synthID, timeTag) {
   }
 }
 
-function sendSynthDef (node, synthdefName) {
-  const synthdefFile = path.join(__dirname, 'synthdefs', synthdefName + '.scsyndef');
+function sendSynthDef (node) {
+  let synthdefPath = path.join(__dirname, 'synthdefs', 'compiled');
+  if (node.tags.includes('sonic-pi')) {
+    synthdefPath = path.join(synthdefPath, 'sonic-pi');
+  }
+
+  const synthdefFile = path.join(synthdefPath, node.synthdefName + '.scsyndef');
+
   fs.readFile(synthdefFile, function (err, data) {
     if (err) {
       node.warn(err);

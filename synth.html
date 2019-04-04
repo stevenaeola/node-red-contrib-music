@@ -44,14 +44,14 @@
      bass3: {tuned: true, midibase: 57},
      bass: {tuned: true, midibase: 55},
      bd: {},
-     bell: {tuned: true, synth:true},
+     bell: {tuned: true, synth: true},
      birds3: {},
      blip: {tuned: true},
      bottle: {},
      can: {},
 
      cr: {},
-     crotale: {synth:true},
+     crotale: {synth: true},
      crow: {},
      diphone2: {},
      drum: {},
@@ -78,8 +78,8 @@
      drum_tom_mid_soft: {},
 
      drumtraks: {},
-     dulcimer: {tuned: true, synth:true},
-     dx: {tuned: true, synth:true},
+     dulcimer: {tuned: true, synth: true},
+     dx: {tuned: true, synth: true},
 
      elec_beep: {},
      elec_bell: {tuned: true, midibase: 53},
@@ -110,10 +110,10 @@
 
      feel: {},
      flick: {tuned: true},
-     fmtanh: {tuned: true, synth:true},
+     fmtanh: {tuned: true, synth: true},
      future: {},
      gabba: {},
-     ghost: {tuned: true, synth:true},
+     ghost: {tuned: true, synth: true},
 
      glitch_bass_g: {tuned: true, midibase: 55},
      glitch_perc1: {},
@@ -140,13 +140,13 @@
      industrial: {},
      jazz: {},
      jvbass: {tuned: true, midibase: 54},
-     kick: {synth:true},
+     kick: {synth: true},
      kurt: {tuned: true, midibase: 64},
      latibro: {},
      less: {},
      lighter: {},
      lt: {tuned: true},
-     marimba: {tuned: true, synth:true},
+     marimba: {tuned: true, synth: true},
 
      mehackit_phone1: {},
      mehackit_phone2: {},
@@ -167,7 +167,7 @@
      misc_clap: {},
      misc_crow: {},
 
-     moog: {tuned: true, synth:true},
+     moog: {tuned: true, synth: true},
      mouth: {},
      mt: {},
      newnotes: {tuned: true, midibase: 61},
@@ -186,15 +186,30 @@
      perc_swoosh: {},
      perc_till: {},
 
-     piano: {tuned: true, synth:true},
+     piano: {tuned: true, synth: true},
      pluck: {tuned: true, midibase: 58},
      print: {},
-     prophet: {tuned: true, synth:true},
+     prophet: {tuned: true, synth: true},
      psr: {tuned: true, midibase: 53},
      rm: {},
      "short": {},
      sid: {},
      sn: {},
+
+     "beep": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "chiplead": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "chipbass": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "dark_ambience": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "dsaw": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "fm": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "growl": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "hollow": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "hoover": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "pretty_bell": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "pulse": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "synth_violin": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "tb303": {tuned: true, synth: true, tags: ["sonic-pi"]},
+     "tech_saws": {tuned: true, synth: true, tags: ["sonic-pi"]},
 
      sn_dolf: {},
      sn_dub: {},
@@ -202,7 +217,7 @@
      sn_zome: {},
 
 
-     snare: {synth:true},
+     snare: {synth: true},
      stab: {},
      tabla: {},
 
@@ -322,43 +337,43 @@
 	     $('#node-input-synthtype-selector-container span').addClass("muted");
 	     $('#node-input-synthtype-selector-' + which).removeClass("muted");
 	     populate(which);
-	 };
-	 
-	 filterSynthtypes(node.tuned);
-	 
-	 var tunedContainer = $('#node-input-tuned-container');
+         };
+         
+         filterSynthtypes(node.tuned);
+         
+         var tunedContainer = $('#node-input-tuned-container');
 
-	 $('#node-input-synthtype').change(
+         $('#node-input-synthtype').change(
 	     function (){
-		 var option = $(this).find('option:selected').val();
-		 if(synthtypes[option] && synthtypes[option].tuned){
+	         var option = $(this).find('option:selected').val();
+	         if(synthtypes[option] && synthtypes[option].tuned){
 		     tunedContainer.show();
-		 }
-		 else{
+	         }
+	         else{
 		     tunedContainer.hide();
-		 }
+	         }
 	     }
-	 );
-	 
-	 $('#node-input-synthtype-selector-all').click(
+         );
+         
+         $('#node-input-synthtype-selector-all').click(
 	     () =>  {
-		 filterSynthtypes('all');
+	         filterSynthtypes('all');
 	     }
-	 );
-	 
-     	 $('#node-input-synthtype-selector-tuned').click(
+         );
+         
+         $('#node-input-synthtype-selector-tuned').click(
 	     () => {
-		 filterSynthtypes('tuned');
-		 tunedContainer.show();
+	         filterSynthtypes('tuned');
+	         tunedContainer.show();
 	     }
-	 );
-	 
-	 $('#node-input-synthtype-selector-untuned').click(
+         );
+         
+         $('#node-input-synthtype-selector-untuned').click(
 	     () => {
-		 filterSynthtypes('untuned');
-		 tunedContainer.hide();
+	         filterSynthtypes('untuned');
+	         tunedContainer.hide();
 	     }
-	 );
+         );
 
      }
  });

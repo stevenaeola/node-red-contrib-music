@@ -28,22 +28,6 @@ module.exports = function (RED) {
     return (Math.pow(base, volume) - 1) / (Math.pow(base, 100) - 1);
   }
 
-  function freeSynths (node) {
-    const global = node.context().global;
-    const toDelete = global.get('synth_delete_sc') || [];
-    for (var i = 0; i < toDelete.length; i++) {
-      sc.freeSynth(node, toDelete[i]);
-    }
-    global.set('synth_delete_sc', []);
-  }
-
-  function deleteSynth (node, synthID) {
-    const global = node.context().global;
-    const toDelete = global.get('synth_delete_sc') || [];
-    toDelete.push(synthID);
-    global.set('synth_delete_sc', toDelete);
-  }
-
   function SynthNode (config) {
     RED.nodes.createNode(this, config);
     const node = this;
@@ -80,7 +64,7 @@ module.exports = function (RED) {
           break;
 
         case 'stop':
-          handleStopSynth();
+          // nothing to do
           break;
 
         case 'start':
@@ -94,7 +78,7 @@ module.exports = function (RED) {
     });
 
     this.on('close', function () {
-      handleCloseSynth();
+      // nothing to do
     });
 
     function handleTickSynth (msg) {
@@ -104,27 +88,6 @@ module.exports = function (RED) {
         });
       } else {
         sendNote(msg.note, msg);
-      }
-    }
-
-    function handleStopSynth () {
-      for (var voice = 0; voice < node.voices; voice++) {
-        var stopMsg = { topic: '/n_set',
-                       payload:
-                       [node.synthIDs[voice], 'gate', 0]
-                      };
-        node.send(stopMsg);
-      }
-    }
-
-    function handleCloseSynth () {
-      // mark for deletion: the actual freeing takes place when the new one is deployed,
-      // so that we can be sure all the wires are in place to connect to server via OSC
-      for (var voice = 0; voice < node.voices; voice++) {
-        if (node.synthIDs[voice]) {
-          deleteSynth(node, node.synthIDs[voice]);
-          node.synthIDs[voice] = null;
-        }
       }
     }
 
@@ -140,47 +103,29 @@ module.exports = function (RED) {
       }
       var payload;
       var action;
-      var synthID;
 
       var amp = volume2amp(node);
 
-      if (node.voices > 0) {
-        action = '/n_set';
-        synthID = node.synthIDs[node.next_voice];
-        payload = [synthID];
-        if (midi === -1) {
-          payload.push('gate', 0);
-        } else {
-          payload.push('gate', 1);
+      action = '/s_new';
+
+      // add it to the head of the root group
+      // use node ID of -1 to auto-generate synth id
+      payload = [node.synthdefName, -1, 0, 0, 'amp', amp];
+
+      if (!isSynth()) {
+        if (!node.bufnum) {
+          sc.createBuffer(node);
         }
-      } else {
-        action = '/s_new';
-        synthID = -1;
-
-        var synthname;
-        if (isSynth()) {
-          synthname = node.synthtype;
-        } else {
-          synthname = 'playSampleMono';
-        }
-
-        // add it to the head of the root group
-        payload = [synthname, -1, 0, 0, 'amp', amp];
-
-        if (!isSynth()) {
-          if (!node.bufnum) {
-            sc.createBuffer(node);
-          }
-          payload.push('buffer', node.bufnum);
-          const midibase = node.synthtypes[node.synthtype].midibase;
-          if (midibase) {
-            payload.push('midibase', midibase);
-          }
+        payload.push('buffer', node.bufnum);
+        const midibase = node.synthtypes[node.synthtype].midibase;
+        if (midibase) {
+          payload.push('midibase', midibase);
         }
       }
 
       if (midi) {
         payload.push('midi', midi);
+        payload.push('note', midi);
       }
 
       for (var param in node.parameters) {
@@ -195,6 +140,12 @@ module.exports = function (RED) {
         payload.push(msg.beats);
         if (bpm) {
           payload.push('bpm', bpm);
+          // set release to 0.25 beats
+          let release = 0.25 * 60 / bpm;
+          // tried subtracting release time but it seemed to leave gaps
+          let sustain = msg.beats * 60 / bpm;
+          payload.push('sustain', sustain);
+          payload.push('release', release);
         }
       }
 
@@ -222,24 +173,18 @@ module.exports = function (RED) {
       }
 
       // avoid problems with DetectSilence leaving zombie synths at amp 0
-      if (amp > 0 && (!midi || midi >= 0 || node.voices > 0)) {
+      if (amp > 0 && (!midi || midi >= 0)) {
         node.send(playmsg);
-      }
-
-      node.next_voice++;
-      if (node.next_voice >= node.voices) {
-        node.next_voice = 0;
       }
     }
 
     function setSynthParam (param, val) {
-      for (var voice = 0; voice < node.voices; voice++) {
-        var volmsg = {
-          'topic': '/n_set',
-          'payload': [node.synthIDs[voice], param, val]
-        };
-        node.send(volmsg);
-      }
+      var paramMsg = {
+        'topic': '/n_set',
+        // use node ID of -1 to apply to most recently generated synth
+        'payload': [-1, param, val]
+      };
+      node.send(paramMsg);
     }
 
     function setSynthVolume () {
@@ -247,36 +192,18 @@ module.exports = function (RED) {
     }
 
     function createSynth () {
-      freeSynths(node);
-      sc.sendSynthDef(node, node.synthtype);
-
-      // leave some time for the synthdef to be sent
-      // check for sustained synths: should do this by seeing if they've got a gate parameter
-      if (node.voices > 0) {
-        setTimeout(function () {
-          const global = node.context().global;
-          for (var voice = 0; voice < node.voices; voice++) {
-            let id = Number(global.get('synth_next_sc_node'));
-            if (isNaN(id)) {
-              id = 100000; // high to avoid nodes from sclang
-            }
-            global.set('synth_next_sc_node', id + 1);
-            node.synthIDs[voice] = id;
-
-            // add it to the head of the root group
-            const createMsg = {
-              topic: '/s_new',
-              payload: [node.synthtype, node.synthIDs[voice], 0, 0, 'out', node.outBus]
-            };
-            node.send(createMsg);
-          }
-          setSynthVolume();
-        }, 200);
+      node.tags = node.synthtypes[node.synthtype].tags || [];
+      if (isSynth()) {
+        if (node.tags.includes('sonic-pi')) {
+          node.synthdefName = 'sonic-pi-' + node.synthtype;
+        } else {
+          node.synthdefName = node.synthtype;
+        }
+        sc.sendSynthDef(node);
       }
     }
 
     function reset () {
-      freeSynths(node);
       node.synthtypes = config.synthtypes;
       node.tuned = config.tuned;
 
@@ -290,16 +217,7 @@ module.exports = function (RED) {
     }
 
     function resetSynth () {
-      node.next_voice = 0;
       node.outBus = Number(config.outBus) || 0;
-
-      if (isSustained()) {
-        node.voices = 1;
-      } else {
-        node.voices = 0;
-      }
-
-      node.synthIDs = Array(node.voices);
 
       // wait a little while to allow wires to be created
       setTimeout(function () {
@@ -307,11 +225,13 @@ module.exports = function (RED) {
       }, 200);
     }
 
-    function resetSample () {
-      setTimeout(function () {
+      function resetSample () {
+        node.synthdefName = 'playSampleMono';
+
+        setTimeout(function () {
         sc.freeBuffer(node);
         sc.createBuffer(node);
-        sc.sendSynthDef(node, 'playSampleMono');
+        sc.sendSynthDef(node);
       }, 200);
     }
 
@@ -323,10 +243,6 @@ module.exports = function (RED) {
 
     function isTuned () {
       return node.synthtypes[node.synthtype] && node.synthtypes[node.synthtype].tuned;
-    }
-
-    function isSustained () {
-      return node.synthtypes[node.synthtype] && node.synthtypes[node.synthtype].sustained;
     }
 
     // turn note number (degree of scale) into midi
@@ -581,6 +497,7 @@ module.exports = function (RED) {
         // receiving a play message from a synth
       case '/s_new':
         msg.payload.push('out', node.inBus);
+        msg.payload.push('out_bus', node.inBus);
 
         setFXbpm(msg);
 
@@ -592,6 +509,7 @@ module.exports = function (RED) {
           let args = msg.payload.packets[0].args;
           if (Array.isArray(args)) {
             args.push('out', node.inBus);
+            args.push('out_bus', node.inBus);
           }
 
           setFXbpm(msg);
@@ -611,7 +529,7 @@ module.exports = function (RED) {
     });
 
     this.on('close', function () {
-      deleteSynth(node, node.synthID);
+      sc.freeSynth(node, node.synthID);
       node.synthID = null;
     });
 
@@ -632,7 +550,9 @@ module.exports = function (RED) {
     }
 
     function createFX () {
-      sc.sendSynthDef(node, node.fxtype);
+      node.tags = [];
+      node.synthdefName = node.fxtype;
+      sc.sendSynthDef(node);
       // leave some time for the synthdef to be sent
 
       setTimeout(function () {
