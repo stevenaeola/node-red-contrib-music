@@ -103,8 +103,10 @@ module.exports = function (RED) {
             setTimeout(function () {
                 sc.freeBuffer(node);
                 sc.createBuffer(node);
-                sc.sendSynthDef(node, 'playSample');
-                sc.sendSynthDef(node, 'recordSample');
+                node.synthdefName = 'playSampleStereo';
+                sc.sendSynthDef(node);
+                node.synthdefName = 'recordSampleStereo';
+                sc.sendSynthDef(node);
             }, 200);
         }
 
@@ -116,6 +118,8 @@ module.exports = function (RED) {
             node.loop = config.loop || false;
 
             node.length = Number(config.length) || 4;
+
+            node.tags = [];
 
             restart();
         }
@@ -178,7 +182,7 @@ module.exports = function (RED) {
         global.set('synth_next_sc_node', id + 1);
         node[synth] = id;
 
-        var payload = [action + 'Sample', node[synth], 0, 0, 'buffer', node.bufnum];
+        var payload = [action + 'SampleStereo', node[synth], 0, 0, 'buffer', node.bufnum];
 
         const address = '/s_new';
 
