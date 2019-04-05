@@ -199,8 +199,8 @@ module.exports = function (RED) {
         } else {
           node.synthdefName = node.synthtype;
         }
-        sc.sendSynthDef(node);
       }
+      sc.sendSynthDef(node);
     }
 
     function reset () {
@@ -225,13 +225,17 @@ module.exports = function (RED) {
       }, 200);
     }
 
-      function resetSample () {
+    function resetSample () {
+      if (node.synthtypes[node.synthtype].stereo === true){
+        node.synthdefName = 'playSampleStereo';
+      } else {
         node.synthdefName = 'playSampleMono';
-
-        setTimeout(function () {
+      }
+      
+      setTimeout(function () {
         sc.freeBuffer(node);
         sc.createBuffer(node);
-        sc.sendSynthDef(node);
+        createSynth(node);
       }, 200);
     }
 
