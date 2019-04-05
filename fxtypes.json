@@ -1,0 +1,7 @@
+{
+    "reverb": {"inBus": 4},
+    "delay": {"inBus": 6},
+    "LPF": {"inBus": 8},
+    "HPF": {"inBus": 10},
+    "drop": {"inBus": 12}
+}
