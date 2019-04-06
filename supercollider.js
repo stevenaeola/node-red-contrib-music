@@ -33,24 +33,25 @@ function freeSynth (node, synthID, timeTag) {
 }
 
 function sendSynthDef (node) {
-  let synthdefPath = path.join(__dirname, 'synthdefs', 'compiled');
-  if (node.tags.includes('sonic-pi')) {
-    synthdefPath = path.join(synthdefPath, 'sonic-pi');
-  }
-
-  const synthdefFile = path.join(synthdefPath, node.synthdefName + '.scsyndef');
-
-  fs.readFile(synthdefFile, function (err, data) {
-    if (err) {
-      node.warn(err);
-    } else {
-      const synthMsg = {
-        topic: '/d_recv',
-        payload: [data, 0]
-      };
-      node.send(synthMsg);
+    let synthdefPath = path.join(__dirname, 'synthdefs', 'compiled');
+    if (node.tags.includes('sonic-pi')) {
+        synthdefPath = path.join(synthdefPath, 'sonic-pi');
     }
-  });
+
+    const synthdefFile = path.join(synthdefPath, node.synthdefName + '.scsyndef');
+
+    fs.readFile(synthdefFile, function (err, data) {
+        if (err) {
+            node.warn(' problem sending file for ' + node.synthtype);
+            node.warn(err);
+        } else {
+            const synthMsg = {
+                topic: '/d_recv',
+                payload: [data, 0]
+            };
+            node.send(synthMsg);
+        }
+    });
 }
 
 function createBuffer (node) {
@@ -110,8 +111,22 @@ function loadBuffer (node) {
   }
 }
 
+// exponential scale with 0->0 and 100->1
+function volume2amp (node) {
+    let volume = Math.max(0, node.volume);
+
+    const globalVolume = node.context().global.get('volume');
+    if (globalVolume !== null && globalVolume >= 0) {
+        volume = volume * globalVolume / 100;
+    }
+
+    const base = 1.02;
+    return (Math.pow(base, volume) - 1) / (Math.pow(base, 100) - 1);
+}
+
 module.exports = { createBuffer,
                    freeBuffer,
                    freeSynth,
                    loadBuffer,
-                   sendSynthDef };
+                   sendSynthDef,
+                   volume2amp };

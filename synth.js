@@ -2,42 +2,25 @@ const sc = require('./supercollider');
 
 // prefix for served GET requests
 
-const URLprefix = 'node-red-contrib-music';
-const synthtypesURL = URLprefix + '/synthtypes';
+const synthtypesURL = 'node-red-contrib-music/synthtypes';
 let synthtypes = require('./synthtypes');
-
-let fxtypes = require('./fxtypes');
-const fxtypesURL = URLprefix + '/fxtypes';
 
 module.exports = function (RED) {
     'use strict';
 
     const _ = require('underscore');
 
-    const configurables =
-          { root: { 'default': 'C4' },
-            scale: { 'default': 'minor' },
-            volume: { 'default': 50 },
-            octave: { 'default': 0 },
-            synthtype: { 'default': 'kick' },
-            key: { 'default': 'C minor' },
-            degree: { 'default': 'I' }
-          };
-
-    // exponential scale with 0->0 and 100->1
-    function volume2amp (node) {
-        let volume = Math.max(0, node.volume);
-
-        const globalVolume = node.context().global.get('volume');
-        if (globalVolume !== null && globalVolume >= 0) {
-            volume = volume * globalVolume / 100;
-        }
-
-        const base = 1.02;
-        return (Math.pow(base, volume) - 1) / (Math.pow(base, 100) - 1);
-    }
-
     function SynthNode (config) {
+        const configurables =
+              { root: { 'default': 'C4' },
+                scale: { 'default': 'minor' },
+                volume: { 'default': 50 },
+                octave: { 'default': 0 },
+                synthtype: { 'default': 'kick' },
+                key: { 'default': 'C minor' },
+                degree: { 'default': 'I' }
+              };
+
         RED.httpAdmin.get('/' + synthtypesURL, function (req, res) {
             // so we can edit syntypes.json without having to restart the server
             synthtypes = require('./synthtypes');
@@ -119,7 +102,7 @@ module.exports = function (RED) {
             var payload;
             var action;
 
-            var amp = volume2amp(node);
+            var amp = sc.volume2amp(node);
 
             action = '/s_new';
 
@@ -203,12 +186,12 @@ module.exports = function (RED) {
         }
 
         function setSynthVolume () {
-            setSynthParam('amp', volume2amp(node));
+            setSynthParam('amp', sc.volume2amp(node));
         }
 
         function createSynth () {
-            node.tags = synthtypes[node.synthtype].tags || [];
             if (isSynth()) {
+                node.tags = synthtypes[node.synthtype].tags || [];
                 if (node.tags.includes('sonic-pi')) {
                     node.synthdefName = 'sonic-pi-' + node.synthtype;
                 } else {
@@ -231,6 +214,7 @@ module.exports = function (RED) {
         }
 
         function resetSynth () {
+            node.tags = [];
             node.outBus = Number(config.outBus) || 0;
 
             // wait a little while to allow wires to be created
@@ -240,6 +224,7 @@ module.exports = function (RED) {
         }
 
         function resetSample () {
+            node.tags = [];
             if (synthtypes[node.synthtype].stereo === true) {
                 node.synthdefName = 'playSampleStereo';
             } else {
@@ -485,132 +470,5 @@ module.exports = function (RED) {
         }
     }
 
-    function SoundFXNode (config) {
-        RED.httpAdmin.get('/' + fxtypesURL, function (req, res) {
-            fxtypes = require('./fxtypes');
-            res.json(fxtypes);
-        });
-
-        RED.nodes.createNode(this, config);
-        const node = this;
-
-        reset();
-
-        this.on('input', function (msg) {
-            if (msg.topic && msg.topic.startsWith('fxcontrol:')) {
-                const fxcontrol = msg.topic.substring(10);
-                const controlval = Number(msg.payload);
-                node.parameters[fxcontrol] = controlval;
-                setFXParam(fxcontrol, controlval);
-                return;
-            }
-
-            switch (msg.topic) {
-            case 'volume':
-                var newVol = Number(msg.payload);
-                if (!Number.isNaN(newVol)) {
-                    node.volume = newVol;
-                }
-                // 100 should be neutral volume, not max
-
-                setFXParam('amp', volume2amp(node));
-
-                break;
-
-                // receiving a play message from a synth
-            case '/s_new':
-                msg.payload.push('out', node.inBus);
-                msg.payload.push('out_bus', node.inBus);
-
-                setFXbpm(msg);
-
-                node.send(msg);
-                break;
-
-            default:
-                if (msg.payload.timeTag) {
-                    let args = msg.payload.packets[0].args;
-                    if (Array.isArray(args)) {
-                        args.push('out', node.inBus);
-                        args.push('out_bus', node.inBus);
-                    }
-
-                    setFXbpm(msg);
-
-                    node.send(msg);
-                    return;
-                }
-                if (msg.payload === 'reset') {
-                    reset();
-                    // just this once the reset message is not propagated
-                    return;
-                }
-
-                //              setFXParam(msg.topic, msg.payload);
-                node.send(msg);
-            }
-        });
-
-        this.on('close', function () {
-            sc.freeSynth(node, node.synthID);
-            node.synthID = null;
-        });
-
-        function setFXParam (param, val) {
-            const parammsg = {
-                'topic': '/n_set',
-                'payload': [node.synthID, param, val]
-            };
-            node.send(parammsg);
-        }
-
-        function setFXbpm (msg) {
-            const bpm = msg.bpm;
-
-            if (bpm) {
-                setFXParam('bpm', bpm);
-            }
-        }
-
-        function createFX () {
-            node.tags = [];
-            node.synthdefName = node.fxtype;
-            sc.sendSynthDef(node);
-            // leave some time for the synthdef to be sent
-
-            setTimeout(function () {
-                sc.freeSynth(node, node.synthID);
-
-                // add it to the tail of the root group
-                const createMsg = {
-                    topic: '/s_new',
-                    payload: [node.fxtype, node.synthID, 1, 0, 'inBus', node.inBus]
-                };
-                node.send(createMsg);
-
-                setFXParam('amp', volume2amp(node));
-            }, 200);
-        }
-
-        function reset () {
-            node.fxtype = config.fxtype || 'reverb';
-            node.name = config.name || node.fxtype;
-            node.inBus = fxtypes[node.fxtype].inBus;
-            node.outBus = Number(config.outBus) || 0;
-            // fix the synthID according to the fxtype (via inBus number)
-            // means we can only have one fx node per fx type
-            // ... which is deliberate
-            node.synthID = 100000 - node.inBus / 2;
-            node.volume = 100;
-
-            node.parameters = {};
-            // wait a little while to allow wires to be created
-            setTimeout(function () {
-                createFX();
-            }, 200);
-        }
-    }
-
     RED.nodes.registerType('synth', SynthNode);
-    RED.nodes.registerType('soundfx', SoundFXNode);
 };

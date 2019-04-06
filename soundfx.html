@@ -1,0 +1,41 @@
+<script type="text/javascript">
+
+ const fxtypesURL = "node-red-contrib-music/fxtypes";
+ let fxtypes;
+ $.getJSON(fxtypesURL, function (data) {
+     fxtypes = data;
+ });
+ 
+ RED.nodes.registerType('soundfx',{
+     category: 'music',
+     color: '#a6bbcf',
+     defaults: {
+	 fxtype: {value: "reverb", required: "true"}
+        },
+     inputs:1,
+     inputLabels:"supercollider instructions or fxcontrol",
+     outputs:1,
+     outputLabels:["supercollider instructions"],
+  icon: "file.png",
+  label: function() {
+  return this.name || this.fxtype || "soundfx";
+  }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="soundfx">
+ <div class="form-row">
+ <label for="node-input-fxtype">Effect Type</label>
+ <select id="node-input-fxtype">
+ <option>reverb</option>
+ <option>delay</option>
+ <option>LPF</option>
+ <option>HPF</option>
+ <option>drop</option>
+ </select>
+ </div>
+</script>
+
+<script type="text/x-red" data-help-name="soundfx">
+    <p>Make a SuperCollider sound effect</p>
+</script>
