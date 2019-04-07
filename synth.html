@@ -115,9 +115,12 @@
 
          //         node.filterTags = node.filterTags || new Set();
          // for some reason node.filterTags is being initialised as {} which is causing problems
-         node.filterTags = new Set();
 
-         filterSynthtypes();
+         if(!node.filterTags.size){
+             node.filterTags = new Set();
+         }
+         
+          filterSynthtypes();
          
          var tunedContainer = $('#node-input-tuned-container');
 
