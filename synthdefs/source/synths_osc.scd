@@ -62,7 +62,7 @@ SynthDef("kick",{
 
 (
 SynthDef("snare",
-	{arg out = 0, sustain = 0.1, drum_mode_level = 0.25,
+	{arg out = 0, sus = 0.1, drum_mode_level = 0.25,
 	snare_level = 50, snare_tightness = 100,
 	freq = 805, amp = 0.5;
 	var drum_mode_sin_1, drum_mode_sin_2, drum_mode_pmosc, drum_mode_mix, drum_mode_env;

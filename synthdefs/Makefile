@@ -1,4 +1,4 @@
-SYNTHDEFS = playSampleStereo playSampleMono recordSampleStereo
+SYNTHDEFS = playSampleStereo playSampleMono recordSampleStereo snare
 
 all: $(SYNTHDEFS)
 
