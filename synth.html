@@ -1,19 +1,48 @@
 <script type="text/javascript">
 
  const synthtypesURL = "node-red-contrib-music/synthtypes";
- let synthtypes;
+
+ // synthtypes is an object with all the associated data, synthtypeList just the names (keys of synthtypes)
+ let synthtypes, tagSet;
+ 
  // do this dynamically from the server so that if we change the list of synths we do not have to re-do all the synths in the examples
  $.getJSON(synthtypesURL, function (data) {
      synthtypes = data;
+
+     tagSet = new Set();
+     //these tags come from the .tuned property rather than the .tags property
+     tagSet.add('tuned');
+     tagSet.add('untuned');
+     for(let synthtype of Object.keys(synthtypes)){
+         let tags = synthtypes[synthtype].tags;
+         if(Array.isArray(tags)){
+             for(let tag of tags){
+                 tagSet.add(tag);
+             }
+         }
+     }
  });
 
+ // this is only used to order the tags we have. Any tags not in this list will not be shown
+ // pairs are exclusive
+ // possibly should go in server
+ const sortTags = [['tuned', 'untuned'], ['short', 'long'], ['bass', 'snare'], 'drum', 'cymbal', ['sonic-pi', 'tidal']];
+
+ let exclusiveTags = {};
+ for(let exclusive of sortTags.filter(x => Array.isArray(x))){
+     for(let tag of exclusive){
+         exclusiveTags[tag] = exclusive.filter(y => (y !== tag));
+     }
+ }
+ 
+ 
  RED.nodes.registerType('synth',{
      category: 'music',
      color: '#a6bbcf',
      defaults: {
 	 name: {value: "", required: false},
 	 synthtype: {value: "kick", required: true},
-	 tuned: {value: "all", required: false},
+	 filterTags: {value: new Set(), required: false},
 	 volume: {value: 50},
 	 octave: {value: 0},
 	 root: {value:"", required: false},
@@ -34,48 +63,59 @@
      oneditprepare: function(){
 	 node = this;
 
-	 function populate(which){
+	 function populateSynthtypeSelect(){
 	     $("#node-input-synthtype").empty();
 
-	     for(var synthtype in synthtypes){
+	     for(var synthtype of node.synthtypeList){
 		 var row = $("<option value='" + synthtype + "'>" + synthtype + "</option>");
-		 if(node.synthtype == synthtype){
+		 if(node.synthtype === synthtype || node.synthtypeList.length === 1){
 		     row.attr("selected", "selected");
 		 }
 		 var select = $("#node-input-synthtype");
-		 var tuned = synthtypes[synthtype].tuned;
-		 switch(which){
-		     case "all":
-			 select.append(row);
-			 break;
-
-		     case "tuned":
-			 if(tuned){
-			     select.append(row);
-			 }
-			 break;
-
-		     case "untuned":
-			 if(!tuned){
-			     select.append(row);
-			 }
-			 break;
-
-		 }
+                 select.append(row);
 	     }
 	 }
 
-	 function filterSynthtypes(which){
-	     if(!which){
-		 which = "all";
-	     }
-	     node.tuned = which;
-	     $('#node-input-synthtype-selector-container span').addClass("muted");
-	     $('#node-input-synthtype-selector-' + which).removeClass("muted");
-	     populate(which);
+	 function filterSynthtypes(){
+             node.filterTags = node.filterTags || new Set();
+
+             $('#node-input-synthtype-filter-container span').addClass("muted");
+
+             for(let tag of node.filterTags){
+	         $('#node-input-synthtype-filter-' + tag).removeClass("muted");
+             }
+             
+             if (node.filterTags.size === 0){
+	         $('#node-input-synthtype-filter-all').removeClass("muted");
+             }
+
+             node.synthtypeList = [];
+             for(let synthtype in synthtypes){
+                 let includeSynthtype = true;
+                 for(let tag of node.filterTags){
+                     if(tag === 'tuned'){
+                         includeSynthtype = includeSynthtype && synthtypes[synthtype].tuned;
+                     } else if(tag === 'untuned'){
+                         includeSynthtype = includeSynthtype && !synthtypes[synthtype].tuned;
+                     } else {
+                         let tags = synthtypes[synthtype].tags;
+                         if(!Array.isArray(tags) || !tags.includes(tag)){
+                             includeSynthtype = false;
+                         }
+                     }
+                 }
+
+                 if(includeSynthtype){
+                     node.synthtypeList.push(synthtype);
+                 }
+             }
+             
+	     node.synthtypeList.sort();
+             
+	     populateSynthtypeSelect();
          };
          
-         filterSynthtypes(node.tuned);
+         filterSynthtypes();
          
          var tunedContainer = $('#node-input-tuned-container');
 
@@ -91,100 +131,109 @@
 	     }
          );
          
-         $('#node-input-synthtype-selector-all').click(
+         $('#node-input-synthtype-filter-all').click(
 	     () =>  {
-	         filterSynthtypes('all');
-	     }
-         );
-         
-         $('#node-input-synthtype-selector-tuned').click(
-	     () => {
-	         filterSynthtypes('tuned');
-	         tunedContainer.show();
-	     }
-         );
-         
-         $('#node-input-synthtype-selector-untuned').click(
-	     () => {
-	         filterSynthtypes('untuned');
-	         tunedContainer.hide();
+                 node.filterTags = new Set();
+	         filterSynthtypes();
 	     }
          );
 
+         console.log(tagSet);
+         for(let tag of tagSet){
+             $('#node-input-synthtype-filter-container').append(
+                 `<span id="node-input-synthtype-filter-${tag}"> | ${tag}</span>`
+             );
+             $('#node-input-synthtype-filter-' + tag).click(
+	         () => {
+                     if(node.filterTags.has(tag)){
+                         node.filterTags.delete(tag);
+                     } else {
+                         node.filterTags.add(tag);
+                         let exclusive = exclusiveTags[tag];
+                         if(Array.isArray(exclusive)){
+                             for(let toDelete of exclusive){
+                                 node.filterTags.delete(toDelete);
+                             }
+                         }
+                     }
+                     if(node.filterTags.has('tuned')){
+		         tunedContainer.show();
+                     }
+	             filterSynthtypes();
+	         }
+             );
+         }
+         filterSynthtypes();
      }
  });
 </script>
 
 <script type="text/x-red" data-template-name="synth">
+
     <div class="form-row">
-	<label for="node-input-synthtype"> Synth type</label>
-	<select id="node-input-synthtype">
-	</select>
-	<div id="node-input-synthtype-selector-container" style="float:right">
-	    <small>
-		<span id="node-input-synthtype-selector-all">all</span> |
-		<span id="node-input-synthtype-selector-untuned" class="muted">untuned</span> |
-		<span id="node-input-synthtype-selector-tuned" class="muted">tuned</span> 
-	    </small>
-	</div>
+        <label for="node-input-synthtype"> Synth type</label>
     </div>
 
     <div class="form-row">
-	<label for="node-input-volume"> Volume</label>
-	<input type="number" min="0" max="100" id="node-input-volume" placeholder="0-100" style="width:7em">
-    </div>
-    <!-- 
-	 <div class="form-row">
-	 <label for="node-input-outBus"> output bus </label>
-	 <input type="number" id="node-input-outBus" placeholder="0 for direct output">
-	 </div>
-       -->
-    <div id='node-input-tuned-container' style="display:none">
+        <label for="node-input-synthtype"> Synth type</label>
+        <select id="node-input-synthtype">
+        </select>
+        <div id="node-input-synthtype-filter-container" style="float:right;font-size:0.8em">
+     <span id="node-input-synthtype-filter-all">all</span>
+ </div>
+ </div>
 
-	<div class="form-row">
-	    <label for="node-input-octave"> Octave</label>
-	    <input type="number" min="-4" max="4" id="node-input-octave" placeholder="e.g. -1" style="width:7em">
-	</div>
+ <div class="form-row">
+     <label for="node-input-volume"> Volume</label>
+     <input type="number" min="0" max="100" id="node-input-volume" placeholder="0-100" style="width:7em">
+ </div>
 
-	<div id="node-input-key-container">
-	    <div class="form-row">
-		<label for="node-input-root"> Scale</label>
-		<input type="text" id="node-input-root" placeholder="e.g. C4" style="width:7em">
-		<select id="node-input-scale">
-		    <option></option>
-		    <option>minor</option>
-		    <option>major</option>
-		    <option>dorian</option>
-		    <option>mixolydian</option>
-		    <option>major pentatonic</option>
-		    <option>minor pentatonic</option>
-		    <option>blues</option>
-		    <option>chromatic</option>
-		</select
-	    </div>
+ <div id='node-input-tuned-container' style="display:none">
 
-	    <div class="form-row">
-		<label for="node-input-degree"> Degree</label>
-		<select id="node-input-degree">
-		    <option></option>
-		    <option>I</option>
-		    <option>II</option>
-		    <option>III</option>
-		    <option>IV</option>
-		    <option>V</option>
-		    <option>VI</option>
-		    <option>VII</option>
-		</select>
-	    </div>
+ <div class="form-row">
+ <label for="node-input-octave"> Octave</label>
+ <input type="number" min="-4" max="4" id="node-input-octave" placeholder="e.g. -1" style="width:7em">
+ </div>
 
-	</div>
-	
-    </div>
+ <div id="node-input-key-container">
+ <div class="form-row">
+ <label for="node-input-root"> Scale</label>
+ <input type="text" id="node-input-root" placeholder="e.g. C4" style="width:7em">
+ <select id="node-input-scale">
+ <option></option>
+ <option>minor</option>
+ <option>major</option>
+ <option>dorian</option>
+ <option>mixolydian</option>
+ <option>major pentatonic</option>
+ <option>minor pentatonic</option>
+ <option>blues</option>
+ <option>chromatic</option>
+ </select
+ </div>
 
-    <div class="form-row">
-	<label for="node-input-name"><i class="icon-tag"></i> Name</label>
-	<input type="text" id="node-input-name" placeholder="">
-    </div>
+ <div class="form-row">
+ <label for="node-input-degree"> Degree</label>
+ <select id="node-input-degree">
+ <option></option>
+ <option>I</option>
+ <option>II</option>
+ <option>III</option>
+ <option>IV</option>
+ <option>V</option>
+ <option>VI</option>
+ <option>VII</option>
+ </select>
+ </div>
+
+ </div>
+ 
+ </div>
+
+ <div class="form-row">
+ <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+ <input type="text" id="node-input-name" placeholder="">
+ </div>
 
 
 
