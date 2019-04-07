@@ -1,4 +1,4 @@
-SYNTHDEFS = playSampleStereo playSampleMono recordSampleStereo snare
+SYNTHDEFS = playSampleStereo playSampleMono recordSampleStereo bell crotale dx fmtanh ghost kick marimba moog piano prophet snare
 
 all: $(SYNTHDEFS)
 

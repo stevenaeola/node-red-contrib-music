@@ -41,7 +41,6 @@ module.exports = function (RED) {
                 const synthcontrol = msg.topic.substring(13);
                 const controlval = Number(msg.payload);
                 node.parameters[synthcontrol] = controlval;
-                setSynthParam(synthcontrol, controlval);
                 return;
             }
 
@@ -174,19 +173,6 @@ module.exports = function (RED) {
             if (amp > 0 && (!midi || midi >= 0)) {
                 node.send(playmsg);
             }
-        }
-
-        function setSynthParam (param, val) {
-            var paramMsg = {
-                'topic': '/n_set',
-                // use node ID of -1 to apply to most recently generated synth
-                'payload': [-1, param, val]
-            };
-            node.send(paramMsg);
-        }
-
-        function setSynthVolume () {
-            setSynthParam('amp', sc.volume2amp(node));
         }
 
         function createSynth () {
@@ -448,7 +434,6 @@ module.exports = function (RED) {
 
                 node.volume = Math.min(100, Math.max(0, node.volume));
 
-                setSynthVolume();
                 break;
 
             case 'key':

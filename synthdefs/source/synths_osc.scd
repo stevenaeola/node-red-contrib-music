@@ -310,7 +310,6 @@ SynthDef("sinebass", {
 
 // Crotale adapted from SuperCollider book p24
 (
-//run this first
 SynthDef("crotale", {
 | midi = 60, tone = 3, art = 1, amp = 0.5, pan = 0|
 var env, out, mod, freq;
