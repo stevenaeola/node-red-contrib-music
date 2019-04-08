@@ -4,15 +4,37 @@
 
  // synthtypes is an object with all the associated data, synthtypeList just the names (keys of synthtypes)
  let synthtypes, tagSet;
+
+
+ // this is only used to order the tags we have. Any tags not in this list will not be shown
+ // pairs are exclusive
+ // possibly should go in server
+ const sortTags = [['tuned', 'untuned'], ['short', 'long'], ['bass', 'snare'], ['drum', 'cymbal','perc'], 'misc', ['sonic-pi', 'tidal']];
+
+ tagSet = new Set();
+
+ // make a set of tags and also an object recording mutually exclusive combinations
+ let exclusiveTags = {};
+ for(let element of sortTags){
+     if (Array.isArray(element)){
+         for(let tag of element){
+             exclusiveTags[tag] = element.filter(y => (y !== tag));
+             tagSet.add(tag);
+         }
+     } else {
+         tagSet.add(element);
+     }
+ }
  
  // do this dynamically from the server so that if we change the list of synths we do not have to re-do all the synths in the examples
  $.getJSON(synthtypesURL, function (data) {
      synthtypes = data;
 
-     tagSet = new Set();
-     //these tags come from the .tuned property rather than the .tags property
+     // in case there are any we have missed ...
+     // these tags come from the .tuned property rather than the .tags property
      tagSet.add('tuned');
      tagSet.add('untuned');
+     
      for(let synthtype of Object.keys(synthtypes)){
          let tags = synthtypes[synthtype].tags;
          if(Array.isArray(tags)){
@@ -23,17 +45,6 @@
      }
  });
 
- // this is only used to order the tags we have. Any tags not in this list will not be shown
- // pairs are exclusive
- // possibly should go in server
- const sortTags = [['tuned', 'untuned'], ['short', 'long'], ['bass', 'snare'], ['drum', 'cymbal','perc'], 'misc', ['sonic-pi', 'tidal']];
-
- let exclusiveTags = {};
- for(let exclusive of sortTags.filter(x => Array.isArray(x))){
-     for(let tag of exclusive){
-         exclusiveTags[tag] = exclusive.filter(y => (y !== tag));
-     }
- }
  
  
  RED.nodes.registerType('synth',{
@@ -120,7 +131,7 @@
              node.filterTags = new Set();
          }
          
-          filterSynthtypes();
+         filterSynthtypes();
          
          var tunedContainer = $('#node-input-tuned-container');
 
