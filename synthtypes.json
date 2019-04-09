@@ -160,7 +160,7 @@
     "tech_saws": {"tuned": true, "synth": true, "tags": ["sonic-pi", "long"]},
 
     "arpy": {"tuned": true, "tags": ["tidal", "short"]},
-    "bass0": {"tags": ["tidal", "short", "bass"]},
+    "bass0": {"tags": ["tidal", "short", "bass", "drum"]},
     "bass2": {"tuned": true, "midibase": 64, "stereo": true, "tags": ["tidal", "short", "bass"]},
     "bass3": {"tuned": true, "midibase": 57, "stereo": true, "tags": ["tidal", "short", "bass"]},
     "bass": {"tuned": true, "midibase": 55, "tags": ["tidal", "short", "bass"]},
