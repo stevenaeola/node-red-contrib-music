@@ -1,18 +1,17 @@
 <script type="text/javascript">
-
+ 
  const synthtypesURL = "node-red-contrib-music/synthtypes";
-
+ 
  // synthtypes is an object with all the associated data, synthtypeList just the names (keys of synthtypes)
  let synthtypes, tagSet;
-
-
+ 
  // this is only used to order the tags we have. Any tags not in this list will not be shown
  // pairs are exclusive
  // possibly should go in server
  const sortTags = [['tuned', 'untuned'], ['short', 'long'], ['bass', 'snare'], ['drum', 'cymbal','perc'], 'misc', ['sonic-pi', 'tidal']];
-
+ 
  tagSet = new Set();
-
+ 
  // make a set of tags and also an object recording mutually exclusive combinations
  let exclusiveTags = {};
  for(let element of sortTags){
@@ -44,22 +43,21 @@
          }
      }
  });
-
- 
  
  RED.nodes.registerType('synth',{
      category: 'music',
      color: '#a6bbcf',
      defaults: {
-	 name: {value: "", required: false},
-	 synthtype: {value: "kick", required: true},
+         name: {value: "", required: false},
+         synthtype: {value: "kick", required: true},
 	 filterTags: {value: new Set(), required: true},
 	 volume: {value: 50},
 	 octave: {value: 0},
 	 root: {value:"", required: false},
 	 scale: {value:"", required: false},
 	 degree: {value:"", required: false},
-	 outBus: {value:0, required: true}
+	 outBus: {value:0, required: true},
+         synthcontrols: {value: {}}
      },
      
      inputs:1,
@@ -72,8 +70,22 @@
      },
      
      oneditprepare: function(){
-	 node = this;
+         node = this;
 
+         function populateSynthcontrols(){
+             node.synthcontrols = node.synthcontrols || {pan: 0};
+             const container = $('#node-input-synthcontrol-container');
+             for(let synthcontrol in node.synthcontrols){
+                 let row = $('<div/>', {class: 'form-row'}).appendTo(container);
+
+                 let id = 'node-input-synthcontrol-' + synthcontrol;
+                 let label = $("<label>" + synthcontrol + "</label>", {for: id}).appendTo(row);
+                 let valueField = $('<input/>',{id: id, class: "node-input-synthcontrol",  type:"number", size: 6, placeholder:"0", style:"width:6em"}).appendTo(row);
+		 valueField.val(node.synthcontrols[synthcontrol]);
+             }
+             // add other options depending on the synthtype, to be specified in synthttypes.json
+         }
+         
 	 function populateSynthtypeSelect(){
 	     $("#node-input-synthtype").empty();
 
@@ -132,6 +144,7 @@
          }
          
          filterSynthtypes();
+         populateSynthcontrols();
          
          var tunedContainer = $('#node-input-tuned-container');
 
@@ -179,6 +192,17 @@
              );
          }
          filterSynthtypes();
+     },
+
+     oneditsave: function(){
+         let synthcontrols = $('.node-input-synthcontrol');
+         synthcontrols.each(function(){
+             const control_id = $(this).attr('id');
+             const control = control_id.split('-').pop();
+             const value =$(this).val();
+             node.synthcontrols[control] = value;
+         }
+         );
      }
  });
 </script>
@@ -220,7 +244,7 @@
                     <option>minor pentatonic</option>
                     <option>blues</option>
                     <option>chromatic</option>
-                </select
+                </select>
             </div>
 
             <div class="form-row">
@@ -240,6 +264,8 @@
         </div>
         
     </div>
+
+    <div id="node-input-synthcontrol-container"></div>
 
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>

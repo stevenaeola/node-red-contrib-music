@@ -189,7 +189,12 @@ module.exports = function (RED) {
 
         function reset () {
             node.tuned = config.tuned;
-
+            node.parameters = node.parameters || {};
+            if(config.synthcontrols){
+                for(let synthcontrol in config.synthcontrols){
+                    node.parameters[synthcontrol] = config.synthcontrols[synthcontrol];
+                }
+            }
             if (isSynth()) {
                 resetSynth();
             } else {
