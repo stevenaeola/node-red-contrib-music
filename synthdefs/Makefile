@@ -1,7 +1,8 @@
 SYNTHDEFS = playSampleStereo playSampleMono recordSampleStereo bell crotale dx fmtanh ghost kick marimba moog piano prophet snare
+FXDEFS = reverb hpf delay
 
-all: $(SYNTHDEFS)
+all: $(SYNTHDEFS) $(FXDEFS)
 
-$(SYNTHDEFS):
+$(SYNTHDEFS) $(FXDEFS):
 	cp ~/'Library/Application Support/SuperCollider/synthdefs'/$@.scsyndef compiled
 
