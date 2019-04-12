@@ -10,30 +10,125 @@
      category: 'music',
      color: '#a6bbcf',
      defaults: {
-	 fxtype: {value: "reverb", required: "true"}
-        },
+         fxtype: {value: "reverb", required: "true"},
+         volume: {value: 100},
+         fxcontrols: {value: {}}
+     },
      inputs:1,
      inputLabels:"supercollider instructions or fxcontrol",
      outputs:1,
      outputLabels:["supercollider instructions"],
-  icon: "file.png",
-  label: function() {
-  return this.name || this.fxtype || "soundfx";
-  }
-  });
+     icon: "file.png",
+     label: function() {
+         return this.name || this.fxtype || "soundfx";
+     },
+     
+     oneditprepare: function(){
+         node = this;
+
+         function setFXDescription(){
+             let fxdescription = fxtypes[node.fxtype].description || " ";
+             $('#node-input-fxtype-description').html(fxdescription);
+         }
+         
+         function populateFxtypeSelect(){
+             let fxtypeList = []
+             for(let fxtype in fxtypes){
+                 fxtypeList.push(fxtype);
+             }
+
+             fxtypeList.sort();
+
+             const select = $("#node-input-fxtype");
+	     select.empty();
+
+	     for(let fxtype of fxtypeList){
+		 let row = $("<option value='" + fxtype + "'>" + fxtype + "</option>");
+		 if(node.fxtype === fxtype){
+		     row.attr("selected", "selected");
+		 }
+
+                 select.append(row);
+	     }
+
+             setFXDescription();
+             
+             select.change(function () {
+                 const value = $(this).find('option:selected').val();
+                 if (value !== node.fxtype) {
+                     node.fxtype = value;
+                     setFXDescription();
+                     node.fxcontrols = {};
+                     $('#node-input-fxcontrol-container').empty();
+                     populateFxcontrols();
+                 }
+             }
+             );
+	 }
+
+         function populateFxcontrols(){
+             const fxcontrolSpecs = fxtypes[node.fxtype].fxcontrols || {};
+             const container = $('#node-input-fxcontrol-container');
+             let noControls = true;
+             for(let fxcontrol in fxcontrolSpecs){
+
+                 let row = $('<div/>', {class: 'form-row'}).appendTo(container);
+
+                 let id = 'node-input-fxcontrol-' + fxcontrol;
+                 
+                 let fxdetails = fxcontrolSpecs[fxcontrol] || {};
+                 let max = fxdetails.max || 1;
+                 let min = fxdetails.min || 0;
+                 let default_ = fxdetails.default;
+                 let info = fxdetails.description + `. min: ${min}, max: ${max}, default: ${default_}`;
+                 let value = node.fxcontrols[fxcontrol] || default_;
+                 
+                 let labelElement = $(`<label>${fxcontrol}</label>`, {'for': id}).appendTo(row);
+                 let step = Math.pow(10, Math.floor(Math.log10(max - min)) - 2);
+                 let valueField = $('<input/>',{id: id, class: "node-input-fxcontrol",  width: "7em", type:"number", min:min, max: max, step: step}).appendTo(row);
+		 valueField.val(value);
+                 
+                 let infoElement = $(`<div><small>${info}</small></div>`, {style: 'float:right'}).appendTo(row);
+                 
+                 noControls = false;
+             }
+             if (noControls) {
+                 $("<div><i>None</i></div>div").appendTo(container);
+             }
+         }
+         
+         populateFxtypeSelect();
+         populateFxcontrols();
+     },
+
+     oneditsave: function(){
+         let fxcontrols = $('.node-input-fxcontrol');
+         fxcontrols.each(function(){
+             const control_id = $(this).attr('id');
+             const control = control_id.split('-').pop();
+             const value =$(this).val();
+             node.fxcontrols[control] = value;
+         }
+         );
+     }
+
+ });
 </script>
 
 <script type="text/x-red" data-template-name="soundfx">
  <div class="form-row">
- <label for="node-input-fxtype">Effect Type</label>
+ <label for="node-input-fxtype" width="25em">Effect Type</label>
  <select id="node-input-fxtype">
- <option>reverb</option>
- <option>delay</option>
- <option>LPF</option>
- <option>HPF</option>
- <option>drop</option>
  </select>
  </div>
+ 
+ <div class="form-row" id="node-input-fxtype-description"></div>
+ 
+ <div class="form-row" width="25em"><b>Effect controls (fxcontrol)</b></div>
+ 
+ <div id="node-input-fxcontrol-container">
+ </div>
+
 </script>
 
 <script type="text/x-red" data-help-name="soundfx">

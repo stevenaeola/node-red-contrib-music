@@ -80,7 +80,7 @@
 
                  let id = 'node-input-synthcontrol-' + synthcontrol;
                  let label = $("<label>" + synthcontrol + "</label>", {for: id}).appendTo(row);
-                 let valueField = $('<input/>',{id: id, class: "node-input-synthcontrol",  type:"number", size: 6, placeholder:"0", style:"width:6em"}).appendTo(row);
+                 let valueField = $('<input/>',{id: id, class: "node-input-synthcontrol",  type:"number", size: 6, placeholder:"0", style:"width:7em"}).appendTo(row);
 		 valueField.val(node.synthcontrols[synthcontrol]);
              }
              // add other options depending on the synthtype, to be specified in synthttypes.json

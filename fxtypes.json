@@ -1,7 +1,17 @@
 {
-    "reverb": {"inBus": 4},
-    "delay": {"inBus": 6},
-    "LPF": {"inBus": 8},
-    "HPF": {"inBus": 10},
-    "drop": {"inBus": 12}
+    "reverb": {"inBus": 4,
+               "fxcontrols": {"room": {"description": "room size", "min": 0, "max": 1, "default": 0.5},
+                              "damp": {"description": "reverb HF damp", "min": 0, "max": 1, "default": 0.5},
+                              "mix": {"description": "dry/wet balance", "min": 0, "max": 1, "default": 0.33}}},
+    "delay": {"inBus": 6,
+              "fxcontrols": {"beats": {"description": "delay time in beats (according to current bpm)", "min": 0.1, "max": 10, "default": 1},
+                             "decaybeats": {"description": "decay time in beats", "min": 1, "max": 100, "default": 10}}},
+    "LPF": {"inBus": 8, "description": "Low Pass Filter (LPF). Only passes through frequencies below the cutoff.",
+            "fxcontrols": {"note": {"description": "midi value of cutoff frequency", "min": 1, "max": 128, "default": 60}}},
+    "HPF": {"inBus": 10, "description": "High Pass Filter (HPF). Only passes through frequencies above the cutoff.",
+            "fxcontrols": {"note": {"description": "midi value of cutoff frequency", "min": 1, "max": 128, "default": 80}}},
+    "drop": {"inBus": 12, "description": "Bass drop: when triggered apply a HPF with the cutoff running from high to low",
+             "fxcontrols": {"t_trig": {"description": "Set to one to trigger the filter, usually do this with an fxcontrol:t_trig message", "min":0, "max":1, "default": 0},
+                            "attack": {"description": "Attach time of HPF envelope in seconds", "min": 0.0001, "max": 1, "default": 0.1},
+                            "beats": {"description": "Number of beats the HPF envelope should last for", "min": 0.25, "max": 16, "default": 1}}}
 }

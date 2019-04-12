@@ -1,5 +1,5 @@
 SYNTHDEFS = playSampleStereo playSampleMono recordSampleStereo bell crotale dx fmtanh ghost kick marimba moog piano prophet snare
-FXDEFS = reverb hpf delay
+FXDEFS = reverb hpf lpf delay drop
 
 all: $(SYNTHDEFS) $(FXDEFS)
 

@@ -20,7 +20,10 @@ module.exports = function (RED) {
         reset();
 
         this.on('input', function (msg) {
+            console.log('input msg.topic ' + msg.topic);
+
             if (msg.topic && msg.topic.startsWith('fxcontrol:')) {
+                console.log('input msg fxcontrol');
                 const fxcontrol = msg.topic.substring(10);
                 const controlval = Number(msg.payload);
                 node.parameters[fxcontrol] = controlval;
@@ -30,7 +33,7 @@ module.exports = function (RED) {
 
             switch (msg.topic) {
             case 'volume':
-                var newVol = Number(msg.payload);
+                const newVol = Number(msg.payload);
                 if (!Number.isNaN(newVol)) {
                     node.volume = newVol;
                 }
@@ -69,7 +72,7 @@ module.exports = function (RED) {
                     return;
                 }
 
-                //              setFXParam(msg.topic, msg.payload);
+//                setFXParam(msg.topic, msg.payload);
                 node.send(msg);
             }
         });
@@ -85,6 +88,7 @@ module.exports = function (RED) {
                 'payload': [node.synthID, param, val]
             };
             node.send(parammsg);
+            console.log('sending fxparam ' + param + ' ' + val);
         }
 
         function setFXbpm (msg) {
@@ -104,14 +108,21 @@ module.exports = function (RED) {
             setTimeout(function () {
                 sc.freeSynth(node, node.synthID);
 
+                let payload = [node.fxtype, node.synthID, 1, 0, 'inBus', node.inBus, 'amp', sc.volume2amp(node)];
+                for (let param in node.parameters) {
+                    payload.push(param);
+                    payload.push(Number(node.parameters[param]));
+                }
+                payload.push('amp');
+                payload.push(sc.volume2amp(node));
+
                 // add it to the tail of the root group
                 const createMsg = {
                     topic: '/s_new',
-                    payload: [node.fxtype, node.synthID, 1, 0, 'inBus', node.inBus]
+                    payload: payload
                 };
-                node.send(createMsg);
 
-                setFXParam('amp', sc.volume2amp(node));
+                node.send(createMsg);
             }, 200);
         }
 
@@ -126,7 +137,13 @@ module.exports = function (RED) {
             node.synthID = 100000 - node.inBus / 2;
             node.volume = 100;
 
-            node.parameters = {};
+            node.parameters = node.parameters || {};
+            if (config.fxcontrols) {
+                for (let fxcontrol in config.fxcontrols) {
+                    node.parameters[fxcontrol] = config.fxcontrols[fxcontrol];
+                }
+            }
+
             // wait a little while to allow wires to be created
             setTimeout(function () {
                 createFX();

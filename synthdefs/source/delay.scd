@@ -1,5 +1,5 @@
 (
-SynthDef("delay", {| out_bus = 0, inBus, bpm = 100, beats = 1, decaybeats = 100|
+SynthDef("delay", {| out_bus = 0, inBus, bpm = 100, beats = 1, decaybeats = 10|
 	var input, delayed, time;
 	time = beats*60/bpm;
 
@@ -11,3 +11,4 @@ SynthDef("delay", {| out_bus = 0, inBus, bpm = 100, beats = 1, decaybeats = 100|
 
 }).store;
 )
+
