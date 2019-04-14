@@ -24,9 +24,15 @@ The subdirectories contain their own README.md files which describe the source a
 
 These are compiled from code written by Sam Aaron as part of the [Sonic Pi](http://sonic-pi.net/) project, which is licenced separately. See the README and LICENCE files in that directory.
 
+## Other synthdefs
+
+(contents of `synthdefs/source`)
+
+These are from a range of sources, see the README and LICENCE files in that directory
+
 ## Examples
 
 (contents of `examples`)
 
-All the examples are copyright by Steven Bradley (2018)  and the content is released under the [CC BY-SA 4.0 license](http://creativecommons.org/licenses/by-sa/4.0/)
+All the examples are copyright by Steven Bradley (2018) and the content is released under the [CC BY-SA 4.0 license](http://creativecommons.org/licenses/by-sa/4.0/)
 

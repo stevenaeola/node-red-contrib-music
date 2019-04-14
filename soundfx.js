@@ -20,10 +20,7 @@ module.exports = function (RED) {
         reset();
 
         this.on('input', function (msg) {
-            console.log('input msg.topic ' + msg.topic);
-
             if (msg.topic && msg.topic.startsWith('fxcontrol:')) {
-                console.log('input msg fxcontrol');
                 const fxcontrol = msg.topic.substring(10);
                 const controlval = Number(msg.payload);
                 node.parameters[fxcontrol] = controlval;
@@ -88,7 +85,6 @@ module.exports = function (RED) {
                 'payload': [node.synthID, param, val]
             };
             node.send(parammsg);
-            console.log('sending fxparam ' + param + ' ' + val);
         }
 
         function setFXbpm (msg) {
