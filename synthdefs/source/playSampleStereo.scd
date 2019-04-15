@@ -7,6 +7,6 @@ SynthDef("playSampleStereo", {
 	env = EnvGen.ar(
 		envelope: Env.linen(0, sustain, dec),
 		doneAction: 2);
-	Out.ar(out_bus, Splay.ar(amp*env*snd, spread: 0.5, center: pan))
+	Out.ar(out_bus, Splay.ar(amp*env*snd, spread: 1, center: pan))
 }).store;
 )

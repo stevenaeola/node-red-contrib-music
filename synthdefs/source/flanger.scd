@@ -34,5 +34,5 @@ SynthDef("flanger", { |out_bus = 0, inBus = 0, delay = 0.1, depth = 0.08, rate =
 	mixed = input + dsig;
 	LocalOut.ar(mixed);
 	Out.ar([out_bus, out_bus+1], mixed);
-}).add;
+}).store;
 )

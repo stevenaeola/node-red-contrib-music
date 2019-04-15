@@ -7,6 +7,6 @@ SynthDef("marimba", {|note = 80, amp = 0.5, out_bus = 0, pan = 0|
 	snd = BPF.ar(env2, freq, 0.02);
 	snd = BLowShelf.ar(snd, 220, 0.81, 6);
 	snd = snd * env;
-	Out.ar(out_bus, Splay.ar(snd, spread: 0.2, center: pan));
+	Out.ar(out_bus, Pan2.ar(snd, pan));
 }).store;
 )

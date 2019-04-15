@@ -1,11 +1,11 @@
 
 (
 SynthDef("moog", {
-	| out_bus = 0, pan = 0, note = 60, amp = 0.5, bpm=100, beats = 1, cutoff = 1000, gain = 2.0, latt = 0.001, dec = 0.3, sus = 0.9, rel = 0.2, chorus = 0.7 |
+	| out_bus = 0, pan = 0, note = 60, amp = 0.5, sustain = 1, cutoff = 1000, gain = 2.0, latt = 0.001, dec = 0.3, sus = 0.9, rel = 0.2, chorus = 0.7 |
 	var freq= midicps(note.clip(0,128));
 	var osc, filter, env, filterenv, snd, chorusfx, playTime;
 
-	playTime = beats*60/bpm;
+	playTime =sustain;
 
 	osc = Mix(VarSaw.ar(
 		freq: freq* [1.0, 1.001, 2.0],
@@ -39,7 +39,7 @@ SynthDef("moog", {
 		)
 	});
 
-	snd = (snd + (chorusfx * chorus)) * amp * 12.0;
+	snd = (snd + (chorusfx * chorus)) * amp ;
 
 	Out.ar(out_bus, Pan2.ar(snd, pan));
 
