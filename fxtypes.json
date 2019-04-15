@@ -16,10 +16,10 @@
                             "beats": {"description": "Number of beats the HPF envelope should last for", "min": 0.25, "max": 16, "default": 1}}},
     "BPF": {"inBus": 14, "description": "Band Pass Filter (BPF). Only passes through frequencies close to the note.",
             "fxcontrols": {"note": {"description": "midi value of centre frequency", "min": 1, "max": 128, "default": 60},
-                           "rq": {"description": "Width of band, reciprocal of Q where Q is cutoff/bandwidth", "min":0.01, "max": 10, "default": 1}}},
+                           "rq": {"description": "Width of band, reciprocal of Q where Q is cutoff/bandwidth", "min":0.1, "max": 10, "default": 1}}},
     "flanger": {"inBus": 16, "description": "In a Flanger, a delayed signal is added to the original signal with a continuously-variable delay (usually smaller than 10 ms) creating a phasing effect. Adapted from ixi audio http://ecmc.rochester.edu/ecmc/docs/supercollider/scbook/Ch21_Interface_Investigations/ixi%20SC%20tutorial/ixi_SC_tutorial_12.html under Attribution-NonCommercial-ShareAlike 2.0 England & Wales License http://creativecommons.org/licenses/by-nc-sa/2.0/uk/",
-            "fxcontrols": {"delay": {"description": "", "min": 0, "max": 1, "default": 0.1},
-                           "depth": {"description": "", "min": 0, "max": 1, "default": 0.08},
+            "fxcontrols": {"delay": {"description": "", "min": 0, "max": 0.5, "default": 0.1},
+                           "depth": {"description": "", "min": 0, "max": 0.1, "default": 0.08},
                            "rate": {"description": "", "min": 0, "max": 1, "default": 0.06},
                            "feedback": {"description": "", "min": 0, "max": 1, "default": 0},
                            "decay": {"description": "", "min": 0, "max": 1, "default": 0}}}
