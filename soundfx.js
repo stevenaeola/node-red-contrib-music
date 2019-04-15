@@ -80,6 +80,11 @@ module.exports = function (RED) {
         });
 
         function setFXParam (param, val) {
+            if (!fxtypes[node.fxtype].fxcontrols[param] && !['bpm'].includes(param)) {
+                node.warn('No such fxcontrol: ' + param);
+                return;
+            }
+
             const parammsg = {
                 'topic': '/n_set',
                 'payload': [node.synthID, param, val]
