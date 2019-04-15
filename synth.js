@@ -4,6 +4,11 @@ const sc = require('./supercollider');
 
 const synthtypesURL = 'node-red-contrib-music/synthtypes';
 let synthtypes = require('./synthtypes');
+for (let synthtype in synthtypes) {
+    let synthcontrols = synthtypes[synthtype].synthcontrols || {};
+    synthcontrols.pan = { 'description': 'position in stereo field: left (-1) or right (1)', 'min': -1, 'max': 1, 'default': 0 };
+    synthtypes[synthtype].synthcontrols = synthcontrols;
+}
 
 module.exports = function (RED) {
     'use strict';
@@ -40,7 +45,7 @@ module.exports = function (RED) {
             if (msg.topic && msg.topic.startsWith('synthcontrol:')) {
                 const synthcontrol = msg.topic.substring(13);
                 const controlval = Number(msg.payload);
-                node.parameters[synthcontrol] = controlval;
+                setSynthcontrol(synthcontrol, controlval);
                 return;
             }
 
@@ -53,7 +58,7 @@ module.exports = function (RED) {
                     break;
 
                 case 'reset':
-                    for (var conf in configurables) {
+                    for (let conf in configurables) {
                         configure(conf, config[conf]);
                     }
                     reset();
@@ -89,7 +94,7 @@ module.exports = function (RED) {
         }
 
         function sendNote (noteVal, msg) {
-            var midi;
+            let midi;
             if (isNaN(msg.midi)) {
                 if (isNaN(noteVal)) {
                     noteVal = 1;
@@ -98,10 +103,10 @@ module.exports = function (RED) {
             } else {
                 midi = msg.midi;
             }
-            var payload;
-            var action;
+            let payload;
+            let action;
 
-            var amp = sc.volume2amp(node);
+            let amp = sc.volume2amp(node);
 
             action = '/s_new';
 
@@ -125,7 +130,7 @@ module.exports = function (RED) {
                 payload.push('note', midi);
             }
 
-            for (var param in node.parameters) {
+            for (let param in node.parameters) {
                 payload.push(param);
                 payload.push(node.parameters[param]);
             }
@@ -187,12 +192,23 @@ module.exports = function (RED) {
             sc.sendSynthDef(node);
         }
 
+        function setSynthcontrol (synthcontrol, value) {
+            let synthcontrolSpecs = synthtypes[node.synthtype].synthcontrols || {};
+             // all synths allow pan at least
+            synthcontrolSpecs.pan = { 'note': { 'description': 'position in stereo field: left (-1) or right (1)', 'min': -1, 'max': 1, 'default': 0 } };
+            if (!synthtypes[node.synthtype].synthcontrols[synthcontrol]) {
+                node.warn('No such synthcontrol: ' + synthcontrol);
+                return;
+            }
+            node.parameters[synthcontrol] = Number(value);
+        }
+
         function reset () {
             node.tuned = config.tuned;
             node.parameters = node.parameters || {};
             if (config.synthcontrols) {
                 for (let synthcontrol in config.synthcontrols) {
-                    node.parameters[synthcontrol] = config.synthcontrols[synthcontrol];
+                    setSynthcontrol(synthcontrol, config.synthcontrols[synthcontrol]);
                 }
             }
             if (isSynth()) {
@@ -200,8 +216,6 @@ module.exports = function (RED) {
             } else {
                 resetSample();
             }
-
-            node.parameters = {};
         }
 
         function resetSynth () {

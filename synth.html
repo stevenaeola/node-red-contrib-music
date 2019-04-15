@@ -72,29 +72,58 @@
      oneditprepare: function(){
          node = this;
 
+         function setSynthDescription(){
+             let synthdescription = synthtypes[node.synthtype].description || " ";
+             $('#node-input-synthtype-description').html(synthdescription);
+         }
+
          function populateSynthcontrols(){
-             node.synthcontrols = node.synthcontrols || {pan: 0};
+             let synthcontrolSpecs = synthtypes[node.synthtype].synthcontrols || {};
+             // all synths allow pan at least
+             synthcontrolSpecs.pan = {"description": "position in stereo field: left (-1) or right (1)", "min": -1, "max": 1, "default": 0};
              const container = $('#node-input-synthcontrol-container');
-             for(let synthcontrol in node.synthcontrols){
+             for(let synthcontrol in synthcontrolSpecs){
+
                  let row = $('<div/>', {class: 'form-row'}).appendTo(container);
 
                  let id = 'node-input-synthcontrol-' + synthcontrol;
-                 let label = $("<label>" + synthcontrol + "</label>", {for: id}).appendTo(row);
-                 let valueField = $('<input/>',{id: id, class: "node-input-synthcontrol",  type:"number", size: 6, placeholder:"0", style:"width:7em"}).appendTo(row);
-		 valueField.val(node.synthcontrols[synthcontrol]);
+                 
+                 let synthdetails = synthcontrolSpecs[synthcontrol] || {};
+                 let max = synthdetails.max || 1;
+                 let min = synthdetails.min || 0;
+                 let default_ = synthdetails.default;
+                 let info = synthdetails.description + `. min: ${min}, max: ${max}, default: ${default_}`;
+                 let value = node.synthcontrols[synthcontrol] || default_;
+                 
+                 let labelElement = $(`<label>${synthcontrol}</label>`, {'for': id}).appendTo(row);
+                 let step = Math.pow(10, Math.floor(Math.log10(max - min)) - 2);
+                 let valueField = $('<input/>',{id: id, class: "node-input-synthcontrol",  width: "7em", type:"number", min:min, max: max, step: step}).appendTo(row);
+		 valueField.val(value);
+                 
+                 let infoElement = $(`<div><small>${info}</small></div>`, {style: 'float:right'}).appendTo(row);
+                 
+                 noControls = false;
              }
              // add other options depending on the synthtype, to be specified in synthttypes.json
          }
          
 	 function populateSynthtypeSelect(){
-	     $("#node-input-synthtype").empty();
 
-	     for(var synthtype of node.synthtypeList){
-		 var row = $("<option value='" + synthtype + "'>" + synthtype + "</option>");
+             let synthtypeList = []
+             for(let synthtype in synthtypes){
+                 synthtypeList.push(synthtype);
+             }
+
+             synthtypeList.sort();
+
+	     const select = $("#node-input-synthtype");
+	     select.empty();
+
+	     for(let synthtype of node.synthtypeList){
+		 let row = $("<option value='" + synthtype + "'>" + synthtype + "</option>");
 		 if(node.synthtype === synthtype || node.synthtypeList.length === 1){
 		     row.attr("selected", "selected");
 		 }
-		 var select = $("#node-input-synthtype");
                  select.append(row);
 	     }
 	 }
@@ -136,7 +165,6 @@
 	     populateSynthtypeSelect();
          };
 
-         //         node.filterTags = node.filterTags || new Set();
          // for some reason node.filterTags is being initialised as {} which is causing problems
 
          if(!node.filterTags.size){
@@ -146,17 +174,25 @@
          filterSynthtypes();
          populateSynthcontrols();
          
-         var tunedContainer = $('#node-input-tuned-container');
+         const tunedContainer = $('#node-input-tuned-container');
 
          $('#node-input-synthtype').change(
 	     function (){
-	         var option = $(this).find('option:selected').val();
+	         const option = $(this).find('option:selected').val();
 	         if(synthtypes[option] && synthtypes[option].tuned){
 		     tunedContainer.show();
 	         }
 	         else{
 		     tunedContainer.hide();
 	         }
+                 if (option !== node.synthtype) {
+                     node.synthtype = option;
+                     setSynthDescription();
+                     node.synthcontrols = {};
+                     $('#node-input-synthcontrol-container').empty();
+                     populateSynthcontrols();
+                 }
+
 	     }
          );
          
@@ -265,6 +301,10 @@
         
     </div>
 
+    <div id="node-input-synthtype-description"></div>
+
+    <div class="form-row" width="25em"><b>Synth controls (synthcontrol)</b></div>
+    
     <div id="node-input-synthcontrol-container"></div>
 
     <div class="form-row">

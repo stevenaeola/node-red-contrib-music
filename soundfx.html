@@ -47,16 +47,15 @@
 		 if(node.fxtype === fxtype){
 		     row.attr("selected", "selected");
 		 }
-
                  select.append(row);
 	     }
 
              setFXDescription();
              
              select.change(function () {
-                 const value = $(this).find('option:selected').val();
-                 if (value !== node.fxtype) {
-                     node.fxtype = value;
+                 const option = $(this).find('option:selected').val();
+                 if (option !== node.fxtype) {
+                     node.fxtype = option;
                      setFXDescription();
                      node.fxcontrols = {};
                      $('#node-input-fxcontrol-container').empty();
@@ -81,7 +80,7 @@
                  let min = fxdetails.min || 0;
                  let default_ = fxdetails.default;
                  let info = fxdetails.description + `. min: ${min}, max: ${max}, default: ${default_}`;
-                 let value = node.fxcontrols[fxcontrol] || default_;
+                 let option = node.fxcontrols[fxcontrol] || default_;
                  
                  let labelElement = $(`<label>${fxcontrol}</label>`, {'for': id}).appendTo(row);
                  let step = Math.pow(10, Math.floor(Math.log10(max - min)) - 2);

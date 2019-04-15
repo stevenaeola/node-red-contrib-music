@@ -228,6 +228,9 @@
     "moog": {"tuned": true, "synth": true, "tags": ["bass", "long"]},
     "piano": {"tuned": true, "synth": true, "tags": []},
     "prophet": {"tuned": true, "synth": true, "tags": ["long"]},
-    "snare": {"synth": true, "tags": ["short", "snare", "drum"]}
-
+    "snare": {"synth": true, "tags": ["short", "snare", "drum"],
+              "synthcontrols": {"snare_tightness": {"description": "", "min": 1, "max": 1000, "default": 100},
+                                "snare_level": {"description": "", "min": 1, "max": 100, "default": 50}}}
+              
 }
+
