@@ -34,6 +34,7 @@
          function populateFxtypeSelect(){
              let fxtypeList = []
              for(let fxtype in fxtypes){
+                 console.log("adding " + fxtype);
                  fxtypeList.push(fxtype);
              }
 
@@ -69,8 +70,9 @@
              const fxcontrolSpecs = fxtypes[node.fxtype].fxcontrols || {};
              const container = $('#node-input-fxcontrol-container');
              let noControls = true;
+             console.log("starting loop");
              for(let fxcontrol in fxcontrolSpecs){
-
+                 console.log(fxcontrol);
                  let row = $('<div/>', {class: 'form-row'}).appendTo(container);
 
                  let id = 'node-input-fxcontrol-' + fxcontrol;
@@ -80,7 +82,7 @@
                  let min = fxdetails.min || 0;
                  let default_ = fxdetails.default;
                  let info = fxdetails.description + `. min: ${min}, max: ${max}, default: ${default_}`;
-                 let option = node.fxcontrols[fxcontrol] || default_;
+                 let value = node.fxcontrols[fxcontrol] || default_;
                  
                  let labelElement = $(`<label>${fxcontrol}</label>`, {'for': id}).appendTo(row);
                  let step = Math.pow(10, Math.floor(Math.log10(max - min)) - 2);
@@ -97,6 +99,7 @@
          }
          
          populateFxtypeSelect();
+         console.log("added select");
          populateFxcontrols();
      },
 
