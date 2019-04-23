@@ -1,4 +1,3 @@
-
 <script type="text/javascript">
  RED.nodes.registerType('looper',{
      category: 'music',
@@ -28,23 +27,56 @@
  <input type="text" id="node-input-name" placeholder="Name">
  </div>
  <div class="form-row">
- <label for="node-input-input"><i class="icon-tag"></i> Input event</label>
+ <label for="node-input-input">Input event</label>
  <input type="text" id="node-input-input" placeholder="e.g. beat">
  </div>
  <div class="form-row">
- <label for="node-input-length"><i class="icon-tag"></i> Length of loop (count of input event)</label>
+ <label for="node-input-length">Length of loop (count of input event)</label>
  <input type="number" id="node-input-length" placeholder="e.g. 4">
  </div>
  <div class="form-row">
- <label for="node-input-start"><i class="icon-tag"></i> Start event</label>
+ <label for="node-input-start">Start event</label>
  <input type="text" id="node-input-start" placeholder="e.g. bar">
  </div>
  <div class="form-row">
- <label for="node-input-loop"><i class="icon-tag"></i> Loop</label>
+ <label for="node-input-loop">Loop</label>
  <input type="checkbox" id="node-input-loop">
  </div>
 </script>
 
-<script type="text/x-red" data-help-name="loop">
-    <p>Samples and replays (loops) sounds.</p>
+<script type="text/x-red" data-help-name="looper">
+ <p>Samples and replays (loops) sounds.</p>
+ 
+ <h3>Inputs</h3>
+ <dl class='message-properties'>
+ 
+ <dt>payload <span class='property-type'>(string)</span></dt>
+ <dd><code>msg.payload</code> is used to control the looper with <code>start</code>, <code>stop</code>, or <code>record</code>. If the payload is <code>tick</code> then the <code>start</code> property of the message is used to control the recording or playing, to align it with the beat.</dd>
+
+ </dl>
+
+ <h3>Outputs</h3>
+
+ <p>The looper outputs SuperCollider instructions, which should be sent via an <code>osc</code> node.</p>
+
+ <h3>Configuration</h3>
+
+ <dl class='message-properties'>
+
+     <dt><span class='optional'>Name</span> <span class='property-type'>(string)</span></dt>
+     <dd>The label for the node.</dd>
+
+     <dt><span class='optional'>Input event</span> <span class='property-type'>(string)</span></dt>
+     <dd>Counting this event will control how long the looper records and plays back for. Defaults to <i>beat</i>.</dd>
+
+     <dt><span class='optional'>Length of loop</span> <span class='property-type'>(string)</span></dt>
+     <dd>The number of input events the loop lasts for.</dd>
+
+     <dt><span class='optional'>Start event</span> <span class='property-type'>(string)</span></dt>
+     <dd>The looper will wait until this event (included in <code>msg.start</code>) to start the recording/playing. By default this is <code>bar</code>, but could be e.g. <code>section</code></dd>
+
+     <dt><span class='optional'>Loop</span> <span class='property-type'>(boolean)</span></dt>
+     <dd>If selected, playback will restart as soon as it is finished. Will also start playing back as soon as recording is finished.</dd>
+
+ </dl>
 </script>

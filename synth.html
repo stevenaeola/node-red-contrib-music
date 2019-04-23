@@ -92,7 +92,8 @@
                  let max = synthdetails.max || 1;
                  let min = synthdetails.min || 0;
                  let default_ = synthdetails.default;
-                 let info = synthdetails.description + `. min: ${min}, max: ${max}, default: ${default_}`;
+                 let description = synthdetails.description?(synthdetails.description + '. '):'';
+                 let info = `${description}min: ${min}, max: ${max}, default: ${default_}`;
                  let value = node.synthcontrols[synthcontrol] || default_;
                  
                  let labelElement = $(`<label>${synthcontrol}</label>`, {'for': id}).appendTo(row);
@@ -206,41 +207,41 @@
          for(let tag of tagSet){
              $('#node-input-synthtype-filter-container').append(
                  `<span id="node-input-synthtype-filter-${tag}"> | ${tag}</span>`
-             );
-             $('#node-input-synthtype-filter-' + tag).click(
-	         () => {
-                     if(node.filterTags.has(tag)){
-                         node.filterTags.delete(tag);
-                     } else {
-                         node.filterTags.add(tag);
-                         let exclusive = exclusiveTags[tag];
-                         if(Array.isArray(exclusive)){
-                             for(let toDelete of exclusive){
-                                 node.filterTags.delete(toDelete);
+ );
+                 $('#node-input-synthtype-filter-' + tag).click(
+	             () => {
+                         if(node.filterTags.has(tag)){
+                             node.filterTags.delete(tag);
+                         } else {
+                             node.filterTags.add(tag);
+                             let exclusive = exclusiveTags[tag];
+                             if(Array.isArray(exclusive)){
+                                 for(let toDelete of exclusive){
+                                     node.filterTags.delete(toDelete);
+                                 }
                              }
                          }
-                     }
-                     if(node.filterTags.has('tuned')){
-		         tunedContainer.show();
-                     }
-	             filterSynthtypes();
-	         }
+                         if(node.filterTags.has('tuned')){
+		             tunedContainer.show();
+                         }
+	                 filterSynthtypes();
+	             }
+                 );
+             }
+             filterSynthtypes();
+         },
+
+         oneditsave: function(){
+             let synthcontrols = $('.node-input-synthcontrol');
+             synthcontrols.each(function(){
+                 const control_id = $(this).attr('id');
+                 const control = control_id.split('-').pop();
+                 const value =$(this).val();
+                 node.synthcontrols[control] = value;
+             }
              );
          }
-         filterSynthtypes();
-     },
-
-     oneditsave: function(){
-         let synthcontrols = $('.node-input-synthcontrol');
-         synthcontrols.each(function(){
-             const control_id = $(this).attr('id');
-             const control = control_id.split('-').pop();
-             const value =$(this).val();
-             node.synthcontrols[control] = value;
-         }
-         );
-     }
- });
+     });
 </script>
 
 <script type="text/x-red" data-template-name="synth">
@@ -328,7 +329,7 @@
  
  <dt class="optional">topic <span class="property-type">string</span></dt>
  <dd><p>If <code>msg.topic</code> is <code>volume</code> then <code>msg.payload</code> is used to set the volume of the sounds produced, in the range 0 to 100.</p>
- <p>If <code>msg.topic</code> starts with <code>synthcontrol:</code> then the rest of the <code>msg.topic</code> is interpreted as a SuperCollider synth parameter name, and the <code>msg.payload</code> is used as its value. The parameters that can be changed vary from synth to synth, and not all synths have paremeters.</p></dd>
+ <p>If <code>msg.topic</code> starts with <code>synthcontrol:</code> then the rest of the <code>msg.topic</code> is interpreted as a SuperCollider synth parameter name, and the <code>msg.payload</code> is used as its value. The parameters (synthcontrol) that can be changed vary from synth to synth, their details can be seen in the configuration.</p></dd>
 
  <dt class="optional">note <span class="property-type">number|array</span></dt>
  <dd>If <code>msg.note</code> is defined then it is used to set the <code>midi</code> note value of the output. If <code>msg.note</code> is an array then all the notes in the array are played at the same time to form a chord.</dd>
@@ -343,8 +344,9 @@
  <dt><span class='optional'>timeTag</span> <span class='property-type'>number</span></dt>
  <dd>If a <code>timeTag</code> property is given for the incoming <code>play</code> message it is included in the outgoing message.</dd>
 
-
  </dl>
+
+   <p>If an input message has the topic synthcontrol:<i>control_name</i> then it will set the synth control to the value contained in the payload of the message</p>
 
  <h3>Outputs</h3>
 
@@ -356,32 +358,37 @@
 
  <dl class='message-properties'>
 
- <dt><span class='optional'>name</span> <span class='property-type'>string</span></dt>
- <dd>The name of the synthesiser type to use. Some types of synthesiser have sustain, which means that the note continues playing until the synthiseser receives a <code>stop</code> or <code>reset</code> value in <code>msg.payload</code> or a <code>null</code> value for <code>msg.note</code></dd>
+   <dt><span class='optional'>Synth type</span> <span class='property-type'>string</span></dt>
+   <dd>The name of the synthesiser type to use, selected from the pull-down list. This list can be filtered by clicking on the filters (e.g. <i>untunted</i>) on the right hand side of the selection list.</dd>
 
- <dt>start volume <span class='property-type'>number</span></dt>
- <dd>A value in the range 0 to 100 to specify the volume that the synth uses after deployment or reset.</dd>
+   <dt>Volume <span class='property-type'>number</span></dt>
+   <dd>A value in the range 0 to 100 to specify the volume that the synth uses after deployment or reset.</dd>
 
- <dt>octave <span class='property-type'>number</span></dt>
- <dd>A number, usually in the range -3 to +3, to shift the pitch relative to the root note, with negative numbers used to lower the pitch.</dd>
- 
- <dt>root note of scale <span class='property-type'>string</span></dt>
- <dd>If defined, this gives the name and octave of the start of the scale, which corresponds to a <code>msg.note</code> of 1. If not defined, the global or default value is used.</dd>
+   <dt>Octave shift<span class='property-type'>number</span></dt>
+   <dd>A number, usually in the range -3 to +3, to shift the pitch relative to the root note, with negative numbers used to lower the pitch.</dd>
+   
+   <dt>Scale <span class='property-type'>string</span></dt>
+   <dd>If defined, this gives the name and octave of the start of the scale, which corresponds to a <code>msg.note</code> of 1. If not defined, the global or default value is used.</dd>
 
- <dt>scale type <span class='property-type'>string</span></dt>
- <dd>The midi pitch value that is output depends on the value of <code>msg.note</code> and the scale root and the scale type. If not defined, the global or default value is used.</dd>
+   <dt>scale type <span class='property-type'>string</span></dt>
+   <dd>The midi pitch value that is output depends on the value of <code>msg.note</code> and the scale root and the scale type. If not defined, the global or default value is used.</dd>
 
- <dt>output bus <span class='property-type'>number</span></dt>
- <dd>Can be used to select an effect bus to send the synthesiser output to instead of the default bus 0.</dd>
+   <dt>Degree <span class='property-type'>string</span></dt>
+   <dd>If defined, this selects the scale relative to the global key. If the global key is C major, then degree II is D minor and degree V is G major.</dd>
 
+   <dt><span class='optional'>Synth controls (synthcontrol)</span> <span class='property-type'>number</span></dt>
+   <dd>Each synth type has has its own set of parameters that control its operation.</dd>
+   
+   <dt><span class='optional'>Name</span> <span class='property-type'>string</span></dt>
+   <dd>The display name for the node: defaults to the synthesiser type in use.</dd>
+   
  </dl>
  
  <h3>Details</h3>
  
  <p>The synth node relies on there being a SuperCollider server running, to which the messages are sent via <code>osc</code> and (usually) <code>udp</code>. Synthdefs are sent to the SuperCollider server when the nodes are deployed.</p>
 
-
- <p>Separate sound effects (soundfx) nodes can be defined which include a bus number to receive input from a synth. These will only work on local machines.</p>
+ <p>Separate sound effects (soundfx) nodes can be defined which accept the output of a synth node.</p>
  
 </script>
 

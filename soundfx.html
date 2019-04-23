@@ -78,7 +78,8 @@
                  let max = fxdetails.max || 1;
                  let min = fxdetails.min || 0;
                  let default_ = fxdetails.default;
-                 let info = fxdetails.description + `. min: ${min}, max: ${max}, default: ${default_}`;
+                 let description = fxdetails.description?(fxdetails.description + '. '):'';
+                 let info = `${description}min: ${min}, max: ${max}, default: ${default_}`;
                  let value = node.fxcontrols[fxcontrol] || default_;
                  
                  let labelElement = $(`<label>${fxcontrol}</label>`, {'for': id}).appendTo(row);
@@ -130,5 +131,34 @@
 </script>
 
 <script type="text/x-red" data-help-name="soundfx">
-    <p>Make a SuperCollider sound effect</p>
+  <p>Add a SuperCollider sound effect to a synth sound</p>
+  <h3>Inputs</h3>
+ 
+  <p>A <code>soundfx</code> node gets its input from a <code>synth</code> node.</p>
+
+  <dl class='message-properties'>
+    <dt class="optional">topic <span class="property-type">string</span></dt>
+    <dd>
+      <p>If <code>msg.topic</code> starts with <code>fxcontrol:</code> then the rest of the <code>msg.topic</code> is interpreted as a SuperCollider sound effect parameter name, and the <code>msg.payload</code> is used as its value. The parameters (fxcontrol) that can be changed vary from effect to effect, and their details can be seen in the configuration.</p></dd>
+  
+  </dl>
+  
+  <h3>Outputs</h3>
+  
+  <p>A <code>soundfx</code> node sends its output to a <code>osc</code> node.</p>
+  
+  <h3>Configuration</h3>
+
+   <dl class='message-properties'>
+
+     <dt><span class='optional'>Effect type</span> <span class='property-type'>string</span></dt>
+     <dd>The name of the sound effect type to use.</dd>
+     
+     <dt><span class='optional'>Effect controls (fxcontrol)</span> <span class='property-type'>number</span></dt>
+     <dd>Each sound effect has its own set of parameters that control its operation.</dd>
+     
+   </dl>
+
+
+
 </script>
