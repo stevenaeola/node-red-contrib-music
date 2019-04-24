@@ -1,5 +1,35 @@
 # Changelog
 
+## yv1.3.0 (24/04/2019)
+
+#### bug
+
+- [**bug**] Global bpm has no effect [#57](https://github.com/stevenaeola/node-red-contrib-music/issues/57)
+- [**bug**] Match mono/stereo sample synths to sample types [#56](https://github.com/stevenaeola/node-red-contrib-music/issues/56)
+
+#### closed
+
+- [**closed**] Give synthcontrols as options in synth configuration [#59](https://github.com/stevenaeola/node-red-contrib-music/issues/59)
+
+#### enhancement
+
+- [**enhancement**] Add extra scale types [#71](https://github.com/stevenaeola/node-red-contrib-music/issues/71)
+- [**enhancement**] Add documentation for soundfx node [#70](https://github.com/stevenaeola/node-red-contrib-music/issues/70)
+- [**enhancement**] Add flanger soundfx [#68](https://github.com/stevenaeola/node-red-contrib-music/issues/68)
+- [**enhancement**] Add distortion soundfx [#66](https://github.com/stevenaeola/node-red-contrib-music/issues/66)
+- [**enhancement**] Add envelope to samples so they don't overlay [#65](https://github.com/stevenaeola/node-red-contrib-music/issues/65)
+- [**enhancement**] Make all synths use sonic-pi format [#61](https://github.com/stevenaeola/node-red-contrib-music/issues/61)
+- [**enhancement**] Reduce download size [#55](https://github.com/stevenaeola/node-red-contrib-music/issues/55)
+- [**enhancement**] Categorise samples and allow search from selector [#48](https://github.com/stevenaeola/node-red-contrib-music/issues/48)
+- [**enhancement**] Make build process for scsynths [#44](https://github.com/stevenaeola/node-red-contrib-music/issues/44)
+- [**enhancement**] Use global volume for synths [#40](https://github.com/stevenaeola/node-red-contrib-music/issues/40)
+- [**enhancement**] Use sonic-pi synths [#36](https://github.com/stevenaeola/node-red-contrib-music/issues/36)
+- [**enhancement**] Give soundfx nodes initial fxcontrol values in configuration [#34](https://github.com/stevenaeola/node-red-contrib-music/issues/34)
+- [**enhancement**] Label all nodes' input and outputs [#33](https://github.com/stevenaeola/node-red-contrib-music/issues/33)
+- [**enhancement**] Make sid sample synth tuned [#26](https://github.com/stevenaeola/node-red-contrib-music/issues/26)
+
+---
+
 ## yv1.2.1 (31/03/2019)
 
 #### bug
@@ -17,7 +47,7 @@
 
 ---
 
-## yv1.2.0 (18/03/2019)
+## yv1.2.0 (17/03/2019)
 - [beat can be started with 'tap' messages, allowing synchronisation. closes #50](https://github.com/stevenaeola/node-red-contrib-music/commit/1f5adfc3c1701534ec96861897b35bc7f69e7429) - @stevenaeola
 - [Update manifesto](https://github.com/stevenaeola/node-red-contrib-music/commit/49837a3062a37b0dd4ab0ca024d2a93e8cc71600) - undefined
 - [Added rationale/manifesto](https://github.com/stevenaeola/node-red-contrib-music/commit/d5489df2cea4543c9973d9d6b5817a87a521010a) - undefined
