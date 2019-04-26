@@ -1,5 +1,10 @@
 # Changelog
 
+## yv1.3.1 (26/04/2019)
+*No changelog for this release.*
+
+---
+
 ## yv1.3.0 (24/04/2019)
 
 #### bug
