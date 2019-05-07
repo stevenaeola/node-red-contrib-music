@@ -1,5 +1,13 @@
 # Changelog
 
+## yv1.3.2 (08/05/2019)
+
+#### enhancement
+
+- [**enhancement**] Add icons for all node types [#72](https://github.com/stevenaeola/node-red-contrib-music/issues/72)
+
+---
+
 ## yv1.3.1 (26/04/2019)
 *No changelog for this release.*
 
