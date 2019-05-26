@@ -27,7 +27,7 @@
     "bd_haus": {"stereo": true, "tags": ["sonic-pi", "short", "bass", "drum"]},
     "bd_klub": {"stereo": true, "tags": ["sonic-pi", "short", "bass", "drum"]},
     "bd_mehackit": {"stereo": true, "tags": ["sonic-pi", "short", "bass", "drum"]},
-    "bd_pure": {"stereo": true, "tags": ["sonic-pi", "short", "bass", "drum"]},
+    "bd_pure": {"tags": ["sonic-pi", "short", "bass", "drum"]},
     "bd_sone": {"stereo": true, "tags": ["sonic-pi", "short", "bass", "drum"]},
     "bd_tek": {"stereo": true, "tags": ["sonic-pi", "short", "bass", "drum"]},
     "bd_zome": {"stereo": true, "tags": ["sonic-pi", "short", "bass", "drum"]},
