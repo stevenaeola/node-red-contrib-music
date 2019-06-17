@@ -1,11 +1,19 @@
 # Changelog
 
+## yv1.3.4 (17/06/2019)
+
+#### bug
+
+- [**bug**] Synth node does not list synthtypes [#74](https://github.com/stevenaeola/node-red-contrib-music/issues/74)
+
+---
+
 ## yv1.3.3 (26/05/2019)
 *No changelog for this release.*
 
 ---
 
-## yv1.3.2 (08/05/2019)
+## yv1.3.2 (07/05/2019)
 
 #### enhancement
 
