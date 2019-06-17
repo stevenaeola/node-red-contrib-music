@@ -21,7 +21,6 @@ module.exports = function (RED) {
         res.json(synthtypes);
     });
 
-
     function SynthNode (config) {
         const configurables =
               { root: { 'default': 'C4' },
@@ -32,7 +31,6 @@ module.exports = function (RED) {
                 key: { 'default': 'C minor' },
                 degree: { 'default': 'I' }
               };
-
 
         RED.nodes.createNode(this, config);
         const node = this;
