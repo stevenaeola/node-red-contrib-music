@@ -7,12 +7,13 @@ const fxtypesURL = 'node-red-contrib-music/fxtypes';
 
 module.exports = function (RED) {
     'use strict';
+    
+    RED.httpAdmin.get('/' + fxtypesURL, function (req, res) {
+        fxtypes = require('./fxtypes');
+        res.json(fxtypes);
+    });
 
     function SoundFXNode (config) {
-        RED.httpAdmin.get('/' + fxtypesURL, function (req, res) {
-            fxtypes = require('./fxtypes');
-            res.json(fxtypes);
-        });
 
         RED.nodes.createNode(this, config);
         const node = this;

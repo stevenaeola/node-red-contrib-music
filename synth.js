@@ -15,6 +15,13 @@ module.exports = function (RED) {
 
     const _ = require('underscore');
 
+    RED.httpAdmin.get('/' + synthtypesURL, function (req, res) {
+        // so we can edit syntypes.json without having to restart the server
+        synthtypes = require('./synthtypes');
+        res.json(synthtypes);
+    });
+
+
     function SynthNode (config) {
         const configurables =
               { root: { 'default': 'C4' },
@@ -26,11 +33,6 @@ module.exports = function (RED) {
                 degree: { 'default': 'I' }
               };
 
-        RED.httpAdmin.get('/' + synthtypesURL, function (req, res) {
-            // so we can edit syntypes.json without having to restart the server
-            synthtypes = require('./synthtypes');
-            res.json(synthtypes);
-        });
 
         RED.nodes.createNode(this, config);
         const node = this;
