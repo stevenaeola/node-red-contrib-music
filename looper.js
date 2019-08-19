@@ -17,18 +17,6 @@ module.exports = function (RED) {
 
             case 'play': // the action
             case 'record': // the action
-                switch (node.state) {
-                case 'play': // the state
-                    stopSynth(node, 'play');
-                    break;
-
-                case 'record': // the state
-                    stopSynth(node, 'record');
-                    break;
-
-                default:
-                    // do nothing
-                }
                 node.count = -1;
                 setState(msg.payload);
                 break;
@@ -37,7 +25,6 @@ module.exports = function (RED) {
                 switch (node.state) {
                 case 'play':
                 case 'record':
-                    stopSynth(node, node.state);
                     node.count = -1;
                     setState('waiting');
                 }
@@ -76,7 +63,6 @@ module.exports = function (RED) {
                         node.count--;
                     }
                     if (node.count <= 0) {
-                        stopSynth(node, node.state, msg.timeTag);
                         if (node.loop) {
                             // whether we are recording or looping we carry on to play
                             setState('play');
@@ -101,7 +87,7 @@ module.exports = function (RED) {
             // wait a little while to allow wires to be created
 
             setTimeout(function () {
-                sc.freeBuffer(node);
+                    sc.freeBuffer(node);
                 sc.createBuffer(node);
                 node.synthdefName = 'playSampleStereo';
                 sc.sendSynthDef(node);
@@ -111,6 +97,8 @@ module.exports = function (RED) {
         }
 
         function reset () {
+            node.volume = config.volume || 50;
+
             node.input = config.input || 'beat';
 
             node.start = config.start || 'bar'; // sampler won't start playing/recording until this
@@ -168,21 +156,16 @@ module.exports = function (RED) {
             return;
         }
 
-        const synth = action + '_synth_id';
-        if (node[synth]) {
-            sc.freeSynth(node, node[synth]);
-            node[synth] = null;
-        }
+        var payload = [action + 'SampleStereo', -1, 0, 0, 'buffer', node.bufnum];
 
-        const global = node.context().global;
-        let id = Number(global.get('synth_next_sc_node'));
-        if (isNaN(id)) {
-            id = 100000; // high to avoid nodes from sclang
+        payload.push('amp', sc.volume2amp(node));
+        const bpm = msg.bpm || node.context().global.get('bpm');
+        let sustain = node.length * 60 / bpm;
+        let multiple = msg['beats_per_' + node.input];
+        if (multiple) {
+            sustain *= multiple;
         }
-        global.set('synth_next_sc_node', id + 1);
-        node[synth] = id;
-
-        var payload = [action + 'SampleStereo', node[synth], 0, 0, 'buffer', node.bufnum];
+        payload.push('sustain', sustain);
 
         const address = '/s_new';
 
@@ -208,12 +191,6 @@ module.exports = function (RED) {
         }
 
         node.send(createMsg);
-    }
-
-    function stopSynth (node, action, timeTag) {
-        const synth = action + '_synth_id';
-        sc.freeSynth(node, node[synth], timeTag);
-        node[synth] = null;
     }
 
     RED.nodes.registerType('looper', LooperNode);

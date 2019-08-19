@@ -6,6 +6,7 @@ SynthDef("recordSampleStereo", {
     RecordBuf.ar(in, buffer,
 		recLevel: recLevel,
 		preLevel: preLevel,
-		loop:0);
+		loop:0,
+                doneAction: 2);
 }).store
 )
