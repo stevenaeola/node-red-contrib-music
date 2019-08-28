@@ -190,7 +190,7 @@
     "house": {"tags": ["tidal", "short", "bass", "drum"]},
     "industrial": {"tags": ["tidal", "misc"]},
     "jazz": {"tags": ["tidal", "short", "bass", "drum"]},
-    "jvbass": {"tuned": true, "midibase": 54, "tags": ["tidal"]},
+    "jvbass": {"tuned": true, "midibase": 54, "tags": ["tidal", "bass", "short"]},
     "kurt": {"tuned": true, "midibase": 64, "tags": ["tidal", "misc"]},
     "latibro": {"tuned": true, "midibase": 54 ,"tags": ["tidal", "short"]},
     "less": {"tags": ["tidal", "bass", "drum"]},
