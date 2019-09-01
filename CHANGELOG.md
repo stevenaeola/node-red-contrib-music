@@ -1,5 +1,19 @@
 # Changelog
 
+## yv1.3.5 (01/09/2019)
+
+#### bug
+
+- [**bug**] Loading samples doesn't work on Windows [#77](https://github.com/stevenaeola/node-red-contrib-music/issues/77)
+
+#### enhancement
+
+- [**enhancement**] Add looper component for importing [#76](https://github.com/stevenaeola/node-red-contrib-music/issues/76)
+- [**enhancement**] Add volume control to looper [#75](https://github.com/stevenaeola/node-red-contrib-music/issues/75)
+- [**enhancement**] Use beat count to self-terminate looper synthdefs : no need to store ID [#52](https://github.com/stevenaeola/node-red-contrib-music/issues/52)
+
+---
+
 ## yv1.3.4 (17/06/2019)
 
 #### bug
@@ -13,7 +27,7 @@
 
 ---
 
-## yv1.3.2 (07/05/2019)
+## yv1.3.2 (08/05/2019)
 
 #### enhancement
 
