@@ -89,14 +89,15 @@ function freeBuffer (node) {
 }
 
 function loadBuffer (node) {
-  var sampdir = path.join(__dirname, 'samples');
+    /* glob uses forward slashes even in Windows */
+  var sampdir = '/samples';
   var matches = [];
-  matches.push(path.join(sampdir, 'Dirt', node.synthtype, '*.wav'));
-  matches.push(path.join(sampdir, 'SonicPi', node.synthtype + '.flac'));
-  matches.push(path.join(sampdir, 'Freesound', node.synthtype + '.wav'));
+  matches.push(sampdir + '/Dirt/' + node.synthtype + '/*.wav');
+  matches.push(sampdir + '/SonicPi/' + node.synthtype + '.flac');
+  matches.push(sampdir + '/Freesound/' + node.synthtype + '.wav');
 
   for (let match of matches) {
-    glob(match, { nocase: true }, function (er, files) {
+      glob(match, { nocase: true, root: __dirname }, function (er, files) {
       var fname;
       fname = files[0];
       if (fname) {
