@@ -32,6 +32,7 @@ module.exports = function (RED) {
 
             case 'reset':
                 reset();
+                restart();
                 // do not send on message
                 break;
 
@@ -97,7 +98,7 @@ module.exports = function (RED) {
         }
 
         function reset () {
-            node.volume = config.volume || 50;
+            node.volume = config.volume || 100;
 
             node.input = config.input || 'beat';
 
@@ -109,7 +110,9 @@ module.exports = function (RED) {
 
             node.tags = [];
 
-            restart();
+            if (!node.state) {
+                restart();
+            }
         }
 
         function setState (state) {
