@@ -130,14 +130,14 @@
 	 }
 
 	 function filterSynthtypes(){
-             $('#node-input-synthtype-filter-container span').addClass("muted");
+             $('#node-input-synthtype-filter-container span').css("font-weight", "normal");
 
              for(let tag of node.filterTags){
-	         $('#node-input-synthtype-filter-' + tag).removeClass("muted");
+	         $('#node-input-synthtype-filter-' + tag).css("font-weight", "bold");
              }
              
              if (node.filterTags.size === 0){
-	         $('#node-input-synthtype-filter-all').removeClass("muted");
+	         $('#node-input-synthtype-filter-all').css("font-weight", "bold");
              }
 
              node.synthtypeList = [];
