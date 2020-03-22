@@ -95,6 +95,7 @@ function loadBuffer (node) {
   matches.push(sampdir + '/Dirt/' + node.synthtype + '/*.wav');
   matches.push(sampdir + '/SonicPi/' + node.synthtype + '.flac');
   matches.push(sampdir + '/Freesound/' + node.synthtype + '.wav');
+  matches.push(sampdir + '/VSCO/' + node.synthtype + '.wav');
 
   for (let match of matches) {
       glob(match, { nocase: true, root: __dirname }, function (er, files) {

@@ -104,7 +104,12 @@
     "misc_cineboom": {"stereo": true, "tags": ["sonic-pi", "long", "misc"]},
     "misc_clap": {"stereo": true, "tags": ["sonic-pi", "short", "misc"]},
     "misc_crow": {"stereo": true, "tags": ["sonic-pi", "short", "misc"]},
-    "perc_bell": {"tuned": true, "midibase": 64, "stereo": true, "tags": ["sonic-pi", "perc"]},
+    "orch_vln_sus_low": {"tuned": true, "midibase": 57, "stereo": true, "tags": ["orch", "long"]},
+    "orch_cello_sus_low": {"tuned": true, "midibase": 36, "stereo": true, "tags": ["orch", "long"]},
+    "orch_tromb_short_low": {"tuned": true, "midibase": 42, "stereo": true, "tags": ["orch", "short"]},
+    "orch_tromb_sus_low": {"tuned": true, "midibase": 42, "stereo": true, "tags": ["orch", "short"]},
+    "orch_tuba_sus_low": {"tuned": true, "midibase": 34, "stereo": true, "tags": ["orch", "short"]},
+
     "perc_bell2": {"stereo": true, "tags": ["sonic-pi", "perc"]},
     "perc_door": {"stereo": true, "tags": ["sonic-pi", "perc", "misc"]},
     "perc_impact1": {"stereo": true, "tags": ["sonic-pi", "short", "perc", "misc"]},
