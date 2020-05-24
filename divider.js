@@ -37,6 +37,10 @@ module.exports = function (RED) {
 
                 msg[node.output] = outputCount;
 
+                node.status({ 'text':
+                             node.output + ':' + outputCount + ' ' +
+                             node.input + ':' + inputCount + ' ' });
+
                 node.send(msg);
 
                 break;
