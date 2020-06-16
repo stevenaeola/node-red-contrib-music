@@ -56,6 +56,10 @@ module.exports = function (RED) {
                     tap();
                     break;
 
+                case 'tick':
+                    tick();
+                    break;
+
                 default:
                     node.send(msg);
                 }
