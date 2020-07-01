@@ -16,6 +16,9 @@ module.exports = function (RED) {
                 var controlSet = false;
                 if (start.indexOf(node.input) >= 0) {
                     //                only start/ restart when we get the right kind of tick
+                    // rhythmCount counts the number of events left in the current sequence position
+                    // rhythmPos points to where we are in the sequence
+                    // rhythmPos starts at -1, and only becomes non-negative when the sequence is started by a node.start event
                     if (node.rhythmPos > -1 || start.indexOf(node.start) >= 0) {
                         node.rhythmCount--;
                         if (node.rhythmCount <= 0) {
@@ -28,6 +31,10 @@ module.exports = function (RED) {
                                     node.rhythmPos = 0;
                                 }
                                 node.rhythmCount = node.rhythm[node.rhythmPos];
+                                // use a null value to pause the sequence until a
+                                if (node.rhythmCount === null) {
+                                    node.rhythmCount = Number.NaN;
+                                }
                             }
 
                             for (let i = 0; i < node.controls.length; i++) {
@@ -106,6 +113,12 @@ module.exports = function (RED) {
                     // do nothing
                     break;
                 }
+                break;
+
+                // move on to the next position next time
+                // particularly useful with a null value
+            case 'next':
+                node.rhythmCount = 0;
                 break;
 
             case 'reset':

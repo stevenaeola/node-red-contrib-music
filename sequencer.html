@@ -124,10 +124,11 @@
  <dl class='message-properties'>
 
  <dt>payload <span class='property-type'>string</span></dt>
- <dd>There are two relevant values for <code>msg.payload</code>:
+ <dd>There are three relevant values for <code>msg.payload</code>:
 			 <ol>
  <li>a <code>tick</code> input is counted by the sequencer if <code>msg.start</code> includes the input event (usually <code>beat</code>)</li>
- <li>a <code>reset</code> input returns the sequencer to its starting state, and also forwards the message to the output.</li>
+ <li>a <code>reset</code> input returns the sequencer to its starting state, and also forwards the message to the output</li>
+ <li>a <code>next</code> input will move the sequencer  on to the next value(s) in the list, irrespective of how many <code>tick</code> inputs have been received</li>
  </ol>
  Any other value for <code>msg.payload</code> is sent straight to the output.
 								   </dd>
@@ -142,7 +143,7 @@
  <dl class='message-properties'>
 
  <dt>payload <span class='property-type'>string</span></dt>
- <dd>By default a <code>tick</code> is sent when enough <code>tick</code> inputs have been received, according to the <code>list of lengths</code> configuration. If the <code>Tick Output</code> property is change to <code>all ticks</code> then all input ticks are sent to the output, but with the current value for any sequenced property added as a message property</dd>
+ <dd>By default a <code>tick</code> is sent when enough <code>tick</code> inputs have been received, according to the <code>list of lengths</code> configuration. If the <code>Tick Output</code> property is change to <code>all ticks</code> then all input ticks are sent to the output, but with the current value for any sequenced property added as a message property.</dd>
 
  <dt><span class='optional'>note</span> <span class='property-type'>number</span></dt>
  <dd>For each control specified he sequencer moves through its list of <code>values</code> with the rhythm specified and the values are added as a message property. Other sequenced properties can be added to the sequencer with the <code>Controls</code> configuration.</dd>
@@ -197,7 +198,7 @@
  <dd>If selected, the list of notes is shuffled randomly each time the sequence starts.</dd>
 
  <dt>list of lengths <span class='property-type'>list,number</span>
- <dd>A list of numbers representing the number of ticks to be counted for a note. The list should be specified as a JSON array, with default <code>[3,1]</code> or a number can be used if all notes have the same length. The size of this list does not have to be the same as the size of the list of notes: the list will be repeated as many times as necessary.</dd>
+ <dd>A list of numbers (or null values) representing the number of ticks to be counted for a note. The list should be specified as a JSON array, with default <code>[3,1]</code> or a number can be used if all notes have the same length. The size of this list does not have to be the same as the size of the list of notes: the list will be repeated as many times as necessary. If a <code>null</code> value is given then the sequencer will not progress until a message with payload <code>next</code> is received.</dd>
 
  <dt>choose lengths randomly from list <span class='property-type'>boolean</span>
  <dd>If selected, the list of lengths is shuffled randomly each time the sequence starts.</dd>
