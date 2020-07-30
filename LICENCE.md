@@ -44,9 +44,9 @@ All the examples are copyright by Steven Bradley (2018) and the content is relea
 
 `divide.png` is derived from a [typeicons](https://www.s-ings.com/typicons/) icon under [SIL Open Font Licence 1.1](https://scripts.sil.org/cms/scripts/page.php?item_id=OFL_web)
 
-`effect.ong` is derived from a [Ligature](http://kudakurage.com/ligature_symbols/) icon under [SIL Open Font Licence 1.1](https://scripts.sil.org/cms/scripts/page.php?item_id=OFL_web)
+`effect.png` is derived from a [Ligature](http://kudakurage.com/ligature_symbols/) icon under [SIL Open Font Licence 1.1](https://scripts.sil.org/cms/scripts/page.php?item_id=OFL_web)
 
-`queue-music.png` is derived from a [Material Icons](http://google.github.io/material-design-icons/) icon under [Apache License Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt)
+`queue-music.png` and `library_music.png` are derived from a [Material Icons](http://google.github.io/material-design-icons/) icon under [Apache License Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 
 Icons created from fonts using <http://fa2png.io/icons/>.
