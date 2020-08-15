@@ -103,16 +103,44 @@ module.exports = function (RED) {
             } else {
                 midi = msg.midi;
             }
-            let payload;
-            let action;
 
             let amp = sc.volume2amp(node);
 
-            action = '/s_new';
+            // build all generic note details first
+            // then add supercollider-only details if relevant
+            let details = { amp };
+            if (midi) {
+                Object.assign(details, { midi });
+            }
 
-            // add it to the head of the root group
+            const bpm = msg.bpm || node.context().global.get('bpm');
+
+            if (msg.beats) {
+                details.beats = msg.beats;
+                if (bpm) {
+                    // set release to 0.25 beats
+                    let release = 0.25 * 60 / bpm;
+                    // tried subtracting release time but it seemed to leave gaps
+                    let sustain = msg.beats * 60 / bpm;
+                    Object.assign(details, { bpm, sustain, release });
+                }
+            }
+
+            // bit of a hack for now: for v2.0 all synth instructions will be sent this way
+            if (node.synthtype === 'modular') {
+                node.send(details);
+                return;
+            }
+
+            // carrying on, we assume this is for SuperCollider
+            // add the synth to the head of the root group
             // use node ID of -1 to auto-generate synth id
-            payload = [node.synthdefName, -1, 0, 0, 'amp', amp];
+            let payload = [node.synthdefName, -1, 0, 0];
+
+            // copy all of the details into the payload to be sent via OSC
+            for (let key in details) {
+                payload.push(key, details[key]);
+            }
 
             if (!isSynth()) {
                 if (!node.bufnum) {
@@ -125,8 +153,8 @@ module.exports = function (RED) {
                 }
             }
 
+            // this is to work with the sonic pi synth defs
             if (midi) {
-                payload.push('midi', midi);
                 payload.push('note', midi);
             }
 
@@ -135,22 +163,7 @@ module.exports = function (RED) {
                 payload.push(node.parameters[param]);
             }
 
-            const bpm = msg.bpm || node.context().global.get('bpm');
-
-            if (msg.beats) {
-                payload.push('beats');
-                payload.push(msg.beats);
-                if (bpm) {
-                    payload.push('bpm', bpm);
-                    // set release to 0.25 beats
-                    let release = 0.25 * 60 / bpm;
-                    // tried subtracting release time but it seemed to leave gaps
-                    let sustain = msg.beats * 60 / bpm;
-                    payload.push('sustain', sustain);
-                    payload.push('release', release);
-                }
-            }
-
+            const action = '/s_new';
             let playmsg;
             if (msg.timeTag) {
                 playmsg = {

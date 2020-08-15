@@ -249,6 +249,8 @@
                                   "lfowidth": {"description": "", "min": 0, "max": 0.5, "default": 0.2}}},
     "snare": {"synth": true, "tags": ["short", "snare", "drum"],
               "synthcontrols": {"snare_tightness": {"description": "", "min": 1, "max": 1000, "default": 100},
-                                "snare_level": {"description": "", "min": 1, "max": 100, "default": 50}}}
+                                "snare_level": {"description": "", "min": 1, "max": 100, "default": 50}}},
+
+    "modular": {"tuned": true}
 }
 
