@@ -1,4 +1,4 @@
-const sc = require('./supercollider');
+const sc = require('./scsynth');
 
 module.exports = function (RED) {
     'use strict';

@@ -1,4 +1,4 @@
-const sc = require('./supercollider');
+const sc = require('./scsynth');
 
 // prefix for served GET requests
 
