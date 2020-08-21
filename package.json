@@ -20,6 +20,7 @@
             "sequencer": "sequencer.js",
             "setting": "setting.js",
             "soundfx": "soundfx.js",
+            "supercollider": "supercollider.js",
             "synth": "synth.js"
         }
     },
@@ -36,6 +37,7 @@
         "ip": "^1.1.5",
         "mathjs": "^3.20.2",
         "node-red-contrib-osc": "^1.1.0",
+        "node-red-contrib-properties": "file:../node-red-contrib-properties",
         "osc": "^2.3.1",
         "path": "^0.12.7",
         "request": "^2.88.0",

@@ -6,7 +6,7 @@
 
 The ISC License
 
-Copyright 2017,2018,2019 Steven Bradley <s.p.bradley@durham.ac.uk>
+Copyright 2017,2018,2019,2020 Steven Bradley <s.p.bradley@durham.ac.uk>
 
 Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
@@ -47,6 +47,8 @@ All the examples are copyright by Steven Bradley (2018) and the content is relea
 `effect.png` is derived from a [Ligature](http://kudakurage.com/ligature_symbols/) icon under [SIL Open Font Licence 1.1](https://scripts.sil.org/cms/scripts/page.php?item_id=OFL_web)
 
 `queue-music.png` and `library_music.png` are derived from a [Material Icons](http://google.github.io/material-design-icons/) icon under [Apache License Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+`sc_cube_48x48_trans.png` is from derived from `sc_cube_48x48.png` [SuperCollider](https://github.com/supercollider/supercollider/tree/develop/icons) under [GPL 3.0](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 
 Icons created from fonts using <http://fa2png.io/icons/>.
