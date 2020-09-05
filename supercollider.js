@@ -46,7 +46,7 @@ module.exports = function (RED) {
                     }
 
                     checkSynthType(synthtype);
-                    sendOSC(note2sc(msg));
+                    sendOSC(note2sc(synthtype, msg));
                     break;
 
                 case 'reset':
@@ -199,7 +199,6 @@ module.exports = function (RED) {
 
         function note2sc (synthtype, msg) {
             // assumes checkSynth has already been run
-
             const synthdef = synthDefName(synthtype);
             let synthDetails = synthtypes[synthtype];
 
@@ -243,8 +242,8 @@ module.exports = function (RED) {
                 };
             } else {
                 playmsg = {
-                    topic: action,
-                    payload: payload
+                    address: action,
+                    args: payload
                 };
             }
 
@@ -285,6 +284,7 @@ module.exports = function (RED) {
 
                     client.on('error', function (err) {
                         node.warn('Error creating SuperCollider connection' + err);
+                        node.udpConnected = false;
                         node.udpPort = null;
                     });
 
