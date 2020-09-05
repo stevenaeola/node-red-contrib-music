@@ -1,8 +1,9 @@
 const sc = require('./scsynth');
+const _ = require('underscore');
 
 // prefix for served GET requests
-
 const synthtypesURL = 'node-red-contrib-music/synthtypes';
+
 let synthtypes = require('./synthtypes');
 for (let synthtype in synthtypes) {
     let synthcontrols = synthtypes[synthtype].synthcontrols || {};
@@ -13,8 +14,6 @@ for (let synthtype in synthtypes) {
 module.exports = function (RED) {
     'use strict';
 
-    const _ = require('underscore');
-
     RED.httpAdmin.get('/' + synthtypesURL, function (req, res) {
         // so we can edit syntypes.json without having to restart the server
         synthtypes = require('./synthtypes');
@@ -23,14 +22,15 @@ module.exports = function (RED) {
 
     function SynthNode (config) {
         const configurables =
-              { root: { 'default': 'C4' },
-                scale: { 'default': 'minor' },
-                volume: { 'default': 50 },
-                octave: { 'default': 0 },
-                synthtype: { 'default': 'kick' },
-                key: { 'default': 'C minor' },
-                degree: { 'default': 'I' }
-              };
+        {
+            root: { 'default': 'C4' },
+            scale: { 'default': 'minor' },
+            volume: { 'default': 50 },
+            octave: { 'default': 0 },
+            synthtype: { 'default': 'kick' },
+            key: { 'default': 'C minor' },
+            degree: { 'default': 'I' }
+        };
 
         RED.nodes.createNode(this, config);
         const node = this;
@@ -50,32 +50,32 @@ module.exports = function (RED) {
             }
 
             switch (msg.topic) {
-            default:
-                switch (msg.payload) {
-                case 'tick':
-                    configureTick(msg);
-                    handleTickSynth(msg);
-                    break;
-
-                case 'reset':
-                    for (let conf in configurables) {
-                        configure(conf, config[conf]);
-                    }
-                    reset();
-                    // just this once the reset message is not propagated
-                    break;
-
-                case 'stop':
-                    // nothing to do
-                    break;
-
-                case 'start':
-                    // nothing to do
-                    break;
-
                 default:
-                    configureMsg(msg);
-                }
+                    switch (msg.payload) {
+                        case 'tick':
+                            configureTick(msg);
+                            handleTickSynth(msg);
+                            break;
+
+                        case 'reset':
+                            for (let conf in configurables) {
+                                configure(conf, config[conf]);
+                            }
+                            reset();
+                            // just this once the reset message is not propagated
+                            break;
+
+                        case 'stop':
+                            // nothing to do
+                            break;
+
+                        case 'start':
+                            // nothing to do
+                            break;
+
+                        default:
+                            configureMsg(msg);
+                    }
             }
         });
 
@@ -104,7 +104,7 @@ module.exports = function (RED) {
                 midi = msg.midi;
             }
 
-            let amp = sc.volume2amp(node);
+            let amp = sc.volume2amp(node); // TODO move into synth?
 
             // build all generic note details first
             // then add supercollider-only details if relevant
@@ -126,88 +126,23 @@ module.exports = function (RED) {
                 }
             }
 
-            // bit of a hack for now: for v2.0 all synth instructions will be sent this way
-            if (node.synthtype === 'modular') {
-                node.send(details);
-                return;
-            }
+            let noteMsg = {
+                payload: 'tick',
+                details,
+                synthtype: node.synthtype
+            };
 
-            // carrying on, we assume this is for SuperCollider
-            // add the synth to the head of the root group
-            // use node ID of -1 to auto-generate synth id
-            let payload = [node.synthdefName, -1, 0, 0];
-
-            // copy all of the details into the payload to be sent via OSC
-            for (let key in details) {
-                payload.push(key, details[key]);
-            }
-
-            if (!isSynth()) {
-                if (!node.bufnum) {
-                    sc.createBuffer(node);
-                }
-                payload.push('buffer', node.bufnum);
-                const midibase = synthtypes[node.synthtype].midibase;
-                if (midibase) {
-                    payload.push('midibase', midibase);
-                }
-            }
-
-            // this is to work with the sonic pi synth defs
-            if (midi) {
-                payload.push('note', midi);
-            }
-
-            for (let param in node.parameters) {
-                payload.push(param);
-                payload.push(node.parameters[param]);
-            }
-
-            const action = '/s_new';
-            let playmsg;
             if (msg.timeTag) {
-                playmsg = {
-                    payload: {
-                        timeTag: msg.timeTag,
-                        packets: [
-                            {
-                                address: action,
-                                args: payload
-                            }
-                        ]
-                    },
-                    // this one is to be picked up by any fx on the way
-                    bpm: bpm
-                };
-            } else {
-                playmsg = {
-                    topic: action,
-                    payload: payload,
-                    bpm: bpm
-                };
+                noteMsg.timeTag = msg.timeTag;
             }
 
-            // avoid problems with DetectSilence leaving zombie synths at amp 0
-            if (amp > 0 && (!midi || midi >= 0)) {
-                node.send(playmsg);
-            }
-        }
-
-        function createSynth () {
-            if (isSynth()) {
-                node.tags = synthtypes[node.synthtype].tags || [];
-                if (node.tags.includes('sonic-pi')) {
-                    node.synthdefName = 'sonic-pi-' + node.synthtype;
-                } else {
-                    node.synthdefName = node.synthtype;
-                }
-            }
-            sc.sendSynthDef(node);
+            // from v2.0 all synth instructions area sent this way
+            node.send(noteMsg);
         }
 
         function setSynthcontrol (synthcontrol, value) {
             let synthcontrolSpecs = synthtypes[node.synthtype].synthcontrols || {};
-             // all synths allow pan at least
+            // all synths allow pan at least
             synthcontrolSpecs.pan = { 'note': { 'description': 'position in stereo field: left (-1) or right (1)', 'min': -1, 'max': 1, 'default': 0 } };
             if (!synthtypes[node.synthtype].synthcontrols[synthcontrol]) {
                 node.warn('No such synthcontrol: ' + synthcontrol);
@@ -224,42 +159,7 @@ module.exports = function (RED) {
                     setSynthcontrol(synthcontrol, config.synthcontrols[synthcontrol]);
                 }
             }
-            if (isSynth()) {
-                resetSynth();
-            } else {
-                resetSample();
-            }
-        }
-
-        function resetSynth () {
-            node.tags = [];
-            node.outBus = Number(config.outBus) || 0;
-
-            // wait a little while to allow wires to be created
-            setTimeout(function () {
-                createSynth();
-            }, 200);
-        }
-
-        function resetSample () {
-            node.tags = [];
-            if (synthtypes[node.synthtype].stereo === true) {
-                node.synthdefName = 'playSampleStereo';
-            } else {
-                node.synthdefName = 'playSampleMono';
-            }
-
-            setTimeout(function () {
-                sc.freeBuffer(node);
-                sc.createBuffer(node);
-                createSynth(node);
-            }, 200);
-        }
-
-        function isSynth () {
-            if (synthtypes[node.synthtype] && synthtypes[node.synthtype].synth) {
-                return true;
-            }
+            node.send({ topic: 'synthtype', payload: node.synthtype });
         }
 
         function isTuned () {
@@ -456,35 +356,35 @@ module.exports = function (RED) {
             var def = configurables[config].default;
 
             switch (config) {
-            case 'volume':
-                var newVol = Number(val);
-                if (Number.isNaN(newVol)) {
-                    if (Number.isNaN(node.volume)) {
-                        node.volume = def;
+                case 'volume':
+                    var newVol = Number(val);
+                    if (Number.isNaN(newVol)) {
+                        if (Number.isNaN(node.volume)) {
+                            node.volume = def;
+                        }
+                    } else {
+                        node.volume = newVol;
                     }
-                } else {
-                    node.volume = newVol;
-                }
 
-                node.volume = Math.min(100, Math.max(0, node.volume));
+                    node.volume = Math.min(100, Math.max(0, node.volume));
 
-                break;
+                    break;
 
-            case 'key':
-                if (val) {
-                    var bits = val.split(' ');
-                    configure('root', bits.shift());
-                    configure('scale', bits.shift());
-                }
-                break;
+                case 'key':
+                    if (val) {
+                        var bits = val.split(' ');
+                        configure('root', bits.shift());
+                        configure('scale', bits.shift());
+                    }
+                    break;
 
-            case 'synthtype':
-                node[config] = val;
-                reset();
-                break;
+                case 'synthtype':
+                    node[config] = val;
+                    reset();
+                    break;
 
-            default:
-                node[config] = val;
+                default:
+                    node[config] = val;
             }
         }
     }

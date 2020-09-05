@@ -1,8 +1,5 @@
 // commonly used functions, imported by synth.js, soundfx.js, looper.js
-
-const fs = require('fs');
 const glob = require('glob');
-const path = require('path');
 
 function freeSynth (node, synthID, timeTag) {
   let freeMsg;
@@ -30,28 +27,6 @@ function freeSynth (node, synthID, timeTag) {
     }
     node.send(freeMsg);
   }
-}
-
-function sendSynthDef (node) {
-    let synthdefPath = path.join(__dirname, 'synthdefs', 'compiled');
-    if (node.tags.includes('sonic-pi')) {
-        synthdefPath = path.join(synthdefPath, 'sonic-pi');
-    }
-
-    const synthdefFile = path.join(synthdefPath, node.synthdefName + '.scsyndef');
-
-    fs.readFile(synthdefFile, function (err, data) {
-        if (err) {
-            node.warn(' problem sending file for ' + node.synthtype);
-            node.warn(err);
-        } else {
-            const synthMsg = {
-                topic: '/d_recv',
-                payload: [data, 0]
-            };
-            node.send(synthMsg);
-        }
-    });
 }
 
 function createBuffer (node) {
@@ -130,5 +105,4 @@ module.exports = { createBuffer,
                    freeBuffer,
                    freeSynth,
                    loadBuffer,
-                   sendSynthDef,
                    volume2amp };
