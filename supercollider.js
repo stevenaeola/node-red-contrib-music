@@ -164,7 +164,11 @@ module.exports = function (RED) {
 
         function reset () {
             clearTimeout(node.heartbeat);
+            clearSynthStore();
             heartbeat();
+        }
+
+        function clearSynthStore () {
             node.samples = {}; // this is a map from synthtype to buffer (if required)
             node.synthDefSent = new Set();
         }
@@ -276,6 +280,7 @@ module.exports = function (RED) {
                     client.on('connect', function () {
                         node.udpConnected = true;
                         client.send(heartbeatBuffer);
+                        clearSynthStore();
                     });
 
                     client.on('error', function (err) {
