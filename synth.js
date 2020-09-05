@@ -126,6 +126,10 @@ module.exports = function (RED) {
                 }
             }
 
+            for (let p in node.parameters) {
+                details[p] = node.parameters[p];
+            }
+
             let noteMsg = {
                 payload: 'tick',
                 details,
