@@ -230,15 +230,13 @@ module.exports = function (RED) {
             let playmsg;
             if (msg.timeTag) {
                 playmsg = {
-                    payload: {
-                        timeTag: msg.timeTag,
-                        packets: [
-                            {
-                                address: action,
-                                args: payload
-                            }
-                        ]
-                    }
+                    timeTag: osc.timeTag(0, msg.timeTag),
+                    packets: [
+                        {
+                            address: action,
+                            args: payload
+                        }
+                    ]
                 };
             } else {
                 playmsg = {
