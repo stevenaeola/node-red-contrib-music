@@ -29,48 +29,46 @@ module.exports = function (RED) {
             }
 
             switch (msg.topic) {
-            case 'volume':
-                const newVol = Number(msg.payload);
-                if (!Number.isNaN(newVol)) {
-                    node.volume = newVol;
-                }
-                // 100 should be neutral volume, not max
-
-                setFXParam('amp', sc.volume2amp(node));
-
-                break;
-
-                // receiving a play message from a synth
-            case '/s_new':
-                msg.payload.push('out', node.inBus);
-                msg.payload.push('out_bus', node.inBus);
-
-                setFXbpm(msg);
-
-                node.send(msg);
-                break;
-
-            default:
-                if (msg.payload.timeTag) {
-                    let args = msg.payload.packets[0].args;
-                    if (Array.isArray(args)) {
-                        args.push('out', node.inBus);
-                        args.push('out_bus', node.inBus);
+                case 'volume':
+                    const newVol = Number(msg.payload);
+                    if (!Number.isNaN(newVol)) {
+                        node.volume = newVol;
                     }
+                    // 100 should be neutral volume, not max
 
-                    setFXbpm(msg);
+                    setFXParam('amp', sc.volume2amp(node));
 
+                    break;
+
+                case 'fxtype':
+                    let fxpath = msg.fxpath || [];
+                    fxpath.push({ nodeID: node.id, fxtype: node.fxtype, parameters: node.parameters });
+                    msg.fxpath = fxpath;
                     node.send(msg);
-                    return;
-                }
-                if (msg.payload === 'reset') {
-                    reset();
-                    // just this once the reset message is not propagated
-                    return;
-                }
+                    break;
 
-//                setFXParam(msg.topic, msg.payload);
-                node.send(msg);
+                case 'synthtype':
+                    node.send(msg);
+                    break;
+
+                default:
+                    switch (msg.payload) {
+                        case 'tick':
+                            let fxChain = msg.fxChain || [];
+                            fxChain.push(node.id);
+                            msg.fxChain = fxChain;
+                            node.send(msg);
+                            break;
+
+                        case 'reset':
+                            reset();
+                            // just this once the reset message is not propagated
+                            break;
+
+                        default:
+                            node.send(msg);
+                            break;
+                    }
             }
         });
 
@@ -82,61 +80,28 @@ module.exports = function (RED) {
         function setFXParam (param, val) {
             if (!fxtypes[node.fxtype].fxcontrols[param] && !['bpm'].includes(param)) {
                 node.warn('No such fxcontrol: ' + param);
-                return;
             }
-
-            const parammsg = {
+// TODO replace this in supercollider.js
+/*             const parammsg = {
                 'topic': '/n_set',
                 'payload': [node.synthID, param, val]
             };
-            node.send(parammsg);
+            node.send(parammsg); */
         }
-
+/*
         function setFXbpm (msg) {
             const bpm = msg.bpm;
 
             if (bpm) {
                 setFXParam('bpm', bpm);
             }
+            // TODO make sure this is called when the FX synth is created
         }
-
-        function createFX () {
-            node.tags = [];
-            node.synthdefName = node.fxtype;
-            sc.sendSynthDef(node);
-            // leave some time for the synthdef to be sent
-
-            setTimeout(function () {
-                sc.freeSynth(node, node.synthID);
-
-                let payload = [node.fxtype, node.synthID, 1, 0, 'inBus', node.inBus, 'amp', sc.volume2amp(node)];
-                for (let param in node.parameters) {
-                    payload.push(param);
-                    payload.push(Number(node.parameters[param]));
-                }
-                payload.push('amp');
-                payload.push(sc.volume2amp(node));
-
-                // add it to the tail of the root group
-                const createMsg = {
-                    topic: '/s_new',
-                    payload: payload
-                };
-
-                node.send(createMsg);
-            }, 200);
-        }
+*/
 
         function reset () {
             node.fxtype = config.fxtype || 'reverb';
             node.name = config.name || node.fxtype;
-            node.inBus = fxtypes[node.fxtype].inBus;
-            node.outBus = Number(config.outBus) || 0;
-            // fix the synthID according to the fxtype (via inBus number)
-            // means we can only have one fx node per fx type
-            // ... which is deliberate
-            node.synthID = 100000 - node.inBus / 2;
-            node.volume = 100;
 
             node.parameters = node.parameters || {};
             if (config.fxcontrols) {
@@ -144,11 +109,7 @@ module.exports = function (RED) {
                     node.parameters[fxcontrol] = config.fxcontrols[fxcontrol];
                 }
             }
-
-            // wait a little while to allow wires to be created
-            setTimeout(function () {
-                createFX();
-            }, 200);
+            node.send({ topic: 'fxtype', fxpath: [{ nodeID: node.id, fxtype: node.fxtype, parameters: node.parameters }] });
         }
     }
 

@@ -8,9 +8,12 @@ module.exports = function (RED) {
     'use strict';
 
     const heartbeatInterval = 5000;
+    const minBusNum = 16; // hopefully no clashes with sclang: default 8 input and 8 output buses
+    const maxSynthID = 100000;
 
     // names for variables in the global context
-    const gBufnum = 'supercollider_next_bufnum';
+    const gBufNum = 'supercolliderNextBufNum';
+    const gBusNum = 'supercolliderNextBusNum';
 
     function SuperColliderNode (config) {
         // TODO make sure this is the only node of this type
@@ -38,6 +41,12 @@ module.exports = function (RED) {
                 return;
             }
 
+            if (msg.topic === 'fxtype') {
+                let fxpath = msg.fxpath;
+                checkFXType(fxpath);
+                return;
+            }
+
             switch (msg.payload) {
                 case 'tick':
                     let synthtype = msg.synthtype;
@@ -47,6 +56,7 @@ module.exports = function (RED) {
 
                     checkSynthType(synthtype);
                     sendOSC(note2sc(synthtype, msg));
+                    treeDump();
                     break;
 
                 case 'reset':
@@ -66,31 +76,28 @@ module.exports = function (RED) {
             }
         });
 
-        // ehecks the synttype is valid and sends anything needed to SuperCollider
+        // ehecks the syntthype is valid and sends anything needed to SuperCollider
         function checkSynthType (synthtype) {
             if (!synthtypes[synthtype]) {
                 node.warn('SuperCollider unknown synthtype: ' + synthtype);
-                return false;
+                return;
             }
 
-            if (!checkSynthDef(synthDefName(synthtype))) {
-                return false;
-            }
+            checkSynthDef(synthDefName(synthtype));
 
             if (synthtypes[synthtype].synth) {
-                return true;
-            } else {
-                return checkSamples(synthtype);
+                return;
             }
+            checkSamples(synthtype);
         }
 
         function checkSamples (synthtype) {
             if (node.samples[synthtype]) {
-                return true;
+                return;
             }
 
-            const bufnum = nextBufnum();
-            node.samples[synthtype] = { 0: bufnum }; // could be varied by pitch
+            const bufNum = nextBufNum();
+            node.samples[synthtype] = { 0: bufNum }; // could be varied by pitch
 
             // glob uses forward slashes even in Windows
             const sampdir = '/samples';
@@ -108,18 +115,17 @@ module.exports = function (RED) {
 
                         var createMsg = {
                             address: '/b_allocRead',
-                            args: [bufnum, fname]
+                            args: [bufNum, fname]
                         };
                         sendOSC(createMsg);
                     }
                 });
             }
-            return true;
         }
 
         function checkSynthDef (synthDefName) {
             if (node.synthDefSent.has(synthDefName)) {
-                return true;
+                return;
             }
 
             node.synthDefSent.add(synthDefName);
@@ -149,17 +155,75 @@ module.exports = function (RED) {
                     }
                 });
             }
-            return true;
         }
 
-        function nextBufnum () {
-            var bufnum = Number(global.get(gBufnum));
-            if (isNaN(bufnum)) {
-                bufnum = 0; // hopefully no clashes with sclang
+        function checkFXType (fxpath) {
+            // fxpath is a list of {nodeID, fxtype, parameters} objects, last element in the chain last in the list
+            // builds chain: a list of (just) node ids, same order
+            // side effect is to claim buses and instantiate the relevant fxsynth
+            // synth ID calculated from busNum
+            // returns the input bus number of the first in the chain (i.e. the bus that any feeding synth should send its output to)
+            if (fxpath.length === 0) {
+                return 0; // then the final fx in the chain will send its output to audio out on bus 0
             }
-            bufnum++;
-            global.set(gBufnum, bufnum);
-            return bufnum;
+            let keyFull = JSON.stringify(path2chain(fxpath));
+            let head = fxpath.shift();
+            let keyTail = JSON.stringify(path2chain(fxpath));
+            let tailBusNum = checkFXType(fxpath); // on the tail of the list
+            if (node.chain2buses[keyFull]) {
+                return node.chain2buses[keyFull][head.nodeID];
+            } else {
+                const headBusNum = nextBusNum();
+                const synthID = busNum2synthID(headBusNum);
+                let payload = [head.fxtype, synthID, 1, 0];
+
+                payload.push('inBus', headBusNum);
+                payload.push('outBus', tailBusNum);
+
+                const fxDetails = head.parameters;
+                for (let key in fxDetails) {
+                    payload.push(key, fxDetails[key]);
+                }
+                sendOSC({ address: '/s_new', args: payload });
+                treeDump();
+                let buses = clone(node.chain2buses[keyTail] || {});
+                buses[head.nodeID] = headBusNum;
+                node.chain2buses[keyFull] = buses;
+                return headBusNum;
+            }
+        }
+
+        function clone (obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
+        // extract the node ids
+        function path2chain (fxpath) {
+            return fxpath.map(e => e.nodeID);
+        }
+
+        function nextBufNum () {
+            let bufNum = Number(global.get(gBufNum));
+            if (isNaN(bufNum)) {
+                bufNum = 0; // hopefully no clashes with sclang
+            }
+            bufNum++;
+            global.set(gBufNum, bufNum);
+            return bufNum;
+        }
+
+        function nextBusNum () {
+            let busNum = Number(global.get(gBusNum));
+            if (isNaN(busNum)) {
+                busNum = minBusNum;
+            }
+            busNum += 2;
+            global.set(gBusNum, busNum);
+            return busNum;
+        }
+
+        function busNum2synthID (busNum) {
+            return maxSynthID - busNum / 2;
         }
 
         function reset () {
@@ -169,8 +233,9 @@ module.exports = function (RED) {
         }
 
         function clearSynthStore () {
-            node.samples = {}; // this is a map from synthtype to buffer (if required)
+            node.samples = {}; // map from synthtype to buffer (if required)
             node.synthDefSent = new Set();
+            node.chain2buses = {}; // keys are (JSON encoded) lists of node ids. Values are objects mapping from node id to busNum
         }
 
         function sendOSC (msg) {
@@ -224,7 +289,12 @@ module.exports = function (RED) {
                 }
             }
 
-            // TODO add output for soundfx
+            let outBus = 0;
+            if (msg.fxChain) {
+                let busMap = node.chain2buses[JSON.stringify(msg.fxChain)];
+                outBus = busMap[msg.fxChain[0]];
+            }
+            payload.push('outBus', outBus);
 
             const action = '/s_new';
             let playmsg;
@@ -253,9 +323,14 @@ module.exports = function (RED) {
             }
         }
 
-        function heartbeat () {
-            // TODO reset samples, synths when connection (re)established
+        function treeDump () {
+            sendOSC({
+                address: '/g_dumpTree',
+                args: [0, 0]
+            });
+        }
 
+        function heartbeat () {
             const heartbeatMsg = { address: '/status', args: [] };
             const heartbeatBuffer = Buffer.from(osc.writePacket(heartbeatMsg));
 
