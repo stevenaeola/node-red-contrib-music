@@ -3,6 +3,7 @@ const osc = require('osc');
 const fs = require('fs');
 const glob = require('glob');
 const nrp = require('node-red-contrib-properties');
+// const _ = require('underscore');
 
 module.exports = function (RED) {
     'use strict';
@@ -36,7 +37,6 @@ module.exports = function (RED) {
             properties.input(msg);
 
             if (msg.topic === 'synthtype') {
-                console.log('recevied synttype', msg);
                 let synthtype = msg.payload;
                 checkSynthType(synthtype);
                 return;
@@ -176,7 +176,13 @@ module.exports = function (RED) {
             } else {
                 const headBusNum = nextBusNum();
                 const synthID = busNum2synthID(headBusNum);
-                let payload = [head.fxtype, synthID, 1, 0];
+                let payload = [head.fxtype, synthID];
+                // specify position in the group: just before the next soundfx in
+                if (tailBusNum) {
+                    payload.push(2, busNum2synthID(tailBusNum));
+                } else {
+                    payload.push(1, 0);
+                }
 
                 payload.push('inBus', headBusNum);
                 payload.push('out_bus', tailBusNum);
