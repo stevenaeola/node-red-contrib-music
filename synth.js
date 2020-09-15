@@ -163,7 +163,9 @@ module.exports = function (RED) {
                     setSynthcontrol(synthcontrol, config.synthcontrols[synthcontrol]);
                 }
             }
-            node.send({ topic: 'synthtype', payload: node.synthtype });
+            setTimeout(() => {
+                node.send({ topic: 'synthtype', payload: node.synthtype });
+            }, 200);
         }
 
         function isTuned () {

@@ -109,7 +109,9 @@ module.exports = function (RED) {
                     node.parameters[fxcontrol] = config.fxcontrols[fxcontrol];
                 }
             }
-            node.send({ topic: 'fxtype', fxpath: [{ nodeID: node.id, fxtype: node.fxtype, parameters: node.parameters }] });
+            setTimeout(() => {
+                node.send({ topic: 'fxtype', fxpath: [{ nodeID: node.id, fxtype: node.fxtype, parameters: node.parameters }] });
+            }, 200);
         }
     }
 

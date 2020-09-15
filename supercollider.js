@@ -231,6 +231,14 @@ module.exports = function (RED) {
             clearTimeout(node.heartbeat);
             clearSynthStore();
             heartbeat();
+            setTimeout(() => {
+                sendOSC({
+                    'address': '/g_freeAll',
+                    'args': [0]
+                }
+                );
+                treeDump();
+            }, 100);
         }
 
         function clearSynthStore () {
