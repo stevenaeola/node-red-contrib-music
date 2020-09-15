@@ -55,7 +55,7 @@ module.exports = function (RED) {
                     switch (msg.payload) {
                         case 'tick':
                             let fxChain = msg.fxChain || [];
-                            fxChain.push(node.id);
+                            fxChain.push({ 'node': node.id, 'fxtype': node.fxtype });
                             msg.fxChain = fxChain;
                             node.send(msg);
                             break;

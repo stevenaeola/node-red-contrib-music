@@ -36,6 +36,7 @@ module.exports = function (RED) {
             properties.input(msg);
 
             if (msg.topic === 'synthtype') {
+                console.log('recevied synttype', msg);
                 let synthtype = msg.payload;
                 checkSynthType(synthtype);
                 return;
@@ -159,7 +160,7 @@ module.exports = function (RED) {
 
         function checkFXType (fxpath) {
             // fxpath is a list of {nodeID, fxtype, parameters} objects, last element in the chain last in the list
-            // builds chain: a list of (just) node ids, same order
+            // builds chain: a list of  node ids with fxtype, same order
             // side effect is to claim buses and instantiate the relevant fxsynth
             // synth ID calculated from busNum
             // returns the input bus number of the first in the chain (i.e. the bus that any feeding synth should send its output to)
@@ -178,7 +179,7 @@ module.exports = function (RED) {
                 let payload = [head.fxtype, synthID, 1, 0];
 
                 payload.push('inBus', headBusNum);
-                payload.push('outBus', tailBusNum);
+                payload.push('out_bus', tailBusNum);
 
                 const fxDetails = head.parameters;
                 for (let key in fxDetails) {
@@ -199,7 +200,7 @@ module.exports = function (RED) {
 
         // extract the node ids
         function path2chain (fxpath) {
-            return fxpath.map(e => e.nodeID);
+            return fxpath.map(e => ({ 'node': e.nodeID, 'fxtype': e.fxtype }));
         }
 
         function nextBufNum () {
@@ -235,7 +236,7 @@ module.exports = function (RED) {
         function clearSynthStore () {
             node.samples = {}; // map from synthtype to buffer (if required)
             node.synthDefSent = new Set();
-            node.chain2buses = {}; // keys are (JSON encoded) lists of node ids. Values are objects mapping from node id to busNum
+            node.chain2buses = {}; // keys are (JSON encoded) lists of node ids with fxtypes. Values are objects mapping from node id to busNum
         }
 
         function sendOSC (msg) {
@@ -292,9 +293,9 @@ module.exports = function (RED) {
             let outBus = 0;
             if (msg.fxChain) {
                 let busMap = node.chain2buses[JSON.stringify(msg.fxChain)];
-                outBus = busMap[msg.fxChain[0]];
+                outBus = busMap[msg.fxChain[0].node];
             }
-            payload.push('outBus', outBus);
+            payload.push('out_bus', outBus);
 
             const action = '/s_new';
             let playmsg;
