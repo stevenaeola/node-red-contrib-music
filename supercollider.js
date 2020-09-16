@@ -3,7 +3,6 @@ const osc = require('osc');
 const fs = require('fs');
 const glob = require('glob');
 const nrp = require('node-red-contrib-properties');
-// const _ = require('underscore');
 
 module.exports = function (RED) {
     'use strict';
@@ -54,7 +53,7 @@ module.exports = function (RED) {
                     if (!synthtype) {
                         node.warn('No synthtype defined');
                     }
-
+                    checkFXType(msg.fxpath);
                     checkSynthType(synthtype);
                     sendOSC(note2sc(synthtype, msg));
                     treeDump();
@@ -160,7 +159,7 @@ module.exports = function (RED) {
 
         function checkFXType (fxpath) {
             // fxpath is a list of {nodeID, fxtype, parameters} objects, last element in the chain last in the list
-            // builds chain: a list of  node ids with fxtype, same order
+            // builds chain: the path with the parameters removed
             // side effect is to claim buses and instantiate the relevant fxsynth
             // synth ID calculated from busNum
             // returns the input bus number of the first in the chain (i.e. the bus that any feeding synth should send its output to)
@@ -168,9 +167,10 @@ module.exports = function (RED) {
                 return 0; // then the final fx in the chain will send its output to audio out on bus 0
             }
             let keyFull = JSON.stringify(path2chain(fxpath));
-            let head = fxpath.shift();
-            let keyTail = JSON.stringify(path2chain(fxpath));
-            let tailBusNum = checkFXType(fxpath); // on the tail of the list
+            let head = fxpath[0];
+            let tail = fxpath.slice(1);
+            let keyTail = JSON.stringify(path2chain(tail));
+            let tailBusNum = checkFXType(tail); // on the tail of the list
             if (node.chain2buses[keyFull]) {
                 return node.chain2buses[keyFull][head.nodeID];
             } else {
@@ -206,7 +206,7 @@ module.exports = function (RED) {
 
         // extract the node ids
         function path2chain (fxpath) {
-            return fxpath.map(e => ({ 'node': e.nodeID, 'fxtype': e.fxtype }));
+            return fxpath.map(e => ({ 'nodeID': e.nodeID, 'fxtype': e.fxtype }));
         }
 
         function nextBufNum () {
@@ -305,9 +305,10 @@ module.exports = function (RED) {
             }
 
             let outBus = 0;
-            if (msg.fxChain) {
-                let busMap = node.chain2buses[JSON.stringify(msg.fxChain)];
-                outBus = busMap[msg.fxChain[0].node];
+            if (msg.fxpath) {
+                let fxChain = path2chain(msg.fxpath);
+                let busMap = node.chain2buses[JSON.stringify(fxChain)];
+                outBus = busMap[fxChain[0].nodeID];
             }
             payload.push('out_bus', outBus);
 

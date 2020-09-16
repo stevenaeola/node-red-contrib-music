@@ -41,10 +41,7 @@ module.exports = function (RED) {
                     break;
 
                 case 'fxtype':
-                    let fxpath = msg.fxpath || [];
-                    fxpath.push({ nodeID: node.id, fxtype: node.fxtype, parameters: node.parameters });
-                    msg.fxpath = fxpath;
-                    node.send(msg);
+                    updateFXPath(msg);
                     break;
 
                 case 'synthtype':
@@ -54,10 +51,7 @@ module.exports = function (RED) {
                 default:
                     switch (msg.payload) {
                         case 'tick':
-                            let fxChain = msg.fxChain || [];
-                            fxChain.push({ 'node': node.id, 'fxtype': node.fxtype });
-                            msg.fxChain = fxChain;
-                            node.send(msg);
+                            updateFXPath(msg);
                             break;
 
                         case 'reset':
@@ -76,6 +70,13 @@ module.exports = function (RED) {
             sc.freeSynth(node, node.synthID);
             node.synthID = null;
         });
+
+        function updateFXPath (msg) {
+            let fxpath = msg.fxpath || [];
+            fxpath.push({ nodeID: node.id, fxtype: node.fxtype, parameters: node.parameters });
+            msg.fxpath = fxpath;
+            node.send(msg);
+        }
 
         function setFXParam (param, val) {
             if (!fxtypes[node.fxtype].fxcontrols[param] && !['bpm'].includes(param)) {
