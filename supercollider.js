@@ -56,7 +56,6 @@ module.exports = function (RED) {
                     checkFXType(msg.fxpath);
                     checkSynthType(synthtype);
                     sendOSC(note2sc(synthtype, msg));
-                    treeDump();
                     break;
 
                 case 'reset':
@@ -133,7 +132,7 @@ module.exports = function (RED) {
             const synthDefDir = '/synthdefs/compiled';
             let matches = [];
             matches.push(synthDefDir + '/' + synthDefName + '.scsyndef');
-            matches.push(synthDefDir + '/SonicPi/' + synthDefName + '.scsyndef');
+            matches.push(synthDefDir + '/sonic-pi/' + synthDefName + '.scsyndef');
 
             for (let match of matches) {
                 glob(match, { nocase: true, root: __dirname }, function (er, files) {
@@ -200,7 +199,6 @@ module.exports = function (RED) {
                     payload.push(key, fxDetails[key]);
                 }
                 sendOSC({ address: '/s_new', args: payload });
-                treeDump();
                 let buses = clone(node.chain2buses[keyTail] || {});
                 buses[head.nodeID] = headBusNum;
                 node.chain2buses[keyFull] = buses;
@@ -251,7 +249,6 @@ module.exports = function (RED) {
                     'args': [0]
                 }
                 );
-                treeDump();
             }, 100);
         }
 
@@ -277,7 +274,11 @@ module.exports = function (RED) {
         function synthDefName (synthtype) {
             let synthDetails = synthtypes[synthtype];
             if (synthDetails.synth) {
-                return synthtype;
+                if (synthDetails.tags.includes('sonic-pi')) {
+                    return 'sonic-pi-' + synthtype;
+                } else {
+                    return synthtype;
+                }
             } else if (synthDetails.stereo === true) {
                 return 'playSampleStereo';
             } else {
@@ -345,13 +346,6 @@ module.exports = function (RED) {
             } else {
                 return {};
             }
-        }
-
-        function treeDump () {
-            sendOSC({
-                address: '/g_dumpTree',
-                args: [0, 0]
-            });
         }
 
         function heartbeat () {
