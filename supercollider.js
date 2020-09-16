@@ -161,18 +161,26 @@ module.exports = function (RED) {
             // fxpath is a list of {nodeID, fxtype, parameters} objects, last element in the chain last in the list
             // builds chain: the path with the parameters removed
             // side effect is to claim buses and instantiate the relevant fxsynth
+            // also updates the fx parameters
             // synth ID calculated from busNum
             // returns the input bus number of the first in the chain (i.e. the bus that any feeding synth should send its output to)
-            if (fxpath.length === 0) {
+            if (!fxpath || fxpath.length === 0) {
                 return 0; // then the final fx in the chain will send its output to audio out on bus 0
             }
             let keyFull = JSON.stringify(path2chain(fxpath));
-            let head = fxpath[0];
-            let tail = fxpath.slice(1);
+            let [head, ...tail] = fxpath;
             let keyTail = JSON.stringify(path2chain(tail));
-            let tailBusNum = checkFXType(tail); // on the tail of the list
+            let tailBusNum = checkFXType(tail);
             if (node.chain2buses[keyFull]) {
-                return node.chain2buses[keyFull][head.nodeID];
+                // synth already exists, just set the fx parameters
+                const bus = node.chain2buses[keyFull][head.nodeID];
+                let payload = [busNum2synthID(bus)];
+                const fxDetails = head.parameters;
+                for (let key in fxDetails) {
+                    payload.push(key, fxDetails[key]);
+                }
+                sendOSC({ address: '/n_set', args: payload });
+                return bus;
             } else {
                 const headBusNum = nextBusNum();
                 const synthID = busNum2synthID(headBusNum);
