@@ -104,17 +104,14 @@ module.exports = function (RED) {
                 midi = msg.midi;
             }
 
-            let amp = sc.volume2amp(node); // TODO move into synth?
-
-            // build all generic note details first
-            // then add supercollider-only details if relevant
+            const amp = sc.volume2amp(node);
             let details = { amp };
+
             if (midi) {
                 Object.assign(details, { midi });
             }
 
             const bpm = msg.bpm || node.context().global.get('bpm');
-
             if (msg.beats) {
                 details.beats = msg.beats;
                 if (bpm) {

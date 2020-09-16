@@ -10,6 +10,7 @@ module.exports = function (RED) {
     const heartbeatInterval = 5000;
     const minBusNum = 16; // hopefully no clashes with sclang: default 8 input and 8 output buses
     const maxSynthID = 100000;
+    const fps = 44100;
 
     // names for variables in the global context
     const gBufNum = 'supercolliderNextBufNum';
@@ -47,15 +48,35 @@ module.exports = function (RED) {
                 return;
             }
 
+            if (msg.topic === 'looper') {
+                let looperID = msg.nodeID;
+                checkLooper(looperID);
+                // create an empty buffer ready for recording
+                const seconds = 20; // assumed max length for now
+                const createMsg = {
+                    address: '/b_alloc',
+                    args: [node.loopers[looperID], fps * seconds * 2, 2]
+                };
+                sendOSC(createMsg);
+                return;
+            }
+
             switch (msg.payload) {
                 case 'tick':
-                    let synthtype = msg.synthtype;
-                    if (!synthtype) {
+                    const synthtype = msg.synthtype;
+                    const looperAction = msg.looper;
+                    if (synthtype) {
+                        checkFXType(msg.fxpath);
+                        checkSynthType(synthtype);
+                        sendOSC(note2sc(synthtype, msg));
+                    } else if (looperAction) {
+                        checkFXType(msg.fxpath);
+                        const looperID = msg.nodeID;
+                        checkLooper(looperID);
+                        sendOSC(looper2sc(looperAction, looperID, msg));
+                    } else {
                         node.warn('No synthtype defined');
                     }
-                    checkFXType(msg.fxpath);
-                    checkSynthType(synthtype);
-                    sendOSC(note2sc(synthtype, msg));
                     break;
 
                 case 'reset':
@@ -206,6 +227,17 @@ module.exports = function (RED) {
             }
         }
 
+        function checkLooper (nodeID) {
+            if (node.loopers[nodeID]) {
+                return;
+            }
+            checkSynthDef('playSampleStereo');
+            checkSynthDef('recordSampleStereo');
+
+            const bufNum = nextBufNum();
+            node.loopers[nodeID] = bufNum;
+        }
+
         function clone (obj) {
             return JSON.parse(JSON.stringify(obj));
         }
@@ -254,6 +286,7 @@ module.exports = function (RED) {
 
         function clearSynthStore () {
             node.samples = {}; // map from synthtype to buffer (if required)
+            node.loopers = {}; // map from nodeID to buffer
             node.synthDefSent = new Set();
             node.chain2buses = {}; // keys are (JSON encoded) lists of node ids with fxtypes. Values are objects mapping from node id to busNum
         }
@@ -295,21 +328,40 @@ module.exports = function (RED) {
             // use node ID of -1 to auto-generate synth id
             let payload = [synthdef, -1, 0, 0];
 
+            if (!synthDetails.synth) {
+                payload.push('buffer', node.samples[synthtype][0]); // TODO check if sample is note-dependent
+                if (synthDetails.midibase) {
+                    payload.push('midibase', synthDetails.midibase);
+                }
+            }
+
             const noteDetails = msg.details;
 
             // copy all of the details into the payload to be sent via OSC
+            let playmsg = playSynthSC(noteDetails, payload, msg);
+
+            // avoid problems with DetectSilence leaving zombie synths at amp 0
+            if (noteDetails.amp > 0 && (!noteDetails.midi || noteDetails.midi >= 0)) {
+                return playmsg;
+            } else {
+                return {};
+            }
+        }
+
+        function looper2sc (looperAction, looperID, msg) {
+            // assumes checkLooper has already been run
+            const synthDef = looperAction + 'SampleStereo';
+            let payload = [synthDef, -1, 0, 0];
+            payload.push('buffer', node.loopers[looperID]);
+            return playSynthSC(msg.details, payload, msg);
+        }
+
+        function playSynthSC (noteDetails, payload, msg) {
             for (let key in noteDetails) {
                 payload.push(key, noteDetails[key]);
                 if (key === 'midi') {
                     // this is to work with the sonic pi synth defs
                     payload.push('note', noteDetails.midi);
-                }
-            }
-
-            if (!synthDetails.synth) {
-                payload.push('buffer', node.samples[synthtype][0]); // TODO check if sample is note-dependent
-                if (synthDetails.midibase) {
-                    payload.push('midibase', synthDetails.midibase);
                 }
             }
 
@@ -339,13 +391,7 @@ module.exports = function (RED) {
                     args: payload
                 };
             }
-
-            // avoid problems with DetectSilence leaving zombie synths at amp 0
-            if (noteDetails.amp > 0 && (!noteDetails.midi || noteDetails.midi >= 0)) {
-                return playmsg;
-            } else {
-                return {};
-            }
+            return playmsg;
         }
 
         function heartbeat () {

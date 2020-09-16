@@ -45,6 +45,7 @@ module.exports = function (RED) {
                     break;
 
                 case 'synthtype':
+                case 'looper':
                     node.send(msg);
                     break;
 
