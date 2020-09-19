@@ -66,18 +66,6 @@ module.exports = function (RED) {
             if (msg.topic === 'looper') {
                 let looperID = msg.nodeID;
                 checkLooper(looperID);
-                // create an empty buffer ready for recording
-                const seconds = 20; // assumed max length for now
-                const createMsg = {
-                    address: '/b_alloc',
-                    args: [node.loopers[looperID], fps * seconds * 2, 2]
-                };
-                sendOSC(createMsg);
-                const zeroMsg = {
-                    address: '/b_zero',
-                    args: [node.loopers[looperID]]
-                };
-                sendOSC(zeroMsg);
                 return;
             }
 
@@ -247,11 +235,26 @@ module.exports = function (RED) {
             if (node.loopers[nodeID]) {
                 return;
             }
+            if (!node.ready) {
+                return;
+            }
             checkSynthDef('playSampleStereo');
             checkSynthDef('recordSampleStereo');
 
             const bufNum = nextBufNum();
             node.loopers[nodeID] = bufNum;
+            // create an empty buffer ready for recording
+            const seconds = 20; // assumed max length for now
+            const createMsg = {
+                address: '/b_alloc',
+                args: [node.loopers[nodeID], fps * seconds * 2, 2]
+            };
+            sendOSC(createMsg);
+            const zeroMsg = {
+                address: '/b_zero',
+                args: [node.loopers[nodeID]]
+            };
+            sendOSC(zeroMsg);
         }
 
         function clone (obj) {
@@ -290,8 +293,6 @@ module.exports = function (RED) {
         }
 
         function reset () {
-            console.log('Calling reset', node.id);
-
             clearTimeout(node.heartbeat);
 
             if (node.udpPort) {
