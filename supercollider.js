@@ -4,10 +4,12 @@ const fs = require('fs');
 const glob = require('glob');
 const nrp = require('node-red-contrib-properties');
 
+// see http://danielnouri.org/docs/SuperColliderHelp/ServerArchitecture/Server-Command-Reference.html for details of SuperCollider commands
+
 module.exports = function (RED) {
     'use strict';
 
-    const heartbeatInterval = 5000;
+    const heartbeatInterval = 1000;
     const minBusNum = 16; // hopefully no clashes with sclang: default 8 input and 8 output buses
     const maxSynthID = 100000;
     const fps = 44100;
@@ -15,6 +17,7 @@ module.exports = function (RED) {
     // names for variables in the global context
     const gBufNum = 'supercolliderNextBufNum';
     const gBusNum = 'supercolliderNextBusNum';
+    const gGroupNum = 'supercolliderNextGroupNum';
 
     function SuperColliderNode (config) {
         // TODO make sure this is the only node of this type
@@ -31,14 +34,26 @@ module.exports = function (RED) {
                 port: { value: '57110' }
             });
 
+        node.groupID = nextGroupNum();
+
         reset();
 
         this.on('input', function (msg) {
             properties.input(msg);
+            if (msg.payload === 'reset') {
+                reset();
+                return;
+            }
+
+            if (!node.ready) {
+                return;
+            }
 
             if (msg.topic === 'synthtype') {
                 let synthtype = msg.payload;
                 checkSynthType(synthtype);
+                let fxpath = msg.fxpath;
+                checkFXType(fxpath);
                 return;
             }
 
@@ -58,6 +73,11 @@ module.exports = function (RED) {
                     args: [node.loopers[looperID], fps * seconds * 2, 2]
                 };
                 sendOSC(createMsg);
+                const zeroMsg = {
+                    address: '/b_zero',
+                    args: [node.loopers[looperID]]
+                };
+                sendOSC(zeroMsg);
                 return;
             }
 
@@ -77,10 +97,6 @@ module.exports = function (RED) {
                     } else {
                         node.warn('No synthtype defined');
                     }
-                    break;
-
-                case 'reset':
-                    reset();
                     break;
 
                 default:
@@ -209,7 +225,7 @@ module.exports = function (RED) {
                 if (tailBusNum) {
                     payload.push(2, busNum2synthID(tailBusNum));
                 } else {
-                    payload.push(1, 0);
+                    payload.push(1, node.groupID);
                 }
 
                 payload.push('inBus', headBusNum);
@@ -248,23 +264,25 @@ module.exports = function (RED) {
         }
 
         function nextBufNum () {
-            let bufNum = Number(global.get(gBufNum));
-            if (isNaN(bufNum)) {
-                bufNum = 0; // hopefully no clashes with sclang
-            }
-            bufNum++;
-            global.set(gBufNum, bufNum);
-            return bufNum;
+            return nextGlobalNum(gBufNum, 1, 0);
         }
 
         function nextBusNum () {
-            let busNum = Number(global.get(gBusNum));
-            if (isNaN(busNum)) {
-                busNum = minBusNum;
+            return nextGlobalNum(gBusNum, 2, minBusNum);
+        }
+
+        function nextGroupNum () {
+            return nextGlobalNum(gGroupNum, 1, 0);
+        }
+
+        function nextGlobalNum (which, inc, def) {
+            let num = Number(global.get(which));
+            if (isNaN(num)) {
+                num = def;
             }
-            busNum += 2;
-            global.set(gBusNum, busNum);
-            return busNum;
+            num += inc;
+            global.set(which, num);
+            return num;
         }
 
         function busNum2synthID (busNum) {
@@ -272,16 +290,33 @@ module.exports = function (RED) {
         }
 
         function reset () {
+            console.log('Calling reset', node.id);
+
             clearTimeout(node.heartbeat);
-            clearSynthStore();
-            heartbeat();
-            setTimeout(() => {
-                sendOSC({
-                    'address': '/g_freeAll',
-                    'args': [0]
-                }
-                );
-            }, 100);
+
+            if (node.udpPort) {
+                node.udpPort.close();
+                node.udpPort = null;
+            }
+            node.ready = false;
+            node.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
+
+            let client = dgram.createSocket('udp4'); // unspecified port number makes OS select one at random
+            node.udpPort = client;
+
+            client.on('connect', function () {
+                heartbeat();
+            });
+
+            client.on('error', function (err) {
+                node.warn('SuperCollider connection error: ' + err);
+                reset();
+            });
+
+            client.on('message', function () {
+                node.heartbeatResponse = true;
+            });
+            client.connect(Number(properties.get('port')), properties.get('host'));
         }
 
         function clearSynthStore () {
@@ -296,12 +331,8 @@ module.exports = function (RED) {
             if (!Object.keys(msg) || !Object.keys(msg).length) {
                 return;
             }
-
-            if (node.udpPort) {
-                node.udpPort.send(Buffer.from(osc.writePacket(msg)));
-            } else {
-                node.warn('No connection to SuperCollider');
-            }
+            node.udpPort.send(Buffer.from(osc.writePacket(msg)));
+            node.udpPort.send(Buffer.from(osc.writePacket({ address: '/g_dumpTree', args: [0] })));
         }
 
         function synthDefName (synthtype) {
@@ -326,7 +357,7 @@ module.exports = function (RED) {
 
             // add the synth to the head of the root group
             // use node ID of -1 to auto-generate synth id
-            let payload = [synthdef, -1, 0, 0];
+            let payload = [synthdef, -1, 0, node.groupID];
 
             if (!synthDetails.synth) {
                 payload.push('buffer', node.samples[synthtype][0]); // TODO check if sample is note-dependent
@@ -351,7 +382,7 @@ module.exports = function (RED) {
         function looper2sc (looperAction, looperID, msg) {
             // assumes checkLooper has already been run
             const synthDef = looperAction + 'SampleStereo';
-            let payload = [synthDef, -1, 0, 0];
+            let payload = [synthDef, -1, 0, node.groupID];
             payload.push('buffer', node.loopers[looperID]);
             return playSynthSC(msg.details, payload, msg);
         }
@@ -397,47 +428,36 @@ module.exports = function (RED) {
         function heartbeat () {
             const heartbeatMsg = { address: '/status', args: [] };
             const heartbeatBuffer = Buffer.from(osc.writePacket(heartbeatMsg));
+            node.udpPort.send(heartbeatBuffer);
+            node.heartbeatResponse = false;
 
+            const drift = 1 + 0.1 * Math.random(); // in case there is more than one connection want to avoid clashes
+            node.heartbeat = setTimeout(heartbeatHandler, heartbeatInterval * drift);
+        }
+
+        function heartbeatHandler () {
             if (node.heartbeatResponse) {
                 // any response indicates that the connection to SuperCollider works
                 // and that SuperCollider is alive
-                node.connected = true;
-
-                node.status({ fill: 'green', shape: 'dot', text: 'connected' });
-            } else {
-                node.connected = false;
-                node.status({ fill: 'red', shape: 'ring', text: 'disconnected' });
-
-                if (!node.udpPort) {
-                    node.udpConnected = false;
-                    let client = dgram.createSocket('udp4'); // unspecified port number makes OS select one at random
-                    node.udpPort = client;
-
-                    client.on('connect', function () {
-                        node.udpConnected = true;
-                        client.send(heartbeatBuffer);
-                        clearSynthStore();
+                if (!node.ready) {
+                    sendOSC({
+                        address: '/g_new',
+                        args: [node.groupID, 0, 0]
                     });
-
-                    client.on('error', function (err) {
-                        node.warn('Error creating SuperCollider connection' + err);
-                        node.udpConnected = false;
-                        node.udpPort = null;
+                    sendOSC({
+                        address: '/g_freeAll',
+                        args: [node.groupID]
                     });
-
-                    client.on('message', function () {
-                        node.heartbeatResponse = true;
+                    clearSynthStore();
+                    setTimeout(() => {
+                        node.ready = true;
                         node.status({ fill: 'green', shape: 'dot', text: 'connected' });
-                    });
-                    client.connect(Number(properties.get('port')), properties.get('host'));
+                    }, 100);
                 }
+                heartbeat();
+            } else {
+                reset();
             }
-
-            node.heartbeatResponse = false;
-            if (node.udpConnected) {
-                node.udpPort.send(heartbeatBuffer);
-            }
-            node.heartbeat = setTimeout(heartbeat, heartbeatInterval);
         }
     }
 

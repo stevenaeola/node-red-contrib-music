@@ -46,6 +46,7 @@ module.exports = function (RED) {
 
                 case 'synthtype':
                 case 'looper':
+                    updateFXPath(msg);
                     node.send(msg);
                     break;
 
