@@ -46,6 +46,7 @@ module.exports = function (RED) {
             }
 
             if (!node.ready) {
+                // TODO queue checkAudio
                 return;
             }
 
@@ -316,6 +317,9 @@ module.exports = function (RED) {
 
             client.on('message', function () {
                 node.heartbeatResponse = true;
+                if (!node.ready) {
+                    heartbeatHandler();
+                }
             });
             client.connect(Number(properties.get('port')), properties.get('host'));
         }
@@ -429,14 +433,17 @@ module.exports = function (RED) {
         function heartbeat () {
             const heartbeatMsg = { address: '/status', args: [] };
             const heartbeatBuffer = Buffer.from(osc.writePacket(heartbeatMsg));
-            node.udpPort.send(heartbeatBuffer);
             node.heartbeatResponse = false;
+            node.udpPort.send(heartbeatBuffer);
 
             const drift = 1 + 0.1 * Math.random(); // in case there is more than one connection want to avoid clashes
             node.heartbeat = setTimeout(heartbeatHandler, heartbeatInterval * drift);
         }
 
         function heartbeatHandler () {
+            if (node.heartbeat) {
+                clearTimeout(node.heartbeat);
+            }
             if (node.heartbeatResponse) {
                 // any response indicates that the connection to SuperCollider works
                 // and that SuperCollider is alive
