@@ -35,6 +35,7 @@ module.exports = function (RED) {
             });
 
         node.groupID = nextGroupNum();
+        node.queuedSetup = []; // list of messages for audio setup that are waiting for the node to be ready
 
         reset();
 
@@ -45,28 +46,7 @@ module.exports = function (RED) {
                 return;
             }
 
-            if (!node.ready) {
-                // TODO queue checkAudio
-                return;
-            }
-
-            if (msg.topic === 'synthtype') {
-                let synthtype = msg.payload;
-                checkSynthType(synthtype);
-                let fxpath = msg.fxpath;
-                checkFXType(fxpath);
-                return;
-            }
-
-            if (msg.topic === 'fxtype') {
-                let fxpath = msg.fxpath;
-                checkFXType(fxpath);
-                return;
-            }
-
-            if (msg.topic === 'looper') {
-                let looperID = msg.nodeID;
-                checkLooper(looperID);
+            if (checkAudioSetup(msg)) {
                 return;
             }
 
@@ -100,6 +80,42 @@ module.exports = function (RED) {
                 node.heartbeat = null;
             }
         });
+
+        function checkAudioSetup (msg) {
+            if (!['synthtype', 'fxtype', 'looper'].includes(msg.topic)) {
+                return false;
+            }
+
+            if (!node.ready) {
+                node.queuedSetup.push(msg);
+                return true;
+            }
+
+            let fxpath = msg.fxpath;
+
+            switch (msg.topic) {
+                case 'synthtype':
+                    let synthtype = msg.payload;
+                    checkSynthType(synthtype);
+                    checkFXType(fxpath);
+                    return true;
+                    // break;
+
+                case 'fxtype':
+                    checkFXType(fxpath);
+                    return true;
+                    // break;
+
+                case 'looper':
+                    let looperID = msg.nodeID;
+                    checkLooper(looperID);
+                    return true;
+                    // break;
+
+                default:
+                    return false;
+            }
+        }
 
         // ehecks the syntthype is valid and sends anything needed to SuperCollider
         function checkSynthType (synthtype) {
@@ -311,8 +327,10 @@ module.exports = function (RED) {
             });
 
             client.on('error', function (err) {
-                node.warn('SuperCollider connection error: ' + err);
-                reset();
+                if (node.ready) {
+                    node.warn('SuperCollider connection error: ' + err);
+                    reset();
+                }
             });
 
             client.on('message', function () {
@@ -337,7 +355,6 @@ module.exports = function (RED) {
                 return;
             }
             node.udpPort.send(Buffer.from(osc.writePacket(msg)));
-            node.udpPort.send(Buffer.from(osc.writePacket({ address: '/g_dumpTree', args: [0] })));
         }
 
         function synthDefName (synthtype) {
@@ -457,8 +474,13 @@ module.exports = function (RED) {
                         args: [node.groupID]
                     });
                     clearSynthStore();
+
                     setTimeout(() => {
                         node.ready = true;
+                        for (let setupMsg of node.queuedSetup) {
+                            checkAudioSetup(setupMsg);
+                        }
+                        node.queuedSetup = [];
                         node.status({ fill: 'green', shape: 'dot', text: 'connected' });
                     }, 100);
                 }
