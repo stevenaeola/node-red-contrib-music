@@ -55,7 +55,7 @@ module.exports = function (RED) {
                     const synthtype = msg.synthtype;
                     const looperAction = msg.looper;
                     if (synthtype) {
-                        checkFXType(msg.fxpath);
+                        checkFXType(msg.fxpath, msg.details.bpm);
                         checkSynthType(synthtype);
                         sendOSC(note2sc(synthtype, msg));
                     } else if (looperAction) {
@@ -198,7 +198,7 @@ module.exports = function (RED) {
             }
         }
 
-        function checkFXType (fxpath) {
+        function checkFXType (fxpath, bpm) {
             // fxpath is a list of {nodeID, fxtype, parameters} objects, last element in the chain last in the list
             // builds chain: the path with the parameters removed
             // side effect is to claim buses and instantiate the relevant fxsynth
@@ -219,6 +219,9 @@ module.exports = function (RED) {
                 const fxDetails = head.parameters;
                 for (let key in fxDetails) {
                     payload.push(key, Number(fxDetails[key]));
+                }
+                if (bpm) {
+                    payload.push('bpm', Number(bpm));
                 }
                 sendOSC({ address: '/n_set', args: payload });
                 return bus;
