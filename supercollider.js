@@ -218,7 +218,7 @@ module.exports = function (RED) {
                 let payload = [busNum2synthID(bus)];
                 const fxDetails = head.parameters;
                 for (let key in fxDetails) {
-                    payload.push(key, fxDetails[key]);
+                    payload.push(key, Number(fxDetails[key]));
                 }
                 sendOSC({ address: '/n_set', args: payload });
                 return bus;
@@ -238,7 +238,7 @@ module.exports = function (RED) {
 
                 const fxDetails = head.parameters;
                 for (let key in fxDetails) {
-                    payload.push(key, fxDetails[key]);
+                    payload.push(key, Number(fxDetails[key]));
                 }
                 sendOSC({ address: '/s_new', args: payload });
                 let buses = clone(node.chain2buses[keyTail] || {});
