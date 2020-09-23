@@ -50,6 +50,13 @@ module.exports = function (RED) {
                 return;
             }
 
+            if (msg.topic && msg.topic.startsWith('fxcontrol:')) {
+                const fxcontrol = msg.topic.substring(10);
+                const controlval = Number(msg.payload);
+                setFXParam(fxcontrol, controlval, msg);
+                return;
+            }
+
             switch (msg.payload) {
                 case 'tick':
                     const synthtype = msg.synthtype;
@@ -213,17 +220,13 @@ module.exports = function (RED) {
             let keyTail = JSON.stringify(path2chain(tail));
             let tailBusNum = checkFXType(tail);
             if (node.chain2buses[keyFull]) {
-                // synth already exists, just set the fx parameters
                 const bus = node.chain2buses[keyFull][head.nodeID];
-                let payload = [busNum2synthID(bus)];
-                const fxDetails = head.parameters;
-                for (let key in fxDetails) {
-                    payload.push(key, Number(fxDetails[key]));
-                }
+                // synth already exists, just set the bpm fx parameter
                 if (bpm) {
+                    let payload = [busNum2synthID(bus)];
                     payload.push('bpm', Number(bpm));
+                    sendOSC({ address: '/n_set', args: payload });
                 }
-                sendOSC({ address: '/n_set', args: payload });
                 return bus;
             } else {
                 const headBusNum = nextBusNum();
@@ -248,6 +251,19 @@ module.exports = function (RED) {
                 buses[head.nodeID] = headBusNum;
                 node.chain2buses[keyFull] = buses;
                 return headBusNum;
+            }
+        }
+
+        function setFXParam (fxcontrol, controlval, msg) {
+            for (let fxchain in node.chain2buses) {
+                let node2bus = node.chain2buses[fxchain];
+                for (let nodeID in node2bus) {
+                    if (nodeID === msg.nodeID) {
+                        let synthID = busNum2synthID(node2bus[nodeID]);
+                        let payload = [synthID, fxcontrol, Number(controlval)];
+                        sendOSC({ address: '/n_set', args: payload });
+                    }
+                }
             }
         }
 

@@ -23,8 +23,7 @@ module.exports = function (RED) {
             if (msg.topic && msg.topic.startsWith('fxcontrol:')) {
                 const fxcontrol = msg.topic.substring(10);
                 const controlval = Number(msg.payload);
-                node.parameters[fxcontrol] = controlval;
-                setFXParam(fxcontrol, controlval);
+                setFXParam(fxcontrol, controlval, msg);
                 return;
             }
 
@@ -35,9 +34,7 @@ module.exports = function (RED) {
                         node.volume = newVol;
                     }
                     // 100 should be neutral volume, not max
-
-                    setFXParam('amp', sc.volume2amp(node));
-
+                    setFXParam('amp', sc.volume2amp(node), msg);
                     break;
 
                 case 'fxtype':
@@ -79,40 +76,40 @@ module.exports = function (RED) {
             node.send(msg);
         }
 
-        function setFXParam (param, val) {
+        function setFXParam (param, val, msg) {
+            // see if this has been passed on from another soundfx
+            if (msg.nodeID) {
+                node.send(msg);
+                return;
+            }
+
             if (!fxtypes[node.fxtype].fxcontrols[param] && !['bpm'].includes(param)) {
                 node.warn('No such fxcontrol: ' + param);
+                return;
             }
-// TODO replace this in supercollider.js
-/*             const parammsg = {
-                'topic': '/n_set',
-                'payload': [node.synthID, param, val]
-            };
-            node.send(parammsg); */
-        }
-/*
-        function setFXbpm (msg) {
-            const bpm = msg.bpm;
-
-            if (bpm) {
-                setFXParam('bpm', bpm);
+            // do not store trigger values
+            if (param.substring(0, 2) !== 't_') {
+                node.parameters[param] = val;
             }
-            // TODO make sure this is called when the FX synth is created
+            msg.nodeID = node.id;
+            node.send(msg);
         }
-*/
 
         function reset () {
             node.fxtype = config.fxtype || 'reverb';
             node.name = config.name || node.fxtype;
 
             node.parameters = node.parameters || {};
-            if (config.fxcontrols) {
-                for (let fxcontrol in config.fxcontrols) {
-                    node.parameters[fxcontrol] = config.fxcontrols[fxcontrol];
-                }
-            }
+
             setTimeout(() => {
                 node.send({ topic: 'fxtype', fxpath: [{ nodeID: node.id, fxtype: node.fxtype, parameters: node.parameters }] });
+                if (config.fxcontrols) {
+                    for (let fxcontrol in config.fxcontrols) {
+                        const controlval = config.fxcontrols[fxcontrol];
+                        let msg = { topic: 'fxcontrol:' + fxcontrol, payload: controlval };
+                        setFXParam(fxcontrol, controlval, msg);
+                    }
+                }
             }, 200);
         }
     }
