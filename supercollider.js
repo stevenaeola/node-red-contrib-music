@@ -59,6 +59,9 @@ module.exports = function (RED) {
 
             switch (msg.payload) {
                 case 'tick':
+                    if (!node.ready) {
+                        break;
+                    }
                     const synthtype = msg.synthtype;
                     const looperAction = msg.looper;
                     if (synthtype) {
@@ -222,11 +225,6 @@ module.exports = function (RED) {
             if (node.chain2buses[keyFull]) {
                 const bus = node.chain2buses[keyFull][head.nodeID];
                 // synth already exists, just set the bpm fx parameter
-                if (bpm) {
-                    let payload = [busNum2synthID(bus)];
-                    payload.push('bpm', Number(bpm));
-                    sendOSC({ address: '/n_set', args: payload });
-                }
                 return bus;
             } else {
                 const headBusNum = nextBusNum();

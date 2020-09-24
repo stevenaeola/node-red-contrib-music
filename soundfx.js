@@ -50,6 +50,7 @@ module.exports = function (RED) {
                     switch (msg.payload) {
                         case 'tick':
                             updateFXPath(msg);
+                            updateBPM(msg);
                             break;
 
                         case 'reset':
@@ -76,6 +77,17 @@ module.exports = function (RED) {
             node.send(msg);
         }
 
+        function updateBPM (msg) {
+            const fxDetails = fxtypes[node.fxtype];
+            if (fxDetails && fxDetails.usesBPM) {
+                let thisBPM = msg.details.bpm;
+                if (thisBPM && thisBPM !== node.parameters.bpm) {
+                    const bpmMsg = { topic: 'fxcontrol:bpm', payload: thisBPM };
+                    setFXParam('bpm', thisBPM, bpmMsg);
+                }
+            }
+        }
+
         function setFXParam (param, val, msg) {
             // see if this has been passed on from another soundfx
             if (msg.nodeID) {
@@ -83,11 +95,11 @@ module.exports = function (RED) {
                 return;
             }
 
-            if (!fxtypes[node.fxtype].fxcontrols[param] && !['bpm'].includes(param)) {
+            if (!fxtypes[node.fxtype].fxcontrols[param] && param !== 'bpm') {
                 node.warn('No such fxcontrol: ' + param);
                 return;
             }
-            // do not store trigger values
+            // do not store trigger values, they should be sent once only
             if (param.substring(0, 2) !== 't_') {
                 node.parameters[param] = val;
             }
