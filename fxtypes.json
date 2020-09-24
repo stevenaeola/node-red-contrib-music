@@ -1,29 +1,155 @@
 {
-    "reverb": {"inBus": 4,
-               "fxcontrols": {"room": {"description": "room size", "min": 0, "max": 1, "default": 0.5},
-                              "damp": {"description": "reverb HF damp", "min": 0, "max": 1, "default": 0.5},
-                              "mix": {"description": "dry/wet balance", "min": 0, "max": 1, "default": 0.33}}},
-    "delay": {"inBus": 6,
-              "fxcontrols": {"beats": {"description": "delay time in beats (according to current bpm)", "min": 0.1, "max": 10, "default": 1},
-                             "decaybeats": {"description": "decay time in beats", "min": 1, "max": 100, "default": 10}}},
-    "LPF": {"inBus": 8, "description": "Low Pass Filter (LPF). Only passes through frequencies below the cutoff.",
-            "fxcontrols": {"note": {"description": "midi value of cutoff frequency", "min": 1, "max": 128, "default": 60}}},
-    "HPF": {"inBus": 10, "description": "High Pass Filter (HPF). Only passes through frequencies above the cutoff.",
-            "fxcontrols": {"note": {"description": "midi value of cutoff frequency", "min": 1, "max": 128, "default": 80}}},
-    "drop": {"inBus": 12, "description": "Bass drop: when triggered apply a HPF with the cutoff running from high to low",
-             "fxcontrols": {"t_trig": {"description": "Set to one to trigger the filter, usually do this with an fxcontrol:t_trig message", "min":0, "max":1, "default": 0},
-                            "attack": {"description": "Attach time of HPF envelope in seconds", "min": 0.0001, "max": 1, "default": 0.1},
-                            "beats": {"description": "Number of beats the HPF envelope should last for", "min": 0.25, "max": 16, "default": 1}}},
-    "BPF": {"inBus": 14, "description": "Band Pass Filter (BPF). Only passes through frequencies close to the note.",
-            "fxcontrols": {"note": {"description": "midi value of centre frequency", "min": 1, "max": 128, "default": 60},
-                           "rq": {"description": "Width of band, reciprocal of Q where Q is cutoff/bandwidth", "min":0.1, "max": 10, "default": 1}}},
-    "flanger": {"inBus": 16, "description": "In a Flanger, a delayed signal is added to the original signal with a continuously-variable delay (usually smaller than 10 ms) creating a phasing effect. Adapted from ixi audio http://ecmc.rochester.edu/ecmc/docs/supercollider/scbook/Ch21_Interface_Investigations/ixi%20SC%20tutorial/ixi_SC_tutorial_12.html under Attribution-NonCommercial-ShareAlike 2.0 England & Wales License http://creativecommons.org/licenses/by-nc-sa/2.0/uk/",
-            "fxcontrols": {"delay": {"description": "", "min": 0, "max": 0.5, "default": 0.1},
-                           "depth": {"description": "", "min": 0, "max": 0.1, "default": 0.08},
-                           "rate": {"description": "", "min": 0, "max": 1, "default": 0.06},
-                           "feedback": {"description": "", "min": 0, "max": 1, "default": 0},
-                           "decay": {"description": "", "min": 0, "max": 1, "default": 0}}},
-        "distortion": {"inBus": 18, "description": "Distortion",
-                       "fxcontrols": {"preGain": {"description": "amplification before distortion", "min": 1, "max": 10, "default": 2},
-                                      "postGain": {"description": "amplification after distortion", "min": 1, "max": 10, "default": 2}}}
+        "reverb": {
+                "fxcontrols": {
+                        "room": {
+                                "description": "room size",
+                                "min": 0,
+                                "max": 1,
+                                "default": 0.5
+                        },
+                        "damp": {
+                                "description": "reverb HF damp",
+                                "min": 0,
+                                "max": 1,
+                                "default": 0.5
+                        },
+                        "mix": {
+                                "description": "dry/wet balance",
+                                "min": 0,
+                                "max": 1,
+                                "default": 0.33
+                        }
+                }
+        },
+        "delay": {
+                "fxcontrols": {
+                        "beats": {
+                                "description": "delay time in beats (according to current bpm)",
+                                "min": 0.1,
+                                "max": 10,
+                                "default": 1
+                        },
+                        "decaybeats": {
+                                "description": "decay time in beats",
+                                "min": 1,
+                                "max": 100,
+                                "default": 10
+                        }
+                },
+                "usesBPM": true
+        },
+        "LPF": {
+                "description": "Low Pass Filter (LPF). Only passes through frequencies below the cutoff.",
+                "fxcontrols": {
+                        "note": {
+                                "description": "midi value of cutoff frequency",
+                                "min": 1,
+                                "max": 128,
+                                "default": 60
+                        }
+                }
+        },
+        "HPF": {
+                "description": "High Pass Filter (HPF). Only passes through frequencies above the cutoff.",
+                "fxcontrols": {
+                        "note": {
+                                "description": "midi value of cutoff frequency",
+                                "min": 1,
+                                "max": 128,
+                                "default": 80
+                        }
+                }
+        },
+        "drop": {
+                "description": "Bass drop: when triggered apply a HPF with the cutoff running from high to low",
+                "fxcontrols": {
+                        "t_trig": {
+                                "description": "Set to one to trigger the filter, usually do this with an fxcontrol:t_trig message",
+                                "min": 0,
+                                "max": 1,
+                                "default": 0
+                        },
+                        "attack": {
+                                "description": "Attach time of HPF envelope in seconds",
+                                "min": 0.0001,
+                                "max": 1,
+                                "default": 0.1
+                        },
+                        "beats": {
+                                "description": "Number of beats the HPF envelope should last for",
+                                "min": 0.25,
+                                "max": 16,
+                                "default": 1
+                        }
+                }
+        },
+        "BPF": {
+                "description": "Band Pass Filter (BPF). Only passes through frequencies close to the note.",
+                "fxcontrols": {
+                        "note": {
+                                "description": "midi value of centre frequency",
+                                "min": 1,
+                                "max": 128,
+                                "default": 60
+                        },
+                        "rq": {
+                                "description": "Width of band, reciprocal of Q where Q is cutoff/bandwidth",
+                                "min": 0.1,
+                                "max": 10,
+                                "default": 1
+                        }
+                }
+        },
+        "flanger": {
+                "description": "In a Flanger, a delayed signal is added to the original signal with a continuously-variable delay (usually smaller than 10 ms) creating a phasing effect. Adapted from ixi audio http://ecmc.rochester.edu/ecmc/docs/supercollider/scbook/Ch21_Interface_Investigations/ixi%20SC%20tutorial/ixi_SC_tutorial_12.html under Attribution-NonCommercial-ShareAlike 2.0 England & Wales License http://creativecommons.org/licenses/by-nc-sa/2.0/uk/",
+                "fxcontrols": {
+                        "delay": {
+                                "description": "",
+                                "min": 0,
+                                "max": 0.5,
+                                "default": 0.1
+                        },
+                        "depth": {
+                                "description": "",
+                                "min": 0,
+                                "max": 0.1,
+                                "default": 0.08
+                        },
+                        "rate": {
+                                "description": "",
+                                "min": 0,
+                                "max": 1,
+                                "default": 0.06
+                        },
+                        "feedback": {
+                                "description": "",
+                                "min": 0,
+                                "max": 1,
+                                "default": 0
+                        },
+                        "decay": {
+                                "description": "",
+                                "min": 0,
+                                "max": 1,
+                                "default": 0
+                        }
+                }
+        },
+        "distortion": {
+                "description": "Distortion",
+                "fxcontrols": {
+                        "preGain": {
+                                "description": "amplification before distortion",
+                                "min": 1,
+                                "max": 10,
+                                "default": 2
+                        },
+                        "postGain": {
+                                "description": "amplification after distortion",
+                                "min": 1,
+                                "max": 10,
+                                "default": 2
+                        }
+                }
+        }
 }
