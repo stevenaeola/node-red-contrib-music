@@ -1,4 +1,4 @@
-const sc = require('./scsynth');
+const sc = require('././synth_common');
 const _ = require('underscore');
 
 // prefix for served GET requests

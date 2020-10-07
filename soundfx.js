@@ -1,4 +1,4 @@
-const sc = require('./scsynth');
+const sc = require('./synth_common');
 
 // prefix for served GET requests
 
