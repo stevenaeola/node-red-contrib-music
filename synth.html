@@ -63,7 +63,7 @@
      inputs:1,
      inputLabels:"tick,synthcontrol:",
      outputs:1,
-     outputLabels:["supercollider instructions"],
+     outputLabels:["synthesis instructions"],
      icon: "music.png",
      label: function() {
 	 return this.name || this.synthtype || "synth";
@@ -326,7 +326,7 @@
 </script>
 
 <script type="text/x-red" data-help-name="synth">
- <p>Turns note instructions into SuperCollider messages for controlling synthesisers.</p>
+ <p>Turns note instructions messages into messages for controlling synthesisers.</p>
  
  <h3>Inputs</h3>
  
@@ -335,7 +335,7 @@
  
  <dt class="optional">topic <span class="property-type">string</span></dt>
  <dd><p>If <code>msg.topic</code> is <code>volume</code> then <code>msg.payload</code> is used to set the volume of the sounds produced, in the range 0 to 100.</p>
- <p>If <code>msg.topic</code> starts with <code>synthcontrol:</code> then the rest of the <code>msg.topic</code> is interpreted as a SuperCollider synth parameter name, and the <code>msg.payload</code> is used as its value. The parameters (synthcontrol) that can be changed vary from synth to synth, their details can be seen in the configuration.</p></dd>
+ <p>If <code>msg.topic</code> starts with <code>synthcontrol:</code> then the rest of the <code>msg.topic</code> is interpreted as a synth parameter name, and the <code>msg.payload</code> is used as its value. The parameters (synthcontrol) that can be changed vary from synth to synth, their details can be seen in the configuration.</p></dd>
 
  <dt class="optional">note <span class="property-type">number|array</span></dt>
  <dd>If <code>msg.note</code> is defined then it is used to set the <code>midi</code> note value of the output. If <code>msg.note</code> is an array then all the notes in the array are played at the same time to form a chord.</dd>
@@ -356,10 +356,8 @@
 
  <h3>Outputs</h3>
 
- <p>A synth usually sends its output to a <code>osc</code> node, which prepares the synthesiser instructions for sending via a <code>udp</code> node to a SuperCollider server.</p>
+ <p>A synth usually sends its output to a <code>supercollider</code> node, possibly via one or more <code>soundfx</code> nodes.</p>
 
- <p>The <code>msg.topic</code> and <code>msg.payload</code> are ready to be encoded via <code>osc</code> according to the <a target="_new" href='http://danielnouri.org/docs/SuperColliderHelp/ServerArchitecture/Server-Command-Reference.html'>SuperCollider server commands</a>.</p>
- 
  <h3>Configuration</h3>
 
  <dl class='message-properties'>
@@ -392,7 +390,7 @@
  
  <h3>Details</h3>
  
- <p>The synth node relies on there being a SuperCollider server running, to which the messages are sent via <code>osc</code> and (usually) <code>udp</code>. Synthdefs are sent to the SuperCollider server when the nodes are deployed.</p>
+ <p>The synth node relies on there being a sound server (e.g. SuperCollider) running, to which the messages are sent through a <code>supercollider</code> node. </p>
 
  <p>Separate sound effects (soundfx) nodes can be defined which accept the output of a synth node.</p>
  
