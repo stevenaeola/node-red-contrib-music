@@ -1,4 +1,4 @@
-const sc = require('./supercollider');
+const sc = require('./synth_common');
 
 module.exports = function (RED) {
     'use strict';
@@ -32,7 +32,6 @@ module.exports = function (RED) {
 
             case 'reset':
                 reset();
-                restart();
                 // do not send on message
                 break;
 
@@ -81,22 +80,6 @@ module.exports = function (RED) {
             }
         }
 
-        function restart () {
-            node.count = -1; // the number of relevant ticks left to the end of the play/record. -1 indicates it hasn't started yet
-            setState('wait');
-
-            // wait a little while to allow wires to be created
-
-            setTimeout(function () {
-                    sc.freeBuffer(node);
-                sc.createBuffer(node);
-                node.synthdefName = 'playSampleStereo';
-                sc.sendSynthDef(node);
-                node.synthdefName = 'recordSampleStereo';
-                sc.sendSynthDef(node);
-            }, 200);
-        }
-
         function reset () {
             node.volume = config.volume || 100;
 
@@ -110,9 +93,13 @@ module.exports = function (RED) {
 
             node.tags = [];
 
-            if (!node.state) {
-                restart();
-            }
+            node.count = -1; // the number of relevant ticks left to the end of the play/record. -1 indicates it hasn't started yet
+            setState('wait');
+
+            // wait a little while to allow wires to be created
+            setTimeout(function () {
+                node.send({ topic: 'looper', nodeID: node.id });
+            }, 200);
         }
 
         function setState (state) {
@@ -154,46 +141,33 @@ module.exports = function (RED) {
             return;
         }
 
-        if (!node.bufnum) {
-            node.warn('cannot create sampler synth without buffer');
-            return;
-        }
+        const amp = sc.volume2amp(node);
+        let details = { amp };
 
-        var payload = [action + 'SampleStereo', -1, 0, 0, 'buffer', node.bufnum];
-
-        payload.push('amp', sc.volume2amp(node));
         const bpm = msg.bpm || node.context().global.get('bpm');
         let sustain = node.length * 60 / bpm;
-        let multiple = msg['beats_per_' + node.input];
+        const multiple = msg['beats_per_' + node.input];
         if (multiple) {
             sustain *= multiple;
         }
-        payload.push('sustain', sustain);
+        Object.assign(details, { bpm, sustain });
 
-        const address = '/s_new';
+        let looperMsg = {
+            payload: 'tick',
+            details,
+            looper: action,
+            nodeID: node.id
+        };
 
-        let createMsg;
         if (msg.timeTag) {
             let timeTag = msg.timeTag;
             if (msg.latency) {
                 timeTag -= msg.latency / 2;
             }
-            createMsg = {
-                payload: {
-                    timeTag,
-                    packets: [
-                        {
-                            address: address,
-                            args: payload
-                        }
-                    ]
-                }
-            };
-        } else {
-            createMsg = { topic: address, payload: payload };
+            looperMsg.timeTag = timeTag;
         }
 
-        node.send(createMsg);
+        node.send(looperMsg);
     }
 
     RED.nodes.registerType('looper', LooperNode);

@@ -1,0 +1,53 @@
+<script type="text/javascript">
+    RED.nodes.registerType('supercollider', {
+        category: 'music',
+        color: '#a6bbcf',
+        defaults: {
+            host: { value: '127.0.0.1' },
+            port: { value: '57110' }
+        },
+        inputs: 1,
+        inputLabels: "tick",
+        outputs: 0,
+        icon: "sc_cube_48x48_trans.png",
+        label: function () {
+            return this.name || "supercollider";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="supercollider">
+
+    <div class="form-row">
+        <label for="node-input-port"> Server port</label>
+        <input type="text" id="node-input-port" placeholder="default 57110">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-host"> Server host</label>
+        <input type="text" id="node-input-host" placeholder="default 127.0.0.1">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="supercollider">
+ <p>Takes synthesised notes and sends them to the SuperCollider server.</p>
+
+ <h3>Inputs</h3>
+
+ <p>Usually gets its input from a <code>synth</code> node or a <code>soundfx</code> node-input-port.</p>
+
+ <h3>Outputs</h3>
+
+ <p>None: notes are sent to SuperCollider via a UDP connection.</p>
+
+ <h3>Configuration</h3>
+
+ <dl class='message-properties'>
+     <dt><span class='optional'>Server port</span> <span class='property-type'>string</span></dt>
+     <dd>Defaults to 57110</dd>
+
+     <dt><span class='optional'>Server host</span> <span class='property-type'>string</span></dt>
+     <dd>Defaults to 127.0.0.1 i.e. localhost</dd>
+ </dl>
+
+</script>
