@@ -66,7 +66,6 @@ module.exports = function (RED) {
         });
 
         this.on('close', function () {
-            sc.freeSynth(node, node.synthID);
             node.synthID = null;
         });
 
