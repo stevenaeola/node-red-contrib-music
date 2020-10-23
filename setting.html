@@ -6,7 +6,7 @@
   name: {required: false},
   setting: {value: "volume", required: true},
   initial: {required: true},
-  global: {value: false, required:true},
+  context: {value: "node", required:true},
   min: {required: false},
   max: {required: false}
 
@@ -34,8 +34,12 @@
     </div>
 
     <div class="form-row">
-        <label for="node-input-global"> Global</label>
-        <input type="checkbox" id="node-input-global">
+        <label for="node-input-context"> Context</label>
+        <select id="node-input-context">
+            <option>node</option>
+            <option>flow</option>
+            <option>global</option>
+        </select>
     </div>
 
     <div class="form-row">
@@ -56,7 +60,7 @@
 </script>
 
 <script type="text/x-red" data-help-name="setting">
-  <p>Keeps track of a setting that can change, e.g. volume, speed (bpm). If <code>global</code> is selected then this setting is shared with other nodes.</p>
+  <p>Keeps track of a setting that can change, e.g. volume, speed (bpm). If context <code>global</code> is selected then this setting is shared with other nodes, similarly <code>flow</code> will share among nodes on the same flow.</p>
 
   <h3>Inputs</h3>
     <dl class="message-properties">
@@ -81,9 +85,11 @@
 
   <p> The <code>setting</code> node acts as a variable which can have its value changed. If the incoming <code>msg.topic</code> is <code>set</code> or equal to the name of the setting,  the incoming <code>msg.payload</code> is taken as the new value.  </p>
 
+  <p>Also if a message has a property with the same name as the setting then its value will be used to update the setting. E.g. if the setting is <i>volume</i> then the setting will be set to the value of <code>msg.volume</code>.
+
   <p> When the setting value is numeric then it can be varied with incoming with <code>msg.topic</code> as <code>up</code> or <code>down</code>.</p>
 
-  <p> If the <code>Global</code> property is selected then the setting is shared with other nodes as their default. This can be used to control the key the music is playing in with values such as "G major". See the <code>Scale</code> setting of the <code>synth</code> node for a list of possible values.</p>
+  <p> The <code>Context</code> property controls if and how the setting is shared with other nodes in the flow or elsewhere. This can be used to control the key the music is playing in with values such as "G major". See the <code>Scale</code> setting of the <code>synth</code> node for a list of possible values.</p>
 
   <p> The node is reset to its intitial configuration when an incoming <code>msg.payload</code> is <code>reset</code>.</p>
 </script>

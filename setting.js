@@ -1,3 +1,6 @@
+
+const nrp = require('node-red-contrib-properties');
+
 module.exports = function (RED) {
     'use strict';
 
@@ -10,37 +13,45 @@ module.exports = function (RED) {
         let newVal;
 
         this.on('input', function (msg) {
-            switch (msg.topic) {
-            case 'up':
-            case 'down':
-                const oldVal = Number(node.trackedVal);
+            if (msg.topic) {
+                switch (msg.topic) {
+                    case 'up':
+                    case 'down':
+                        const oldVal = getSetting();
 
-                if (Number.isNaN(oldVal)) {
-                    node.warn('To change a setting up or down the value must be a number');
-                    return;
+                        if (Number.isNaN(oldVal)) {
+                            node.warn('To change a setting up or down the value must be a number');
+                            return;
+                        }
+
+                        let change = numberFrom(msg.payload, 1);
+                        if (msg.topic === 'down') {
+                            change = -change;
+                        }
+
+                        newVal = oldVal + change;
+                        setSetting(newVal);
+                        msg.topic = node.setting;
+                        msg.payload = newVal;
+                        node.send(msg);
+                        break;
+
+                    case 'set':
+                    default:
+                        if (node.properties.inputPayload(msg)) {
+                            node.send(msg);
+                        }
                 }
-
-                let change = numberFrom(msg.payload, 1);
-                if (msg.topic === 'down') {
-                    change = -change;
-                }
-
-                newVal = oldVal + change;
-                setSetting(newVal);
-
-                break;
-
-            case 'set':
-            default:
+            } else {
                 if (msg.payload === 'reset') {
                     reset();
                     node.send(msg);
                 } else {
-                    if (msg.topic === node.setting) {
+                    if (!node.properties.inputProperties(msg)) {
                         setSetting(msg.payload);
                     }
+                    node.send(msg);
                 }
-                break;
             }
         });
 
@@ -60,37 +71,39 @@ module.exports = function (RED) {
                     newVal = Math.min(newVal, node.max);
                 }
             }
-            node.trackedVal = newVal;
 
             let disp;
-            if (isNaN(node.trackedVal)) {
-                disp = node.trackedVal;
+            if (isNaN(newVal)) {
+                disp = newVal;
             } else {
-                if (node.trackedVal >= 10) {
-                    disp = Math.round(node.trackedVal);
+                if (newVal >= 10) {
+                    disp = Math.round(newVal);
                 } else {
-                    disp = Math.round(node.trackedVal * 10) / 10;
+                    disp = Math.round(newVal * 10) / 10;
                 }
             }
             node.status({ fill: 'grey', shape: 'ring', text: node.setting + ': ' + disp });
 
-            if (node.global) {
-                node.context().global.set(node.setting, node.trackedVal);
-            }
+            node.properties.setRaw(node.setting, newVal);
+        }
 
-            node.send({
-                topic: node.setting,
-                payload: node.trackedVal
-            });
+        function getSetting () {
+            return node.properties.get(node.setting);
         }
 
         function reset () {
             node.name = config.name || config.setting || 'setting';
             node.setting = config.setting || 'volume';
             node.initial = config.initial || 50;
-            node.global = config.global || false;
+            node.contextName = config.context || 'node';
             node.min = Number(config.min);
             node.max = Number(config.max);
+
+            let props = {};
+            props[node.setting] = { value: config.initial };
+            node.properties = new nrp.NodeRedProperties(node, config, props);
+            node.properties.setContext(node.contextName, node.setting);
+            node.properties.handle(setSetting, node.setting);
 
             // set the value a little later so other nodes are connected and ready to receive the message
             setTimeout(function () {
