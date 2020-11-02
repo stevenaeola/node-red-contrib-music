@@ -56,13 +56,11 @@ module.exports = function (RED) {
         });
 
         this.on('close', function () {
-            if (node.global) {
-                node.context().global.set(node.setting, null);
-            }
+            setSetting(null);
         });
 
         function setSetting (newVal) {
-            if (!isNaN(newVal)) {
+            if (!isNaN(newVal) && newVal !== null) {
                 if (!isNaN(node.min)) {
                     newVal = Math.max(newVal, node.min);
                 }
