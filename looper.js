@@ -144,7 +144,7 @@ module.exports = function (RED) {
         const amp = sc.volume2amp(node);
         let details = { amp };
 
-        const bpm = msg.bpm || node.context().global.get('bpm');
+        const bpm = msg.bpm || node.context().flow.get('bpm') || node.context().global.get('bpm');
         let sustain = node.length * 60 / bpm;
         const multiple = msg['beats_per_' + node.input];
         if (multiple) {

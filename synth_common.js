@@ -4,7 +4,7 @@
 function volume2amp (node) {
     let volume = Math.max(0, node.volume);
 
-    const globalVolume = node.context().global.get('volume');
+    const globalVolume = node.context().flow.get('volume') || node.context().global.get('volume');
     if (globalVolume !== null && globalVolume >= 0) {
         volume = volume * globalVolume / 100;
     }
