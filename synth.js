@@ -111,7 +111,7 @@ module.exports = function (RED) {
                 Object.assign(details, { midi });
             }
 
-            const bpm = msg.bpm || node.context().global.get('bpm');
+            const bpm = msg.bpm || node.context().flow.get('bpm') || node.context().global.get('bpm');
             if (msg.beats) {
                 details.beats = msg.beats;
                 if (bpm) {
@@ -183,6 +183,7 @@ module.exports = function (RED) {
                 return -1;
             }
 
+            const flow = node.context().flow;
             const global = node.context().global;
 
             var root = node.root;
@@ -190,34 +191,30 @@ module.exports = function (RED) {
             var scale = node.scale;
 
             var degree = node.degree;
-            var globalkey = global.get('key');
+            var globalkey = flow.get('key') || global.get('key');
             var globalroot;
             var globalscale;
             if (typeof globalkey === 'string') {
                 var bits = globalkey.split(' ');
                 globalroot = bits.shift();
-                globalscale = bits.shift();
+                globalscale = bits.join(' ');
             }
 
             if (root === '') {
-                root = global.get('root') || globalroot ||
+                root = flow.get('root') || global.get('root') || globalroot ||
                     configurables.root['default'];
             }
 
             if (scale === '') {
-                scale = global.get('scale') || globalscale ||
+                scale = flow.get('scale') || global.get('scale') || globalscale ||
                     configurables.scale['default'];
             }
 
-            if (degree === '') {
-                degree = global.get('degree') || configurables.degree['default'];
-            }
+            scale = scale.toLowerCase();
 
-            /*
-              node.warn("degree " + degree);
-              node.warn("scale " + scale);
-              node.warn("root " + root);
-            */
+            if (degree === '') {
+                degree = flow.get('degree') || global.get('degree') || configurables.degree['default'];
+            }
 
             // turn the degree into an offset
 
