@@ -25,7 +25,9 @@ module.exports = function (RED) {
         setRatio(config.ratio || 4);
 
         this.on('input', function (msg) {
-            properties.input(msg);
+            if (properties.input(msg)) {
+                return;
+            }
 
             switch (msg.payload) {
             case 'tick':
