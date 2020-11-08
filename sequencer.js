@@ -1,19 +1,19 @@
 module.exports = function (RED) {
     'use strict';
 
-    var _ = require('underscore');
+    const _ = require('underscore');
 
     function SequencerNode (config) {
         RED.nodes.createNode(this, config);
-        var node = this;
+        const node = this;
 
         reset();
 
         this.on('input', function (msg) {
             switch (msg.payload) {
             case 'tick':
-                var start = msg.start || [];
-                var controlSet = false;
+                let start = msg.start || [];
+                let controlSet = false;
                 if (start.indexOf(node.input) >= 0) {
                     //                only start/ restart when we get the right kind of tick
                     // rhythmCount counts the number of events left in the current sequence position
@@ -81,8 +81,8 @@ module.exports = function (RED) {
                 switch (node.output) {
                 case 'single':
                     if (controlSet) {
-                        var playmsg = JSON.parse(JSON.stringify(msg));
-                        var beatRatio = 1;
+                        let playmsg = JSON.parse(JSON.stringify(msg));
+                        let beatRatio = 1;
                         if (node.input !== 'beat') {
                             beatRatio = msg['beats_per_' + node.input];
                         }
@@ -128,7 +128,7 @@ module.exports = function (RED) {
 
             default:
                 // see if the topic is one of the sequenced values
-                var foundTopic = false;
+                let foundTopic = false;
                 for (let i = 0; i < node.controls.length; i++) {
                     let control = node.controls[i];
                     if (control.name === msg.topic) {
