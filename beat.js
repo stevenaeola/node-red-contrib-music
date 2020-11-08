@@ -20,7 +20,10 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         var node = this;
 
-        stopBeat();
+        if (!config.autostart) {
+            stopBeat();
+        }
+
         reset();
 
         this.on('input', function (msg) {
@@ -95,6 +98,7 @@ module.exports = function (RED) {
             node.latency = Number(config.latency) || 0;
             node.sharing = config.sharing || 'standalone';
             node.conductorIP = config.conductorIP || '127.0.0.1';
+            node.autostart = config.autostart;
 
             // get rid of old sockets if already there
 
@@ -120,6 +124,13 @@ module.exports = function (RED) {
             setFractionalBeats(node.subBeats);
 
             setBPM();
+
+            if (node.autostart) {
+                if (!node.started) {
+                    node.started = true;
+                    beat();
+                }
+            }
         }
 
         function stopBeat () {

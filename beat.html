@@ -7,6 +7,7 @@
 	 output: {value:"beat"},
 	 bpm: {value: ""},
 	 latency: {value: 0},
+	 autostart: {value: false},
 	 sharing: {value: "standalone"},
 	 conductorIP: {value: "127.0.0.1"},
 	 subBeats: {value: []}
@@ -94,6 +95,11 @@
  <div class="form-row">
  <label for="node-input-latency"> Latency</label>
  <input type="number" id="node-input-latency" placeholder="in milliseconds">
+ </div>
+
+ <div class="form-row">
+	<label for="node-input-autostart"> Auto-start on deployment</label>
+	<input type="checkbox" id="node-input-autostart">
  </div>
  
  <div class="form-row">
