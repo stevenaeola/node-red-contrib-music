@@ -32,18 +32,22 @@ module.exports = function (RED) {
             switch (msg.payload) {
             case 'tick':
                 const start = msg.start || [];
+                const end = msg.end || [];
                 let inputVal, inputCount, outputCount;
                 inputVal = msg[node.input];
                 inputCount = counts(inputVal).input;
                 outputCount = counts(inputVal).output;
 
-                if (start.indexOf(node.input) >= 0) {
-                    if (inputCount === 1) {
+                if (inputCount === node.ratio && end.includes(node.input)) {
+                    end.push(node.output);
+                }
+
+                if (inputCount === 1 && start.includes(node.input)) {
                         start.push(node.output);
-                    }
                 }
 
                 msg.start = start;
+                msg.end = end;
 
                 var counter = node.input + '_of_' + node.output;
                 var beatsPerName = 'beats_per_' + node.output;

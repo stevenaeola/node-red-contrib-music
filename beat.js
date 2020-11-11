@@ -223,11 +223,11 @@ module.exports = function (RED) {
 
                     return sofar;
                 }, []);
-
                 node.fractionalBeats = _.map(combinedEvents, function (event) { event.pos /= lcm; return event; });
             } else {
                 node.fractionalBeats = [{ names: [node.output], pos: 0 }];
             }
+            node.subBeatEnds = _.map(node.fractionalBeats, x => x.names).reverse();
             node.allSubBeatNames = node.fractionalBeats[0].names;
             node.beatCounter = {};
             node.subBeatNum = 0;
@@ -425,6 +425,7 @@ module.exports = function (RED) {
             if (node.sharing === 'conductor' && node.subBeatNum === 0) {
                 const bmsg = { payload: 'tick',
                                start: ['beat'],
+                               end: ['beat'],
                                beat: node.beatCounter['beat'],
                                bpm: node.current_bpm,
                                thisBeatStart: node.nextBeatStart,
@@ -445,6 +446,7 @@ module.exports = function (RED) {
 
             var msg = { payload: 'tick',
                         start: _.clone(subBeat.names),
+                        end: _.clone(node.subBeatEnds[node.subBeatNum]),
                         bpm: node.current_bpm
                       };
 

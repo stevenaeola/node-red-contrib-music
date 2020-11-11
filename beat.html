@@ -155,8 +155,11 @@
  <dd>The number of ticks since the last deployment or <code>reset</code> is counted and added as a property to the message. By default this property is simply called <code>beat</code> but this can be configured with the <code>output counter</code> configuration.</dd>
 
  <dt>start <span class='property-type'>(array)</span></dt>
- <dd>This property usually contains the single string <code>beat</code>. However if the beat is divided into sub-beats then only some of the <code>tick</code> messages will contain <code>beat</code> in the <code>start</code> array.</dd>
+ <dd>This property usually contains the single string <code>beat</code>, indicating that the tick represents the start of a beat. However if the beat is divided into sub-beats then only some of the <code>tick</code> messages will contain <code>beat</code> in the <code>start</code> array.</dd>
 
+ <dt>end <span class='property-type'>(array)</span></dt>
+ <dd>Similar to <code>start</code> except for the end of a beat/sub-beat</dd>
+ 
  <dt><span class='optional'>timeTag</span> <span class='property-type'>(number)</span></dt>
  <dd>If <code>latency</code> is defined in the configuration then a <code>timeTag</code> property is given for <code>tick</code> messages to indicate the timestamp on which the beat should occur.</dd>
 
