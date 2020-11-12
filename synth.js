@@ -283,6 +283,7 @@ module.exports = function (RED) {
                 major: [0, 2, 4, 5, 7, 9, 11, 12],
                 dorian: [0, 2, 3, 5, 7, 9, 10, 12],
                 mixolydian: [0, 2, 4, 5, 7, 9, 10, 12],
+                lydian: [0, 2, 4, 6, 7, 9, 11, 12],
                 'major pentatonic': [0, 2, 4, 7, 9, 12],
                 'minor pentatonic': [0, 3, 5, 7, 10, 12],
                 blues: [0, 3, 5, 6, 7, 10, 12],
