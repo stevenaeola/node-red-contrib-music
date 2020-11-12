@@ -126,29 +126,32 @@ module.exports = function (RED) {
                 node.send([msg, null]);
                 break;
 
-            default:
-                // see if the topic is one of the sequenced values
-                let foundTopic = false;
-                for (let i = 0; i < node.controls.length; i++) {
-                    let control = node.controls[i];
-                    if (control.name === msg.topic) {
-                        try {
-                            if (Array.isArray(msg.payload)) {
-                                control.values = msg.payload;
-                            } else {
-                                control.values = JSON.parse(msg.payload);
+                default:
+                    // see if the topic is one of the sequenced values
+                    let foundTopic = false;
+                    for (let control of node.controls) {
+                        if (control.name === msg.topic) {
+                            try {
+                                if (Array.isArray(msg.payload)) {
+                                    control.values = msg.payload;
+                                } else {
+                                    if (msg.payload === 'pop') {
+                                        control.values.pop();
+                                    } else {
+                                        control.values = JSON.parse(msg.payload);
+                                    }
+                                }
+                                foundTopic = true;
+                            } catch (e) {
+                                // do nothing
                             }
-                            foundTopic = true;
-                        } catch (e) {
-                            // do nothing
                         }
                     }
-                }
 
-                if (!foundTopic) {
-                    node.send([msg, null]);
-                }
-                break;
+                    if (!foundTopic) {
+                        node.send([msg, null]);
+                    }
+                    break;
             }
         });
 
