@@ -119,6 +119,7 @@ module.exports = function (RED) {
                 case 'looper':
                     let looperID = msg.nodeID;
                     checkLooper(looperID);
+                    clearLooper(looperID);
                     return true;
                     // break;
 
@@ -284,6 +285,11 @@ module.exports = function (RED) {
                 args: [node.loopers[nodeID], fps * seconds * 2, 2]
             };
             sendOSC(createMsg);
+            clearLooper(nodeID);
+        }
+
+        function clearLooper (nodeID) {
+            // assumes checkLooper has already been called
             const zeroMsg = {
                 address: '/b_zero',
                 args: [node.loopers[nodeID]]
