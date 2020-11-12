@@ -54,7 +54,7 @@
 
  <h3>Outputs</h3>
 
- <p>By default the divider counts beats into bars of four beats, so that every four beats a new bar is started. For each input message with <code>msg.payload</code> as <code>tick</code>, the property <code>beat_of_bar</code> is added, which counts from 1 to 4 for subsequent ticks. The value <code>bar</code> is also added, which increments by one every four beats. At the beginning of each bar (when <code>beat_of_bar</code> is 1) the value <code>bar</code> is also added to the array <code>msg.start</code>.</p>
+ <p>By default the divider counts beats into bars of four beats, so that every four beats a new bar is started. For each input message with <code>msg.payload</code> as <code>tick</code>, the property <code>beat_of_bar</code> is added, which counts from 1 to 4 for subsequent ticks. The value <code>bar</code> is also added, which increments by one every four beats. At the beginning of each bar (when <code>beat_of_bar</code> is 1) the value <code>bar</code> is also added to the array <code>msg.start</code>. On the final beat of the bear, the value <code>bar</code> is added to the array <code>msg.end</code>.</p>
 
  <h3>Configuration</h3>
 
@@ -69,7 +69,7 @@
      <dd>is the event that is created, by default this is <code>bar</code>.</dd>
 
      <dt><span class='optional'>Ratio</span> <span class='property-type'>number</span></dt>
-     <dd>controls the number of input events per output event, e.g. the number of beats in a bar, and defaults to 4. To count four beats in a bar and eight bars in a phrase you should have two divider nodes, the first one (beats to bars) should have its input connected to the output of a beat generator, and then send its output to the input of the second divider. The second divider should then be configured with the input event as <code>bar</code> and the output event as <code>phrase</code> and a ratio of 8. The tick messages coming from the second divider will then include properties for <code>beat</code>, <code>bar</code>, <code>phrase</code>, <code>beat_of_bar</code>, <code>bar_of_phrase</code> and <code>start</code> (an array).</dd>
+     <dd>controls the number of input events per output event, e.g. the number of beats in a bar, and defaults to 4. To count four beats in a bar and eight bars in a phrase you should have two divider nodes, the first one (beats to bars) should have its input connected to the output of a beat generator, and then send its output to the input of the second divider. The second divider should then be configured with the input event as <code>bar</code> and the output event as <code>phrase</code> and a ratio of 8. The tick messages coming from the second divider will then include properties for <code>beat</code>, <code>bar</code>, <code>phrase</code>, <code>beat_of_bar</code>, <code>bar_of_phrase</code>, <code>start</code> (an array) and <code>end</code> (another array).</dd>
  </dl>
 
 </script>
