@@ -38,12 +38,12 @@ module.exports = function (RED) {
                 inputCount = counts(inputVal).input;
                 outputCount = counts(inputVal).output;
 
-                if (inputCount === node.ratio && end.includes(node.input)) {
+                if (inputCount >= node.ratio && end.includes(node.input)) {
                     end.push(node.output);
                 }
 
                 if (inputCount === 1 && start.includes(node.input)) {
-                        start.push(node.output);
+                    start.push(node.output);
                 }
 
                 msg.start = start;
@@ -61,6 +61,7 @@ module.exports = function (RED) {
                 msg[beatsPerName] = beatsPerVal;
 
                 msg[counter] = inputCount;
+                node.lastInput = inputCount;
 
                 msg[node.output] = outputCount;
                 node.lastOutput = outputCount;
@@ -98,9 +99,13 @@ module.exports = function (RED) {
             if (node.ratio > 0 && Number.isInteger(ratio)) {
                 let oldRatio = node.ratio;
                 node.ratio = ratio;
-                // recalculate the offset to retain the same e.g. bar and beat of bar
+                // recalculate the offset to retain the same e.g. bar and beat of bar (bob)
+                // beat = (bar-1)*ratio + bob + offset
                 if (node.lastOutput) {
                     node.offsetCount = node.offsetCount + (node.lastOutput - 1) * (ratio - oldRatio);
+                    // when changing down ratio, make sure the new input is at most the last beat of bar
+                    let changeDown = Math.max(node.lastInput - ratio, 0);
+                    node.offsetCount -= changeDown;
                 } else {
                     // should only happen when first deploying
                     node.offsetCount = 0;
