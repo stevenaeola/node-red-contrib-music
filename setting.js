@@ -32,7 +32,7 @@ module.exports = function (RED) {
                         newVal = oldVal + change;
                         setSetting(newVal);
                         msg.topic = node.setting;
-                        msg.payload = newVal;
+                        msg.payload = getSetting(); // not newVal in case it is outside limits
                         node.send(msg);
                         break;
 
