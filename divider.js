@@ -96,7 +96,7 @@ module.exports = function (RED) {
         function setRatio (ratio, msg) {
             msg = msg || {};
             ratio = Number(ratio);
-            if (node.ratio > 0 && Number.isInteger(ratio)) {
+            if (ratio > 0 && Number.isInteger(ratio)) {
                 let oldRatio = node.ratio;
                 node.ratio = ratio;
                 // recalculate the offset to retain the same e.g. bar and beat of bar (bob)
