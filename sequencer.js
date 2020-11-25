@@ -37,8 +37,7 @@ module.exports = function (RED) {
                                 }
                             }
 
-                            for (let i = 0; i < node.controls.length; i++) {
-                                let control = node.controls[i];
+                            for (let control of node.controls) {
                                 // use undefined instead of null so we can include null values in sequences
                                 control.value = undefined;
                                 if (node.notesrand && node.loop) {
@@ -59,7 +58,7 @@ module.exports = function (RED) {
                                 }
                             }
                             if (!controlSet) {
-                                reset();
+                                restart();
                             }
                         }
                     }
@@ -67,8 +66,7 @@ module.exports = function (RED) {
 
                 // send control message to second output every time
                 if (controlSet) {
-                    for (let i = 0; i < node.controls.length; i++) {
-                        let control = node.controls[i];
+                    for (let control of node.controls) {
                         if (control.value != null) {
                             let controlMsg = { topic: control.name,
                                                payload: control.value
@@ -87,8 +85,7 @@ module.exports = function (RED) {
                             beatRatio = msg['beats_per_' + node.input];
                         }
                         playmsg.beats = node.rhythmCount * beatRatio;
-                        for (let i = 0; i < node.controls.length; i++) {
-                            let control = node.controls[i];
+                        for (let control of node.controls) {
                             if (control.value !== undefined) {
                                 playmsg[control.name] = control.value;
                             }
@@ -98,8 +95,7 @@ module.exports = function (RED) {
                     break;
 
                 case 'all':
-                    for (let i = 0; i < node.controls.length; i++) {
-                        let control = node.controls[i];
+                    for (let control of node.controls) {
                         if (control.value != null) {
                             msg[control.name] = control.value;
                         }
@@ -129,16 +125,25 @@ module.exports = function (RED) {
                 default:
                     // see if the topic is one of the sequenced values
                     let foundTopic = false;
-                    for (let control of node.controls) {
+                    for (let i = 0; i < node.controls.length; i++) {
+                        let control = node.controls[i];
+                        let controlraw = node.controlsraw[i];
                         if (control.name === msg.topic) {
                             try {
                                 if (Array.isArray(msg.payload)) {
                                     control.values = msg.payload;
                                 } else {
-                                    if (msg.payload === 'pop') {
+                                    let bits = msg.payload.split(' ');
+                                    let firstBit = bits.shift();
+                                    if (firstBit === 'pop') {
                                         control.values.pop();
+                                        controlraw.values.pop();
+                                    } else if (firstBit === 'push') {
+                                        const rest = bits.join(' ');
+                                        control.values.push(rest);
+                                        controlraw.values.push(rest);
                                     } else {
-                                        control.values = JSON.parse(msg.payload);
+                                        controlraw.values = control.values = JSON.parse(msg.payload);
                                     }
                                 }
                                 foundTopic = true;
@@ -161,13 +166,12 @@ module.exports = function (RED) {
                 node.controls = [{ name: 'note', values: '[1,4,5,4]' }];
             }
 
-            for (let i = 0; i < node.controls.length; i++) {
-                let control = node.controls[i];
-                try {
-                    control.values = JSON.parse(control.values);
-                } catch (e) {
-                    control.values = [1, 4, 5, 4];
-                }
+            for (let control of node.controls) {
+                // try {
+                //     control.values = JSON.parse(control.values);
+                // } catch (e) {
+                //     control.values = [1, 4, 5, 4];
+                // }
                 if (!Array.isArray(control.values)) {
                     if (control.values) {
                         control.values = [control.values];
@@ -210,8 +214,17 @@ module.exports = function (RED) {
             node.notesrand = config.notesrand || false;
             node.rhythmrand = config.rhythmrand || false;
             node.output = config.output || 'single';
-
-            node.controlsraw = config.controls;
+            node.controlsraw = [];
+            for (let ccontrol of config.controls) {
+                let values;
+                try {
+                    values = JSON.parse(ccontrol.values);
+                } catch (e) {
+                    values = null;
+                }
+                let control = { name: ccontrol.name, values };
+                node.controlsraw.push(control);
+            }
 
             restart();
         }
