@@ -183,6 +183,8 @@ module.exports = function (RED) {
                 return -1;
             }
 
+            note = Number(note);
+
             const flow = node.context().flow;
             const global = node.context().global;
 
