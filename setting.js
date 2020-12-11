@@ -45,7 +45,7 @@ module.exports = function (RED) {
             } else {
                 if (msg.payload === 'reset') {
                     reset();
-                    setTimeout(() => node.send(msg), 200); // wait for links to be created
+                    node.send(msg);
                 } else {
                     if (!node.properties.inputProperties(msg)) {
                         setSetting(msg.payload);
