@@ -251,6 +251,8 @@
               "synthcontrols": {"snare_tightness": {"description": "", "min": 1, "max": 1000, "default": 100},
                                 "snare_level": {"description": "", "min": 1, "max": 100, "default": 50}}},
 
-    "modular": {"tuned": true}
+    "modular": {"tuned": true},
+
+    "user-sample": {"tuned": true}
 }
 

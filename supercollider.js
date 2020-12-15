@@ -2,6 +2,7 @@ const dgram = require('dgram');
 const osc = require('osc');
 const fs = require('fs');
 const glob = require('glob');
+const path = require('path');
 const nrp = require('node-red-contrib-properties');
 
 // see http://danielnouri.org/docs/SuperColliderHelp/ServerArchitecture/Server-Command-Reference.html for details of SuperCollider commands
@@ -128,19 +129,34 @@ module.exports = function (RED) {
             }
         }
 
-        // ehecks the syntthype is valid and sends anything needed to SuperCollider
+        // ehecks the synththype is valid and sends anything needed to SuperCollider
         function checkSynthType (synthtype) {
-            if (!synthtypes[synthtype]) {
+            if (!synthtypes[synthtype] && !isUserSample(synthtype)) {
                 node.warn('SuperCollider unknown synthtype: ' + synthtype);
                 return;
             }
 
-            checkSynthDef(synthDefName(synthtype));
+            checkSynthDef(synthtype);
 
-            if (synthtypes[synthtype].synth) {
+            if (!isUserSample(synthtype) && synthtypes[synthtype].synth) {
                 return;
             }
             checkSamples(synthtype);
+        }
+
+        function userSampleFile (synthtype) {
+            let bits = synthtype.split('#');
+            if (bits.length !== 2) {
+                return null;
+            }
+            if (bits[0] !== 'user-sample') {
+                return null;
+            }
+            return bits[1];
+        }
+
+        function isUserSample (synthtype) {
+            return userSampleFile(synthtype) !== null;
         }
 
         function checkSamples (synthtype) {
@@ -151,13 +167,21 @@ module.exports = function (RED) {
             const bufNum = nextBufNum();
             node.samples[synthtype] = { 0: bufNum }; // could be varied by pitch
 
-            // glob uses forward slashes even in Windows
-            const sampdir = '/samples';
             let matches = [];
-            matches.push(sampdir + '/Dirt/' + synthtype + '/*.wav');
-            matches.push(sampdir + '/SonicPi/' + synthtype + '.flac');
-            matches.push(sampdir + '/Freesound/' + synthtype + '.wav');
-            matches.push(sampdir + '/VSCO/' + synthtype + '.wav');
+
+            // glob uses forward slashes even in Windows
+
+            if (isUserSample(synthtype)) {
+                const uploadDir = '/uploads';
+                const sampleName = path.basename(userSampleFile(synthtype));
+                matches.push(uploadDir + '/' + sampleName);
+            } else {
+                const sampdir = '/samples';
+                matches.push(sampdir + '/Dirt/' + synthtype + '/*.wav');
+                matches.push(sampdir + '/SonicPi/' + synthtype + '.flac');
+                matches.push(sampdir + '/Freesound/' + synthtype + '.wav');
+                matches.push(sampdir + '/VSCO/' + synthtype + '.wav');
+            }
 
             for (let match of matches) {
                 glob(match, { nocase: true, root: __dirname }, function (er, files) {
@@ -381,6 +405,9 @@ module.exports = function (RED) {
         }
 
         function synthDefName (synthtype) {
+            if (isUserSample(synthtype)) {
+                return 'playSampleMono';
+            }
             let synthDetails = synthtypes[synthtype];
             if (synthDetails.synth) {
                 if (synthDetails.tags.includes('sonic-pi')) {
@@ -398,8 +425,12 @@ module.exports = function (RED) {
         function note2sc (synthtype, msg) {
             // assumes checkSynth has already been run
             const synthdef = synthDefName(synthtype);
-            let synthDetails = synthtypes[synthtype];
-
+            let synthDetails;
+            if (isUserSample(synthtype)) {
+                synthDetails = synthtypes['user-sample'];
+            } else {
+                synthDetails = synthtypes[synthtype];
+            }
             // add the synth to the head of the root group
             // use node ID of -1 to auto-generate synth id
             let payload = [synthdef, -1, 0, node.groupID];

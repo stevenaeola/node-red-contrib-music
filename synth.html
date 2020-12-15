@@ -1,6 +1,8 @@
 <script type="text/javascript">
  
  const synthtypesURL = "node-red-contrib-music/synthtypes";
+ const userSampleURL = 'node-red-contrib-music/usersamples';
+
  
  // synthtypes is an object with all the associated data, synthtypeList just the names (keys of synthtypes)
  let synthtypes, tagSet;
@@ -48,16 +50,17 @@
      category: 'music',
      color: '#a6bbcf',
      defaults: {
-         name: {value: "", required: false},
-         synthtype: {value: "kick", required: true},
-	 filterTags: {value: new Set(), required: true},
-	 volume: {value: 50},
-	 octave: {value: 0},
-	 root: {value:"", required: false},
-	 scale: {value:"", required: false},
-	 degree: {value:"", required: false},
-	 outBus: {value:0, required: true},
-         synthcontrols: {value: {}}
+         name: { value: "", required: false },
+         synthtype: { value: "kick", required: true },
+         filterTags: { value: new Set(), required: true },
+         volume: { value: 50 },
+         octave: { value: 0 },
+         root: { value: "", required: false },
+         scale: { value: "", required: false },
+         degree: { value: "", required: false },
+         outBus: { value: 0, required: true },
+         synthcontrols: { value: {} },
+         sampleName: { value: "", required: false}
      },
      
      inputs:1,
@@ -176,16 +179,31 @@
          populateSynthcontrols();
          
          const tunedContainer = $('#node-input-tuned-container');
+         const sampleContainer = $('#node-input-userSample-container');
+
 
          $('#node-input-synthtype').change(
-	     function (){
-	         const option = $(this).find('option:selected').val();
-	         if(synthtypes[option] && synthtypes[option].tuned){
-		     tunedContainer.show();
-	         }
-	         else{
-		     tunedContainer.hide();
-	         }
+             function () {
+                 const option = $(this).find('option:selected').val();
+                 if (synthtypes[option] && synthtypes[option].tuned) {
+                     tunedContainer.show();
+                 }
+                 else {
+                     tunedContainer.hide();
+                 }
+                 if (option === 'user-sample'){
+                    sampleContainer.show();
+                    $.getJSON(userSampleURL, function (data) {
+
+                        let selectSample = document.getElementById('node-input-sampleName');
+                        for(let sample of data){
+                            selectSample.add(new Option(sample));
+                        }
+                    });
+                 }
+                 else {
+                    sampleContainer.hide();
+                 }
                  if (option !== node.synthtype) {
                      node.synthtype = option;
                      setSynthDescription();
@@ -194,7 +212,7 @@
                      populateSynthcontrols();
                  }
 
-	     }
+             }
          );
          
          $('#node-input-synthtype-filter-all').click(
@@ -237,7 +255,7 @@
          filterSynthtypes();
      },
 
-     oneditsave: function(){
+     oneditsave: async function(){
          let synthcontrols = $('.node-input-synthcontrol');
          synthcontrols.each(function(){
              const control_id = $(this).attr('id');
@@ -246,6 +264,14 @@
              node.synthcontrols[control] = value;
          }
          );
+
+         // send the uploaded file
+         const formData = new FormData();
+         const sampleFile = $('#userSample-file').files[0];
+         formData.append('username', 'abc123');
+formData.append('avatar', fileField.files[0]);  
+
+         fetch()
      }
  });
 </script>
@@ -264,6 +290,16 @@
     <div class="form-row">
         <label for="node-input-volume"> Volume</label>
         <input type="number" min="0" max="100" id="node-input-volume" placeholder="0-100" style="width:7em">
+    </div>
+
+    <div id='node-input-userSample-container' style="display:none">
+<!--        <div class="form-row">
+            <label for="node-input-file"> File (.wav or .aiff)</label>
+            <input type="file" id="userSample-file" style="width:7em">
+        </div>
+    -->
+
+        <select id="node-input-sampleName"></select>
     </div>
     
     <div id='node-input-tuned-container' style="display:none">

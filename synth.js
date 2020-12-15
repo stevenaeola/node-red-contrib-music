@@ -1,8 +1,14 @@
-const sc = require('././synth_common');
+const sc = require('./synth_common');
+const multer = require('multer');
+const glob = require('glob');
+const path = require('path');
 const _ = require('underscore');
+
+const uploadDir = 'uploads';
 
 // prefix for served GET requests
 const synthtypesURL = 'node-red-contrib-music/synthtypes';
+const userSampleURL = 'node-red-contrib-music/usersamples';
 
 let synthtypes = require('./synthtypes');
 for (let synthtype in synthtypes) {
@@ -18,6 +24,30 @@ module.exports = function (RED) {
         // so we can edit syntypes.json without having to restart the server
         synthtypes = require('./synthtypes');
         res.json(synthtypes);
+    });
+
+    RED.httpAdmin.get('/' + userSampleURL, async function (req, res) {
+        // list of already uploaded files
+        let matches = [];
+        matches.push('/' + uploadDir + '/*.wav');
+        matches.push('/' + uploadDir + '/*.aiff');
+        let fpaths = [];
+        for (let match of matches) {
+            fpaths = fpaths.concat(glob.sync(match, { nocase: true, root: __dirname }));
+        }
+        let fnames = [];
+        for (let fpath of fpaths) {
+            fnames.push(path.basename(fpath));
+        }
+        res.json(fnames);
+    });
+
+    let upload = multer({ dest: uploadDir });
+
+    RED.httpAdmin.post('/' + userSampleURL, upload.single('sample'), function (req, res) {
+        // saving files that are uploaded
+        console.log('Received file ' + req.file.path);
+        res.sendStatus(200);
     });
 
     function SynthNode (config) {
@@ -127,10 +157,14 @@ module.exports = function (RED) {
                 details[p] = node.parameters[p];
             }
 
+            let synthtypeExtended = node.synthtype;
+            if (node.synthtype === 'user-sample') {
+                synthtypeExtended = synthtypeExtended + '#' + node.sampleName;
+            }
             let noteMsg = {
                 payload: 'tick',
                 details,
-                synthtype: node.synthtype
+                synthtype: synthtypeExtended
             };
 
             if (msg.timeTag) {
@@ -154,6 +188,7 @@ module.exports = function (RED) {
 
         function reset () {
             node.tuned = config.tuned;
+            node.sampleName = config.sampleName;
             node.parameters = node.parameters || {};
             if (config.synthcontrols) {
                 for (let synthcontrol in config.synthcontrols) {
