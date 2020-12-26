@@ -1,5 +1,5 @@
 const sc = require('./synth_common');
-const multer = require('multer');
+// const multer = require('multer');
 const glob = require('glob');
 const path = require('path');
 const _ = require('underscore');
@@ -31,6 +31,8 @@ module.exports = function (RED) {
         let matches = [];
         matches.push('/' + uploadDir + '/*.wav');
         matches.push('/' + uploadDir + '/*.aiff');
+        matches.push('/' + uploadDir + '/*.aif');
+
         let fpaths = [];
         for (let match of matches) {
             fpaths = fpaths.concat(glob.sync(match, { nocase: true, root: __dirname }));
@@ -42,6 +44,7 @@ module.exports = function (RED) {
         res.json(fnames);
     });
 
+    /*
     let upload = multer({ dest: uploadDir });
 
     RED.httpAdmin.post('/' + userSampleURL, upload.single('sample'), function (req, res) {
@@ -49,6 +52,7 @@ module.exports = function (RED) {
         console.log('Received file ' + req.file.path);
         res.sendStatus(200);
     });
+    */
 
     function SynthNode (config) {
         const configurables =
@@ -126,10 +130,9 @@ module.exports = function (RED) {
         function sendNote (noteVal, msg) {
             let midi;
             if (isNaN(msg.midi)) {
-                if (isNaN(noteVal)) {
-                    noteVal = 1;
+                if (!isNaN(noteVal)) {
+                    midi = note2midi(noteVal);
                 }
-                midi = note2midi(noteVal);
             } else {
                 midi = msg.midi;
             }

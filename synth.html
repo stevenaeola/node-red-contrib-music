@@ -46,6 +46,7 @@
      }
  });
  
+ 
  RED.nodes.registerType('synth',{
      category: 'music',
      color: '#a6bbcf',
@@ -75,62 +76,77 @@
      oneditprepare: function(){
          node = this;
 
-         function setSynthDescription(){
+         function setSynthDescription() {
              let synthdescription = synthtypes[node.synthtype].description || " ";
              $('#node-input-synthtype-description').html(synthdescription);
          }
 
-         function populateSynthcontrols(){
+         function populateSynthcontrols() {
              let synthcontrolSpecs = synthtypes[node.synthtype].synthcontrols || {};
              // all synths allow pan at least
-             synthcontrolSpecs.pan = {"description": "position in stereo field: left (-1) or right (1)", "min": -1, "max": 1, "default": 0};
+             synthcontrolSpecs.pan = { "description": "position in stereo field: left (-1) or right (1)", "min": -1, "max": 1, "default": 0 };
              const container = $('#node-input-synthcontrol-container');
-             for(let synthcontrol in synthcontrolSpecs){
+             for (let synthcontrol in synthcontrolSpecs) {
 
-                 let row = $('<div/>', {class: 'form-row'}).appendTo(container);
+                 let row = $('<div/>', { class: 'form-row' }).appendTo(container);
 
                  let id = 'node-input-synthcontrol-' + synthcontrol;
-                 
+
                  let synthdetails = synthcontrolSpecs[synthcontrol] || {};
                  let max = synthdetails.max || 1;
                  let min = synthdetails.min || 0;
                  let default_ = synthdetails.default;
-                 let description = synthdetails.description?(synthdetails.description + '. '):'';
+                 let description = synthdetails.description ? (synthdetails.description + '. ') : '';
                  let info = `${description}min: ${min}, max: ${max}, default: ${default_}`;
                  let value = node.synthcontrols[synthcontrol] || default_;
-                 
-                 let labelElement = $(`<label>${synthcontrol}</label>`, {'for': id}).appendTo(row);
+
+                 let labelElement = $(`<label>${synthcontrol}</label>`, { 'for': id }).appendTo(row);
                  let step = Math.pow(10, Math.floor(Math.log10(max - min)) - 2);
-                 let valueField = $('<input/>',{id: id, class: "node-input-synthcontrol",  width: "7em", type:"number", min:min, max: max, step: step}).appendTo(row);
-		 valueField.val(value);
-                 
-                 let infoElement = $(`<div><small>${info}</small></div>`, {style: 'float:right'}).appendTo(row);
-                 
+                 let valueField = $('<input/>', { id: id, class: "node-input-synthcontrol", width: "7em", type: "number", min: min, max: max, step: step }).appendTo(row);
+                 valueField.val(value);
+
+                 let infoElement = $(`<div><small>${info}</small></div>`, { style: 'float:right' }).appendTo(row);
+
                  noControls = false;
              }
              // add other options depending on the synthtype, to be specified in synthttypes.json
          }
          
-	 function populateSynthtypeSelect(){
+         function populateSynthtypeSelect() {
 
-             let synthtypeList = []
-             for(let synthtype in synthtypes){
+             let synthtypeList = [];
+             for (let synthtype in synthtypes) {
                  synthtypeList.push(synthtype);
              }
 
              synthtypeList.sort();
 
-	     const select = $("#node-input-synthtype");
-	     select.empty();
+             const select = $("#node-input-synthtype");
+             select.empty();
 
-	     for(let synthtype of node.synthtypeList){
-		 let row = $("<option value='" + synthtype + "'>" + synthtype + "</option>");
-		 if(node.synthtype === synthtype || node.synthtypeList.length === 1){
-		     row.attr("selected", "selected");
-		 }
+             for (let synthtype of node.synthtypeList) {
+                 let row = $("<option value='" + synthtype + "'>" + synthtype + "</option>");
+                 if (node.synthtype === synthtype || node.synthtypeList.length === 1) {
+                     row.attr("selected", "selected");
+                 }
                  select.append(row);
-	     }
-	 }
+             }
+         }
+     
+         function populateUserSampleSelect() {
+             const selectSample = $('#node-input-sampleName');
+             selectSample.empty();
+
+             $.getJSON(userSampleURL, function (data) {
+                 for (let sample of data) {
+                     let row = $(`<option value='${sample}'>${sample}</option>`);
+                     if (node.userSample === sample || data.length === 1) {
+                         row.attr("selected", "selected");
+                     }
+                     selectSample.append(row);
+                 }
+            });
+        }
 
 	 function filterSynthtypes(){
              $('#node-input-synthtype-filter-container span').css("font-weight", "normal");
@@ -193,13 +209,8 @@
                  }
                  if (option === 'user-sample'){
                     sampleContainer.show();
-                    $.getJSON(userSampleURL, function (data) {
-
-                        let selectSample = document.getElementById('node-input-sampleName');
-                        for(let sample of data){
-                            selectSample.add(new Option(sample));
-                        }
-                    });
+                    $('#node-input-sampleName').empty();
+                    populateUserSampleSelect();
                  }
                  else {
                     sampleContainer.hide();
@@ -212,6 +223,15 @@
                      populateSynthcontrols();
                  }
 
+             }
+         );
+
+         $('#node-input-sampleName').change(
+             function () {
+                 const option = $(this).find('option:selected').val();
+                 if (option) {
+                     node.userSample = option;
+                 }
              }
          );
          
@@ -266,12 +286,14 @@
          );
 
          // send the uploaded file
+         /*
          const formData = new FormData();
          const sampleFile = $('#userSample-file').files[0];
          formData.append('username', 'abc123');
-formData.append('avatar', fileField.files[0]);  
+        formData.append('avatar', fileField.files[0]);  
 
          fetch()
+         */
      }
  });
 </script>
@@ -293,14 +315,14 @@ formData.append('avatar', fileField.files[0]);
     </div>
 
     <div id='node-input-userSample-container' style="display:none">
-<!--        <div class="form-row">
-            <label for="node-input-file"> File (.wav or .aiff)</label>
-            <input type="file" id="userSample-file" style="width:7em">
-        </div>
-    -->
+     <div class="form-row">
+        <label for="node-input-sampleName"> User sample</label>
 
         <select id="node-input-sampleName"></select>
     </div>
+    </div>
+
+
     
     <div id='node-input-tuned-container' style="display:none">
         
@@ -399,7 +421,7 @@ formData.append('avatar', fileField.files[0]);
  <dl class='message-properties'>
 
    <dt><span class='optional'>Synth type</span> <span class='property-type'>string</span></dt>
-   <dd>The name of the synthesiser type to use, selected from the pull-down list. This list can be filtered by clicking on the filters (e.g. <i>untunted</i>) on the right hand side of the selection list.</dd>
+   <dd>The name of the synthesiser type to use, selected from the pull-down list. This list can be filtered by clicking on the filters (e.g. <i>untunted</i>) on the right hand side of the selection list. If the 'user-sample' option is selected then any .wav or .aif files in the uploads folder are available.</dd>
 
    <dt>Volume <span class='property-type'>number</span></dt>
    <dd>A value in the range 0 to 100 to specify the volume that the synth uses after deployment or reset.</dd>
