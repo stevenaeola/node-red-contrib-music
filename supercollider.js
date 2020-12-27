@@ -136,7 +136,7 @@ module.exports = function (RED) {
                 return;
             }
 
-            checkSynthDef(synthtype);
+            checkSynthDef(synthDefName(synthtype));
 
             if (!isUserSample(synthtype) && synthtypes[synthtype].synth) {
                 return;
