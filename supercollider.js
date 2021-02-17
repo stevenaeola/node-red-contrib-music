@@ -225,6 +225,7 @@ module.exports = function (RED) {
                                     address: '/d_recv',
                                     args: [data, 0]
                                 };
+
                                 sendOSC(synthMsg);
                             }
                         });
@@ -254,6 +255,7 @@ module.exports = function (RED) {
             } else {
                 const headBusNum = nextBusNum();
                 const synthID = busNum2synthID(headBusNum);
+                checkSynthDef(head.fxtype);
                 let payload = [head.fxtype, synthID];
                 // specify position in the group: just before the next soundfx in
                 if (tailBusNum) {
@@ -269,7 +271,10 @@ module.exports = function (RED) {
                 for (let key in fxDetails) {
                     payload.push(key, Number(fxDetails[key]));
                 }
-                sendOSC({ address: '/s_new', args: payload });
+                // delay the sending to give the synthdef time to arrive through checkSynthDef
+                setTimeout(() => {
+                    sendOSC({ address: '/s_new', args: payload });
+                }, 50);
                 let buses = clone(node.chain2buses[keyTail] || {});
                 buses[head.nodeID] = headBusNum;
                 node.chain2buses[keyFull] = buses;
