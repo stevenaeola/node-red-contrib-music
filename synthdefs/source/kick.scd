@@ -1,6 +1,6 @@
 (
 SynthDef("kick",{
-	| out = 0, freq = 50, mod_freq = 2, mod_index = 5, sus = 0.3, amp = 0.5, beater_noise = 0.05, pan = 0 |
+	| out_bus = 0, freq = 50, mod_freq = 2, mod_index = 5, sus = 0.3, amp = 0.5, beater_noise = 0.05, pan = 0 |
 	var pitch_contour, drum_osc, drum_lpf, drum_env;
 	var beater_source, beater_hpf, beater_lpf, lpf_cutoff_contour, beater_env;
 	var kick_mix;
@@ -20,7 +20,7 @@ SynthDef("kick",{
 	kick_mix = Mix.new([drum_env, beater_env]) * 8 * amp;
 	DetectSilence.ar(kick_mix, doneAction:2);
 
-	Out.ar(out, Pan2.ar(kick_mix, pan))
+	Out.ar(out_bus, Pan2.ar(kick_mix, pan))
 	}
 ).store
 )

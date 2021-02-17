@@ -1,6 +1,6 @@
 (
 SynthDef("snare",
-	{arg out = 0, sus = 0.1, drum_mode_level = 0.25,
+	{arg out_bus = 0, sus = 0.1, drum_mode_level = 0.25,
 	snare_level = 50, snare_tightness = 100,
 	freq = 805, amp = 0.5;
 	var drum_mode_sin_1, drum_mode_sin_2, drum_mode_pmosc, drum_mode_mix, drum_mode_env;
@@ -28,7 +28,7 @@ SynthDef("snare",
 	snare_brf_4 = BRF.ar(in: snare_brf_3, freq: 2000, mul: snare_env, rq: 0.0001);
 	snare_reson = Resonz.ar(snare_brf_4, snare_tightness, mul: snare_level) ;
 	snare_drum_mix = Mix.new([drum_mode_mix, snare_reson]) * 10 * amp;
-	Out.ar(out, [snare_drum_mix, snare_drum_mix])
+	Out.ar(out_bus, [snare_drum_mix, snare_drum_mix])
 	}
 ).store
 )
