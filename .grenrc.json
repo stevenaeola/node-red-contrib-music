@@ -1,7 +1,6 @@
 {
     "dataSource": "issues",
     "onlyMilestones": false,
-    "prefix": "v",
     "groupBy": "label",
     "changelogFilename": "CHANGELOG.md"
 }
