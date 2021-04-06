@@ -1,5 +1,5 @@
 const sc = require('./synth_common');
-// const multer = require('multer');
+const multer = require('multer');
 const glob = require('glob');
 const path = require('path');
 const _ = require('underscore');
@@ -44,15 +44,23 @@ module.exports = function (RED) {
         res.json(fnames);
     });
 
-    /*
-    let upload = multer({ dest: uploadDir });
+// adapted from https://github.com/expressjs/multer/issues/439
+
+    const storage = multer.diskStorage({
+        destination (req, file, cb) {
+          cb(null, uploadDir);
+        },
+        filename: function (req, file, cb) {
+            cb(null, file.originalname);
+          }
+      });
+    let upload = multer({ storage });
 
     RED.httpAdmin.post('/' + userSampleURL, upload.single('sample'), function (req, res) {
         // saving files that are uploaded
-        console.log('Received file ' + req.file.path);
-        res.sendStatus(200);
+        const msg = 'Received file ' + req.file.path;
+        res.send(msg);
     });
-    */
 
     function SynthNode (config) {
         const configurables =
