@@ -8,6 +8,26 @@
 
 ---
 
+## v1.0.0 (27/12/2020)
+*No changelog for this release.*
+
+---
+
+## v1.1.0 (27/12/2020)
+*No changelog for this release.*
+
+---
+
+## v2.0.0 (27/12/2020)
+*No changelog for this release.*
+
+---
+
+## v2.0.1 (27/12/2020)
+*No changelog for this release.*
+
+---
+
 ## v2.1.0 (27/12/2020)
 
 #### bug
