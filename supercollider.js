@@ -442,8 +442,21 @@ module.exports = function (RED) {
 
             if (!synthDetails.synth) {
                 payload.push('buffer', node.samples[synthtype][0]); // TODO check if sample is note-dependent
-                if (synthDetails.midibase) {
-                    payload.push('midibase', synthDetails.midibase);
+                let midibase;
+                if (isUserSample(synthtype)) {
+                    let sampleFile = userSampleFile(synthtype);
+                    // search for a midi value at the end of the filename
+                    const base = path.basename(sampleFile, path.extname(sampleFile));
+                    const rexp = /\d+$/;
+                    const matches = base.match(rexp);
+                    if (matches && matches.length > 0) {
+                        midibase = parseInt(matches[0]);
+                    }
+                } else if (synthDetails.midibase) {
+                    midibase = synthDetails.midibase;
+                }
+                if (midibase) {
+                    payload.push('midibase', midibase);
                 }
             }
 

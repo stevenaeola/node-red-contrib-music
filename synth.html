@@ -465,7 +465,8 @@
  <dl class='message-properties'>
 
    <dt><span class='optional'>Synth type</span> <span class='property-type'>string</span></dt>
-   <dd>The name of the synthesiser type to use, selected from the pull-down list. This list can be filtered by clicking on the filters (e.g. <i>untunted</i>) on the right hand side of the selection list. If the 'user-sample' option is selected then any .wav or .aif files in the uploads folder are available.</dd>
+   <dd>The name of the synthesiser type to use, selected from the pull-down list. This list can be filtered by clicking on the filters (e.g. <i>untuned</i>) on the right hand side of the selection list. If the 'user-sample' option is selected then any .wav or .aif files in the uploads folder are available.
+       A web interface for uploading samples is also provided. If a provided sample file name (before the .wav or .aif extension) ends with an integer then this is interpreted as the pitch of the sample as a midi value, and is used as the basis of pitch variation through the 'note' property.</dd>
 
    <dt>Volume <span class='property-type'>number</span></dt>
    <dd>A value in the range 0 to 100 to specify the volume that the synth uses after deployment or reset.</dd>
