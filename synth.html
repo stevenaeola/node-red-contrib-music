@@ -58,7 +58,7 @@
             octave: { value: 0 },
             root: { value: "", required: false },
             scale: { value: "", required: false },
-            degree: { value: "", required: false },
+            chord: { value: "", required: false },
             outBus: { value: 0, required: true },
             synthcontrols: { value: {} },
             sampleName: { value: "", required: false }
@@ -395,16 +395,16 @@
             </div>
 
             <div class="form-row">
-                <label for="node-input-degree"> Degree</label>
-                <select id="node-input-degree">
+                <label for="node-input-chord"> Chord</label>
+                <select id="node-input-chord">
                     <option></option>
-                    <option>I</option>
-                    <option>II</option>
-                    <option>III</option>
-                    <option>IV</option>
-                    <option>V</option>
-                    <option>VI</option>
-                    <option>VII</option>
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option>4</option>
+                    <option>5</option>
+                    <option>6</option>
+                    <option>7</option>
                 </select>
             </div>
 
@@ -480,8 +480,8 @@
    <dt>scale type <span class='property-type'>string</span></dt>
    <dd>The midi pitch value that is output depends on the value of <code>msg.note</code> and the scale root and the scale type. If not defined, the global or default value is used.</dd>
 
-   <dt>Degree <span class='property-type'>string</span></dt>
-   <dd>If defined, this selects the scale relative to the global key. If the global key is C major, then degree II is D minor and degree V is G major.</dd>
+   <dt>Chord <span class='property-type'>string</span></dt>
+   <dd>If defined, this selects the scale relative to the global key. If the global key is C major, then chord 2 is D minor and chord 5 is G major.</dd>
 
    <dt><span class='optional'>Synth controls (synthcontrol)</span> <span class='property-type'>number</span></dt>
    <dd>Each synth type has has its own set of parameters that control its operation.</dd>

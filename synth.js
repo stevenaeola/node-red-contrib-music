@@ -71,7 +71,7 @@ module.exports = function (RED) {
             octave: { 'default': 0 },
             synthtype: { 'default': 'kick' },
             key: { 'default': 'C minor' },
-            degree: { 'default': 'I' }
+            chord: { 'default': 1 }
         };
 
         RED.nodes.createNode(this, config);
@@ -234,16 +234,16 @@ module.exports = function (RED) {
             const flow = node.context().flow;
             const global = node.context().global;
 
-            var root = node.root;
+            let root = node.root;
 
-            var scale = node.scale;
+            let scale = node.scale;
 
-            var degree = node.degree;
-            var globalkey = flow.get('key') || global.get('key');
-            var globalroot;
-            var globalscale;
+            let chord = node.chord;
+            const globalkey = flow.get('key') || global.get('key');
+            let globalroot;
+            let globalscale;
             if (typeof globalkey === 'string') {
-                var bits = globalkey.split(' ');
+                let bits = globalkey.split(' ');
                 globalroot = bits.shift();
                 globalscale = bits.join(' ');
             }
@@ -260,8 +260,8 @@ module.exports = function (RED) {
 
             scale = scale.toLowerCase();
 
-            if (degree === '') {
-                degree = flow.get('degree') || global.get('degree') || configurables.degree['default'];
+            if (chord === '') {
+                chord = flow.get('chord') || global.get('chord') || configurables.chord['default'];
             }
 
             // turn the degree into an offset
@@ -277,12 +277,13 @@ module.exports = function (RED) {
                 VIII: 8
             };
 
-            var noteoffset = 0;
-            if (_.isString(degree) && roman[degree.toUpperCase()]) {
-                noteoffset = roman[degree.toUpperCase()] - 1;
+            if (_.isString(chord) && roman[chord.toUpperCase()]) {
+                chord = roman[chord.toUpperCase()];
             }
 
-            var midiroot;
+            chord = Number(chord) || 0;
+
+            let midiroot;
 
             if (isNaN(root)) {
                 const name2midi = {
@@ -295,14 +296,14 @@ module.exports = function (RED) {
                     B: 71
                 };
 
-                var rootbits = root.toUpperCase().split('');
-                var base = rootbits.shift();
+                let rootbits = root.toUpperCase().split('');
+                let base = rootbits.shift();
                 midiroot = name2midi[base];
                 if (midiroot === undefined) {
                     node.warn('Scale root should be a midi number or start with a letter A-G');
                     return;
                 }
-                var next = rootbits.shift();
+                let next = rootbits.shift();
                 if (next === '#' || next === 's') {
                     midiroot++;
                 } else if (next === 'b') {
@@ -311,7 +312,7 @@ module.exports = function (RED) {
                     rootbits.unshift(next);
                 }
                 if (rootbits.length > 0) {
-                    var octave = Number(rootbits.join(''));
+                    let octave = Number(rootbits.join(''));
                     if (!isNaN(octave)) {
                         midiroot += (octave - 4) * 12;
                     }
@@ -324,7 +325,7 @@ module.exports = function (RED) {
                 midiroot = root;
             }
 
-            note += noteoffset;
+            note = sc.transpose(note, chord);
 
             const intervals = {
                 minor: [0, 2, 3, 5, 7, 8, 10, 12],
@@ -345,8 +346,8 @@ module.exports = function (RED) {
                 scale = configurables.scale['default'];
                 node.warn('Using: ' + scale);
             }
-            var offsets = intervals[scale];
-            var midi = midiroot;
+            let offsets = intervals[scale];
+            let midi = midiroot;
 
             // work out notes above the offset values by shifting up an octave
             while (note > offsets.length) {
@@ -361,7 +362,7 @@ module.exports = function (RED) {
                 note = 1;
             }
 
-            var negative = false;
+            let negative = false;
             while (note < 0) {
                 negative = true;
                 note += offsets.length - 1;
@@ -380,8 +381,8 @@ module.exports = function (RED) {
         }
 
         function configureTick (msg) {
-            for (var configurable in configurables) {
-                var val = msg[configurable];
+            for (let configurable in configurables) {
+                let val = msg[configurable];
                 if (val != null) {
                     configure(configurable, val);
                 }
@@ -389,7 +390,7 @@ module.exports = function (RED) {
         }
 
         function configureMsg (msg) {
-            for (var configurable in configurables) {
+            for (let configurable in configurables) {
                 if (msg.topic === configurable) {
                     configure(configurable, msg.payload);
                 }
@@ -402,11 +403,11 @@ module.exports = function (RED) {
                 return;
             }
 
-            var def = configurables[config].default;
+            let def = configurables[config].default;
 
             switch (config) {
                 case 'volume':
-                    var newVol = Number(val);
+                    let newVol = Number(val);
                     if (Number.isNaN(newVol)) {
                         if (Number.isNaN(node.volume)) {
                             node.volume = def;
@@ -421,7 +422,7 @@ module.exports = function (RED) {
 
                 case 'key':
                     if (val) {
-                        var bits = val.split(' ');
+                        let bits = val.split(' ');
                         configure('root', bits.shift());
                         configure('scale', bits.shift());
                     }
