@@ -1,6 +1,7 @@
 # node-red-contrib music
 
 ![node-red music logo](icons/node-red-music-logo.svg)
+
 Designed for live-coding, this package offers a range of nodes to generate beats, subdivide them into bars and sections, and to generate sound synthesis instructions for the SuperCollider audio synthesis platform. Messages are sent from node-red to Supercollider via OSC.
 
 # Installation
