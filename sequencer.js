@@ -125,30 +125,52 @@ module.exports = function (RED) {
                 default:
                     // see if the topic is one of the sequenced values
                     let foundTopic = false;
+                    const indexRegex = /(\w+)\[(\d+)]/;
+                    let topicControl = msg.topic;
+                    let controlIndex = null;
+                    let match = msg.topic.match(indexRegex);
+
+                    if (match) {
+                        controlIndex = Number(match[2]);
+                        if (Number.isInteger(controlIndex) && controlIndex >= 0) {
+                            topicControl = match[1];
+                        } else {
+                            controlIndex = null;
+                        }
+                    }
                     for (let i = 0; i < node.controls.length; i++) {
                         let control = node.controls[i];
                         let controlraw = node.controlsraw[i];
-                        if (control.name === msg.topic) {
-                            try {
-                                if (Array.isArray(msg.payload)) {
-                                    control.values = msg.payload;
-                                } else {
-                                    let bits = msg.payload.split(' ');
-                                    let firstBit = bits.shift();
-                                    if (firstBit === 'pop') {
-                                        control.values.pop();
-                                        controlraw.values.pop();
-                                    } else if (firstBit === 'push') {
-                                        const rest = bits.join(' ');
-                                        control.values.push(rest);
-                                        controlraw.values.push(rest);
-                                    } else {
-                                        controlraw.values = control.values = JSON.parse(msg.payload);
-                                    }
+                        if (control.name === topicControl) {
+                            if (controlIndex !== null) {
+                                while ((control.values.length - 1) < controlIndex) {
+                                    control.values.push(null);
+                                    controlraw.values.push(null);
                                 }
+                                control.values[controlIndex] = controlraw.values[controlIndex] = JSON.parse(msg.payload);
                                 foundTopic = true;
-                            } catch (e) {
-                                // do nothing
+                            } else {
+                                try {
+                                    if (Array.isArray(msg.payload)) {
+                                        control.values = msg.payload;
+                                    } else {
+                                        let bits = msg.payload.split(' ');
+                                        let firstBit = bits.shift();
+                                        if (firstBit === 'pop') {
+                                            control.values.pop();
+                                            controlraw.values.pop();
+                                        } else if (firstBit === 'push') {
+                                            const rest = bits.join(' ');
+                                            control.values.push(rest);
+                                            controlraw.values.push(rest);
+                                        } else {
+                                            controlraw.values = control.values = JSON.parse(msg.payload);
+                                        }
+                                    }
+                                    foundTopic = true;
+                                } catch (e) {
+                                    // do nothing
+                                }
                             }
                         }
                     }
@@ -167,11 +189,6 @@ module.exports = function (RED) {
             }
 
             for (let control of node.controls) {
-                // try {
-                //     control.values = JSON.parse(control.values);
-                // } catch (e) {
-                //     control.values = [1, 4, 5, 4];
-                // }
                 if (!Array.isArray(control.values)) {
                     if (control.values) {
                         control.values = [control.values];

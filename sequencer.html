@@ -196,14 +196,14 @@
  <dt>list of notes <span class='property-type'>list,number</span>
  <dd>A list of numbers representing the position in the scale of the note to be played. The list should be specified as a JSON array, with default <code>[1,4,5,4]</code> or a number can be used if a single note is to be repeated. If no note is to be played at some part of the sequence (i.e. a rest), the value <code>null</code> should be used.</dd>
 
- <dt>choose notes randomly from list <span class='property-type'>boolean</span>
- <dd>If selected, the list of notes is shuffled randomly each time the sequence starts.</dd>
+ <dt>choose values randomly from list <span class='property-type'>boolean</span>
+ <dd>If selected, values (e.g. notes) are selected randomly from the list for each note.</dd>
 
  <dt>list of lengths <span class='property-type'>list,number</span>
  <dd>A list of numbers (or null values) representing the number of ticks to be counted for a note. The list should be specified as a JSON array, with default <code>[3,1]</code> or a number can be used if all notes have the same length. The size of this list does not have to be the same as the size of the list of notes: the list will be repeated as many times as necessary. If a <code>null</code> value is given then the sequencer will not progress until a message with payload <code>next</code> is received.</dd>
 
  <dt>choose lengths randomly from list <span class='property-type'>boolean</span>
- <dd>If selected, the list of lengths is shuffled randomly each time the sequence starts.</dd>
+ <dd>If selected, note lengths are selected randomly from the list for each note.</dd>
 
 
  </dt>
