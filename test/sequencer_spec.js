@@ -1,4 +1,4 @@
-// const sinon = require('sinon');
+const sinon = require('sinon');
 const helper = require('node-red-node-test-helper');
 const sequencerNode = require('../sequencer.js');
 
@@ -56,22 +56,23 @@ describe('sequencer Node', function () {
         });
     });
 
-    // it('should send first beat unchanged when first length is 1 and bar is started', function (done) {
-    //     let flow = sequencerBase;
-    //     helper.load(sequencerNode, flow, function () {
-    //         const n1 = helper.getNode("n1");
-    //         const n2 = helper.getNode("n2");
-    //         const spy = sinon.spy();
-    //         const injectMsg = { "payload": "tick", "start": ["beat", "bar"] };
-    //         n2.on("input", function (msg) {
-    //             try {
-    //                 spy(injectMsg);
-    //                 done();
-    //             } catch (err) {
-    //                 done(err);
-    //             }
-    //         });
-    //         n1.receive(injectMsg);
-    //     });
-    // });
+    it('should send first beat unchanged when first length is 1 and bar is started', function (done) {
+        let flow = sequencerBase;
+        helper.load(sequencerNode, flow, function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = sinon.spy();
+            const injectMsg = { 'payload': 'tick', 'start': ['beat', 'bar'] };
+            n2.on('input', function (msg) {
+                try {
+                    spy(injectMsg);
+                    done();
+                } catch (err) {
+                    done(err);
+                }
+            });
+            n1.receive(injectMsg);
+            spy.should.have.been.called;
+        });
+    });
 });
