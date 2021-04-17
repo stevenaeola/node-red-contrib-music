@@ -4,8 +4,8 @@
     "description": "Synthesise music with node-red. The beat node creates regular beats at a rate you can control, and which can be sunchronised with other machines. The divider node adds information to beat events, dividing beats into bars, bars into phrases, phrases into sections. The synth node creates messages for SuperCollider that can be sent via OSC. The sequencer node plays a sequence of notes with a specified rhythm.",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "postversion": "git push origin && git push --tags && gren release && gren changelog --override && git add CHANGELOG.md && git commit -m \"Update CHANGELOG\" && git push -u origin master && echo \"npm publish\""
+        "test": "mocha \"test/**/*_spec.js\"",
+        "postversion": "git push origin && git push --tags && gren release && gren changelog --override && git add CHANGELOG.md && git commit -m \"Update CHANGELOG\" && git push -u origin main && echo \"npm publish\""
     },
     "keywords": [
         "node-red",
@@ -46,6 +46,9 @@
         "ws": "^6.2.1"
     },
     "devDependencies": {
+        "mocha": "^8.3.2",
+        "node-red": "^1.3.2",
+        "node-red-node-test-helper": "^0.2.7",
         "standard": "^12.0.1"
     }
 }
