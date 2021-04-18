@@ -47,7 +47,7 @@ describe('sequencer Node', function () {
         helper.load(sequencerNode, flow, function () {
             const n1 = helper.getNode('n1');
             try {
-                n1.should.have.property('name', 'sequencer');
+                expect(n1).toHaveProperty('name', 'sequencer');
                 done();
               } catch (err) {
                 done(err);
