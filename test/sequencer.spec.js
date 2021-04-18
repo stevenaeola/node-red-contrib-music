@@ -42,7 +42,7 @@ describe('sequencer Node', function () {
         helper.stopServer(done);
     });
 
-    test('should be loaded', function (done) {
+    it('should be loaded', function (done) {
         let flow = sequencerBase;
         helper.load(sequencerNode, flow, function () {
             const n1 = helper.getNode('n1');
@@ -55,26 +55,34 @@ describe('sequencer Node', function () {
         });
     });
 
-    // it('should send first beat when first length is 1 and bar is started', function (done) {
-    //     let flow = sequencerBase;
-    //     helper.load(sequencerNode, flow, function () {
-    //         const n1 = helper.getNode('n1');
-    //         const n2 = helper.getNode('n2');
-    //         const spy = sinon.spy();
-    //         const injectMsg = { 'payload': 'tick', 'start': ['beat', 'bar'] };
-    //         n2.on('input', function (msg) {
-    //             try {
-    //                 spy(msg);
-    //             } catch (err) {
-    //                 done(err);
-    //             }
-    //         });
-    //         spy.should.not.have.been.called;
-    //         n1.receive(injectMsg);
-    //         spy.should.have.been.called;
-    //         done();
-    //     });
-    // });
+    // send a message to a node and wait to the next loop so that any events are triggered, return a promise so we can await resolution
+    function receivePromise (node, msg) {
+        return new Promise(resolve => {
+            node.receive(msg);
+            setImmediate(resolve);
+        });
+    }
+
+    it('should send first beat when first length is 1 and bar is started', function (done) {
+        let flow = sequencerBase;
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            const injectMsg = { 'payload': 'tick', 'start': ['beat', 'bar'] };
+            await n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            expect(spy).not.toHaveBeenCalled();
+            await receivePromise(n1, injectMsg);
+            expect(spy).toHaveBeenCalled();
+            done();
+        });
+    });
 
     // it('should not send beat when start event (bar) has not happened', function (done) {
     //     let flow = sequencerBase;
