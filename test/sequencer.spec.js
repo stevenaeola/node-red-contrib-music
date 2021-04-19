@@ -5,6 +5,8 @@ helper.init(require.resolve('node-red'));
 
 describe('sequencer Node', function () {
     let sequencerBase;
+    let beatMsg;
+    let barMsg;
 
     beforeEach(function (done) {
         helper.startServer(done);
@@ -15,7 +17,7 @@ describe('sequencer Node', function () {
             'name': 'sequencer',
             'input': 'beat',
             'notesrand': false,
-            'rhythm': '[3,1]',
+            'rhythm': '[2,1]',
             'rhythmrand': false,
             'loop': true,
             'start': 'bar',
@@ -35,6 +37,8 @@ describe('sequencer Node', function () {
             'type': 'helper'
         }
     ];
+        barMsg = { 'payload': 'tick', 'start': ['beat', 'bar'] };
+        beatMsg = { 'payload': 'tick', 'start': ['beat'] };
     });
 
     afterEach(function (done) {
@@ -63,13 +67,17 @@ describe('sequencer Node', function () {
         });
     }
 
+    // return the most recent value for the first parameter passed to the spy function
+    function lastValue (spy) {
+        return spy.mock.calls[spy.mock.calls.length - 1][0];
+    }
+
     it('should send first beat when first length is 1 and bar is started', function (done) {
         let flow = sequencerBase;
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
             const spy = jest.fn();
-            const injectMsg = { 'payload': 'tick', 'start': ['beat', 'bar'] };
             await n2.on('input', function (msg) {
                 try {
                     spy(msg);
@@ -78,54 +86,156 @@ describe('sequencer Node', function () {
                 }
             });
             expect(spy).not.toHaveBeenCalled();
-            await receivePromise(n1, injectMsg);
+            await receivePromise(n1, barMsg);
             expect(spy).toHaveBeenCalled();
             done();
         });
     });
 
-    // it('should not send beat when start event (bar) has not happened', function (done) {
-    //     let flow = sequencerBase;
-    //     helper.load(sequencerNode, flow, function () {
-    //         const n1 = helper.getNode('n1');
-    //         const n2 = helper.getNode('n2');
-    //         const spy = sinon.spy();
-    //         const injectMsg = { 'payload': 'tick', 'start': ['beat'] };
-    //         n2.on('input', function (msg) {
-    //             try {
-    //                 spy(msg);
-    //             } catch (err) {
-    //                 done(err);
-    //             }
-    //         });
-    //         n1.receive(injectMsg);
-    //         spy.should.not.have.been.called;
-    //         done();
-    //     });
-    // });
+    it('should not send beat when start event (bar) has not happened', function (done) {
+        let flow = sequencerBase;
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, beatMsg);
+            expect(spy).not.toHaveBeenCalled();
+            done();
+        });
+    });
 
-    // it('should follow pattern from start event', function (done) {
-    //     let flow = sequencerBase;
-    //     helper.load(sequencerNode, flow, function () {
-    //         const n1 = helper.getNode('n1');
-    //         const n2 = helper.getNode('n2');
-    //         const spy = sinon.spy();
-    //         const injectMsg1 = { 'payload': 'tick', 'start': ['beat', 'bar'] };
-    //         const injectMsg2 = { 'payload': 'tick', 'start': ['bar'] };
-    //         n2.on('input', function (msg) {
-    //             try {
-    //                 spy(msg);
-    //             } catch (err) {
-    //                 done(err);
-    //             }
-    //         });
-    //         n1.receive(injectMsg1);
-    //         spy.should.have.been.calledTwice;
-    //         n1.receive(injectMsg2);
-    //         spy.should.have.been.calledTwice;
-    //         n1.receive(injectMsg2);
-    //         spy.should.have.been.calledTwice;
-    //         done();
-    //     });
-    // });
+    it('should follow pattern from start event', function (done) {
+        let flow = sequencerBase;
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            expect(spy).not.toHaveBeenCalled();
+            await receivePromise(n1, barMsg);
+            expect(spy).toHaveBeenCalledTimes(1);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(1);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(2);
+            done();
+        });
+    });
+
+    it('should should loop when loop is true', function (done) {
+        let flow = sequencerBase;
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            expect(spy).not.toHaveBeenCalled();
+            await receivePromise(n1, barMsg);
+            expect(spy).toHaveBeenCalledTimes(1);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(1);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(2);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(3);
+            done();
+        });
+    });
+
+    it('should should not loop when loop is false', function (done) {
+        let flow = sequencerBase;
+        let seqNode = flow[0];
+        seqNode.loop = false;
+        flow[0] = seqNode;
+        console.log(flow);
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            expect(spy).not.toHaveBeenCalled();
+            await receivePromise(n1, barMsg);
+            expect(spy).toHaveBeenCalledTimes(1);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(1);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(2);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(2);
+            done();
+        });
+    });
+
+    it('should wait until start event occurs', function (done) {
+        let flow = sequencerBase;
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            expect(spy).not.toHaveBeenCalled();
+            await receivePromise(n1, beatMsg);
+            expect(spy).not.toHaveBeenCalled();
+            await receivePromise(n1, beatMsg);
+            expect(spy).not.toHaveBeenCalled();
+            await receivePromise(n1, barMsg);
+            expect(spy).toHaveBeenCalledTimes(1);
+            done();
+        });
+    });
+
+    it('should add sequenced note values', function (done) {
+        let flow = sequencerBase;
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            await receivePromise(n1, beatMsg);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 2);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 4);
+            done();
+        });
+    });
 });
