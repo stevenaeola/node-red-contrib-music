@@ -166,7 +166,6 @@ describe('sequencer Node', function () {
         let seqNode = flow[0];
         seqNode.loop = false;
         flow[0] = seqNode;
-        console.log(flow);
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
@@ -215,7 +214,7 @@ describe('sequencer Node', function () {
         });
     });
 
-    it('should add sequenced note values', function (done) {
+    it('should add sequenced note values to ticks', function (done) {
         let flow = sequencerBase;
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
@@ -235,6 +234,90 @@ describe('sequencer Node', function () {
             expect(lastValue(spy)).toHaveProperty('note', 2);
             await receivePromise(n1, beatMsg);
             expect(lastValue(spy)).toHaveProperty('note', 4);
+            done();
+        });
+    });
+
+    it('should allow values to be pushed', function (done) {
+        let flow = sequencerBase;
+        let seqNode = flow[0];
+        seqNode.rhythm = '[1]';
+        flow[0] = seqNode;
+        let pushMsg = { topic: 'note', payload: 'push 7' };
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            await receivePromise(n1, pushMsg);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 2);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 4);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 7);
+            done();
+        });
+    });
+
+    it('should allow values to be popped', function (done) {
+        let flow = sequencerBase;
+        let seqNode = flow[0];
+        seqNode.rhythm = '[1]';
+        flow[0] = seqNode;
+        let popMsg = { topic: 'note', payload: 'pop' };
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            await receivePromise(n1, popMsg);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 2);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            done();
+        });
+    });
+
+    it('should allow individual values to be changed', function (done) {
+        let flow = sequencerBase;
+        let seqNode = flow[0];
+        seqNode.rhythm = '[1]';
+        flow[0] = seqNode;
+        let changeMsg = { topic: 'note[1]', payload: '7' };
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            await receivePromise(n1, changeMsg);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 7);
             done();
         });
     });

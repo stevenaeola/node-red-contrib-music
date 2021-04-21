@@ -160,7 +160,7 @@ module.exports = function (RED) {
                                             control.values.pop();
                                             controlraw.values.pop();
                                         } else if (firstBit === 'push') {
-                                            const rest = bits.join(' ');
+                                            const rest = JSON.parse(bits.join(' '));
                                             control.values.push(rest);
                                             controlraw.values.push(rest);
                                         } else {
