@@ -2,5 +2,7 @@
 *.log
 node_modules
 uploads
+coverage
+
 
 
