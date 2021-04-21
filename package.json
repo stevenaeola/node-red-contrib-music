@@ -4,7 +4,7 @@
     "description": "Synthesise music with node-red. The beat node creates regular beats at a rate you can control, and which can be sunchronised with other machines. The divider node adds information to beat events, dividing beats into bars, bars into phrases, phrases into sections. The synth node creates messages for SuperCollider that can be sent via OSC. The sequencer node plays a sequence of notes with a specified rhythm.",
     "main": "index.js",
     "scripts": {
-        "test": "jest",
+        "test": "jest --coverage",
         "postversion": "git push origin && git push --tags && gren release && gren changelog --override && git add CHANGELOG.md && git commit -m \"Update CHANGELOG\" && git push -u origin main && echo \"npm publish\""
     },
     "keywords": [

@@ -4,14 +4,11 @@ const sequencerNode = require('../sequencer.js');
 helper.init(require.resolve('node-red'));
 
 describe('sequencer Node', function () {
-    let sequencerBase;
     let beatMsg;
     let barMsg;
 
-    beforeEach(function (done) {
-        helper.startServer(done);
-        sequencerBase =
-        [{
+    function sequencerBase (nonDefaultProps) {
+        let n1 = {
             'id': 'n1',
             'type': 'sequencer',
             'name': 'sequencer',
@@ -31,12 +28,19 @@ describe('sequencer Node', function () {
             'wires': [
                 ['n2']
             ]
-        },
-        {
-            'id': 'n2',
-            'type': 'helper'
-        }
-    ];
+        };
+        Object.assign(n1, nonDefaultProps);
+        let flow = [n1,
+            {
+                'id': 'n2',
+                'type': 'helper'
+            }
+        ];
+        return flow;
+    }
+
+    beforeEach(function (done) {
+        helper.startServer(done);
         barMsg = { 'payload': 'tick', 'start': ['beat', 'bar'] };
         beatMsg = { 'payload': 'tick', 'start': ['beat'] };
     });
@@ -47,7 +51,7 @@ describe('sequencer Node', function () {
     });
 
     it('should be loaded', function (done) {
-        let flow = sequencerBase;
+        let flow = sequencerBase();
         helper.load(sequencerNode, flow, function () {
             const n1 = helper.getNode('n1');
             try {
@@ -73,7 +77,7 @@ describe('sequencer Node', function () {
     }
 
     it('should send first beat when first length is 1 and bar is started', function (done) {
-        let flow = sequencerBase;
+        let flow = sequencerBase();
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
@@ -93,7 +97,7 @@ describe('sequencer Node', function () {
     });
 
     it('should not send beat when start event (bar) has not happened', function (done) {
-        let flow = sequencerBase;
+        let flow = sequencerBase();
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
@@ -112,7 +116,7 @@ describe('sequencer Node', function () {
     });
 
     it('should follow pattern from start event', function (done) {
-        let flow = sequencerBase;
+        let flow = sequencerBase();
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
@@ -136,7 +140,7 @@ describe('sequencer Node', function () {
     });
 
     it('should should loop when loop is true', function (done) {
-        let flow = sequencerBase;
+        let flow = sequencerBase();
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
@@ -162,10 +166,7 @@ describe('sequencer Node', function () {
     });
 
     it('should should not loop when loop is false', function (done) {
-        let flow = sequencerBase;
-        let seqNode = flow[0];
-        seqNode.loop = false;
-        flow[0] = seqNode;
+        let flow = sequencerBase({ loop: false });
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
@@ -185,13 +186,18 @@ describe('sequencer Node', function () {
             await receivePromise(n1, beatMsg);
             expect(spy).toHaveBeenCalledTimes(2);
             await receivePromise(n1, beatMsg);
-            expect(spy).toHaveBeenCalledTimes(2);
+            expect(spy).toHaveBeenCalledTimes(3);
+            for (let i = 0; i < 10; i++) {
+                await receivePromise(n1, beatMsg);
+                expect(spy).toHaveBeenCalledTimes(3);
+            }
+
             done();
         });
     });
 
     it('should wait until start event occurs', function (done) {
-        let flow = sequencerBase;
+        let flow = sequencerBase();
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
@@ -215,7 +221,7 @@ describe('sequencer Node', function () {
     });
 
     it('should add sequenced note values to ticks', function (done) {
-        let flow = sequencerBase;
+        let flow = sequencerBase();
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
@@ -239,10 +245,7 @@ describe('sequencer Node', function () {
     });
 
     it('should allow values to be pushed', function (done) {
-        let flow = sequencerBase;
-        let seqNode = flow[0];
-        seqNode.rhythm = '[1]';
-        flow[0] = seqNode;
+        let flow = sequencerBase({ rhythm: '[1]' });
         let pushMsg = { topic: 'note', payload: 'push 7' };
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
@@ -269,10 +272,7 @@ describe('sequencer Node', function () {
     });
 
     it('should allow values to be popped', function (done) {
-        let flow = sequencerBase;
-        let seqNode = flow[0];
-        seqNode.rhythm = '[1]';
-        flow[0] = seqNode;
+        let flow = sequencerBase({ rhythm: '[1]' });
         let popMsg = { topic: 'note', payload: 'pop' };
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
@@ -297,10 +297,7 @@ describe('sequencer Node', function () {
     });
 
     it('should allow individual values to be changed', function (done) {
-        let flow = sequencerBase;
-        let seqNode = flow[0];
-        seqNode.rhythm = '[1]';
-        flow[0] = seqNode;
+        let flow = sequencerBase({ rhythm: '[1]' });
         let changeMsg = { topic: 'note[1]', payload: '7' };
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
@@ -319,6 +316,102 @@ describe('sequencer Node', function () {
             await receivePromise(n1, beatMsg);
             expect(lastValue(spy)).toHaveProperty('note', 7);
             done();
+        });
+    });
+
+    it('should reset when told to', function (done) {
+        let flow = sequencerBase({ rhythm: '[1]' });
+        let resetMsg = { payload: 'reset' };
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            await receivePromise(n1, resetMsg);
+            expect(spy).toHaveBeenCalledTimes(2); // reset message is forwarded
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(2); // need a bar message to restart
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1); // back to the beginning
+            done();
+        });
+    });
+
+    it('should wait indefinitely for a null length', function (done) {
+        let flow = sequencerBase({ rhythm: '[1,null]' });
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            for (let i = 0; i < 10; i++) {
+                await receivePromise(n1, beatMsg);
+                expect(spy).toHaveBeenCalledTimes(2);
+            }
+            done();
+        });
+    });
+
+    it('should move on with a "next" message', function (done) {
+        let flow = sequencerBase({ rhythm: '[1,null]' });
+        let nextMsg = { payload: 'next' };
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            for (let i = 0; i < 10; i++) {
+                await receivePromise(n1, beatMsg);
+                expect(spy).toHaveBeenCalledTimes(2);
+                expect(lastValue(spy)).toHaveProperty('note', 2);
+            }
+            await receivePromise(n1, nextMsg);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(3);
+            expect(lastValue(spy)).toHaveProperty('note', 4);
+            done();
+        });
+    });
+
+    it('should allow non-array values', function (done) {
+        let flow = sequencerBase({ 'controls': [
+            {
+                'name': 'note',
+                'values': '3'
+            }
+        ] });
+        helper.load(sequencerNode, flow, function () {
+            const n1 = helper.getNode('n1');
+            try {
+                expect(n1.controls.valueList).toEqual([3]);
+                done();
+              } catch (err) {
+                done(err);
+              }
         });
     });
 });
