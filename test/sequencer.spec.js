@@ -406,8 +406,9 @@ describe('sequencer Node', function () {
         ] });
         helper.load(sequencerNode, flow, function () {
             const n1 = helper.getNode('n1');
+            console.log(n1.controls);
             try {
-                expect(n1.controls.valueList).toEqual([3]);
+                expect(n1.controls[0]).toHaveProperty('valueList', [3]);
                 done();
               } catch (err) {
                 done(err);

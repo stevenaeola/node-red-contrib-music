@@ -41,16 +41,16 @@ module.exports = function (RED) {
                                 // use undefined instead of null so we can include null values in sequences
                                 control.value = undefined;
                                 if (node.notesrand && node.loop) {
-                                    control.value = _.sample(control.values);
+                                    control.value = _.sample(control.valueList);
                                 } else {
                                     control.pos++;
-                                    if (control.pos >= control.values.length) {
+                                    if (control.pos >= control.valueList.length) {
                                         if (node.loop) {
                                             control.pos = 0;
-                                            control.value = control.values[control.pos];
+                                            control.value = control.valueList[control.pos];
                                         }
                                     } else {
-                                        control.value = control.values[control.pos];
+                                        control.value = control.valueList[control.pos];
                                     }
                                 }
                                 if (control.value !== undefined) {
@@ -143,28 +143,28 @@ module.exports = function (RED) {
                         let controlraw = node.controlsraw[i];
                         if (control.name === topicControl) {
                             if (controlIndex !== null) {
-                                while ((control.values.length - 1) < controlIndex) {
-                                    control.values.push(null);
-                                    controlraw.values.push(null);
+                                while ((control.valueList.length - 1) < controlIndex) {
+                                    control.valueList.push(null);
+                                    controlraw.valueList.push(null);
                                 }
-                                control.values[controlIndex] = controlraw.values[controlIndex] = JSON.parse(msg.payload);
+                                control.valueList[controlIndex] = controlraw.valueList[controlIndex] = JSON.parse(msg.payload);
                                 foundTopic = true;
                             } else {
                                 try {
                                     if (Array.isArray(msg.payload)) {
-                                        control.values = msg.payload;
+                                        control.valueList = msg.payload;
                                     } else {
                                         let bits = msg.payload.split(' ');
                                         let firstBit = bits.shift();
                                         if (firstBit === 'pop') {
-                                            control.values.pop();
-                                            controlraw.values.pop();
+                                            control.valueList.pop();
+                                            controlraw.valueList.pop();
                                         } else if (firstBit === 'push') {
                                             const rest = JSON.parse(bits.join(' '));
-                                            control.values.push(rest);
-                                            controlraw.values.push(rest);
+                                            control.valueList.push(rest);
+                                            controlraw.valueList.push(rest);
                                         } else {
-                                            controlraw.values = control.values = JSON.parse(msg.payload);
+                                            controlraw.valueList = control.valueList = JSON.parse(msg.payload);
                                         }
                                     }
                                     foundTopic = true;
@@ -189,11 +189,11 @@ module.exports = function (RED) {
             }
 
             for (let control of node.controls) {
-                if (!Array.isArray(control.values)) {
-                    if (control.values) {
-                        control.values = [control.values];
+                if (!Array.isArray(control.valueList)) {
+                    if (control.valueList) {
+                        control.valueList = [control.valueList];
                     } else {
-                        control.values = [1, 4, 5, 4];
+                        control.valueList = [1, 4, 5, 4];
                     }
                 }
             }
@@ -208,7 +208,7 @@ module.exports = function (RED) {
                 let control = node.controls[i];
                 control.pos = -1;
                 if (node.notesrand & !node.loop) {
-                    control.values = _.shuffle(control.values);
+                    control.valueList = _.shuffle(control.valueList);
                 }
             }
         }
@@ -239,7 +239,7 @@ module.exports = function (RED) {
                 } catch (e) {
                     values = null;
                 }
-                let control = { name: ccontrol.name, values };
+                let control = { name: ccontrol.name, valueList: values };
                 node.controlsraw.push(control);
             }
 
