@@ -24,7 +24,7 @@ module.exports = function (RED) {
                         if (node.rhythmCount <= 0) {
                             if (node.rhythmrand && node.loop) {
                                 node.rhythmCount = _.sample(node.rhythm);
-                                node.rhythmPos = 0; // needs to be > 0 so that it continues after start/restart
+                                node.rhythmPos = 0; // needs to be > -1 so that it continues after start/restart
                             } else {
                                 node.rhythmPos++;
                                 if (node.rhythmPos >= node.rhythm.length) {
@@ -228,7 +228,8 @@ module.exports = function (RED) {
             node.start = config.start || 'bar'; // sequence won't start until this
 
             node.loop = config.loop || false;
-            node.notesrand = config.notesrand || false;
+            node.order = config.order || config.notesrand ? 'random' : 'forward';
+            node.notesrand = node.order === 'random';
             node.rhythmrand = config.rhythmrand || false;
             node.output = config.output || 'single';
             node.controlsraw = [];

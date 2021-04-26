@@ -1,27 +1,29 @@
 <script type="text/javascript">
  RED.nodes.registerType('sequencer',{
-     category: 'music',
-     color: '#a6bbcf',
-     defaults: {
-	 name: {value: "sequencer"},
-	 input: {value: "beat",
-		 required: true},
-	 notesrand: {value: false, required: false},
-	 rhythm: {value: "[3,1]", required: true},
-	 rhythmrand: {value: false, required: false},
-	 loop: {value: true, required: true},
-	 start: {value: "bar", required: true},
-	 output: {value: "single", required: true},
-	 controls: {value:[{name: "note", value: "[1,4,5,4]"}], required: true}
-     },
-     inputs:1,
-     inputLabels: "tick",
-     outputs:2,
-     outputLabels: ["tick", "control:"],
-     icon: "queue-music.png",
-     label: function() {
-	 return this.name||"sequencer";
-     },
+	 category: 'music',
+	 color: '#a6bbcf',
+	 defaults: {
+		 name: { value: "sequencer" },
+		 input: {
+			 value: "beat",
+			 required: true
+		 },
+		 rhythm: { value: "[3,1]", required: true },
+		 rhythmrand: { value: false, required: false },
+		 loop: { value: true, required: true },
+		 start: { value: "bar", required: true },
+		 output: { value: "single", required: true },
+		 order: { value: "forward", required: true },
+		 controls: { value: [{ name: "note", value: "[1,4,5,4]" }], required: true }
+	 },
+	 inputs: 1,
+	 inputLabels: "tick",
+	 outputs: 2,
+	 outputLabels: ["tick", "control:"],
+	 icon: "queue-music.png",
+	 label: function () {
+		 return this.name || "sequencer";
+	 },
 
      oneditprepare: function(){
 	 node = this;
@@ -94,6 +96,17 @@
  </div>
 
  <div class="form-row">
+	<label for="node-input-order">Order of values</label>
+	<select id="node-input-order">
+	<option value="forward">forward</option>
+	<option value="backward">backward</option>
+	<option value="forwardbackwardrep">forward then backward, repeat ends</option>
+	<option value="forwardbackwardnorep">forward then backward, don't repeat ends</option>
+	<option value="random">random</option>
+	</select>
+</div>
+
+ <div class="form-row">
      <label for="node-input-loop"> Loop</label>
      <input type="checkbox" id="node-input-loop">
  </div>
@@ -101,11 +114,6 @@
  <div class="form-row">
      <label for="node-input-rhythmrand"> Choose lengths randomly from list</label>
      <input type="checkbox" id="node-input-rhythmrand">
- </div>
-
- <div class="form-row">
-     <label for="node-input-notesrand"> Choose values randomly from list</label>
-     <input type="checkbox" id="node-input-notesrand">
  </div>
 
  <div class="form-row node-input-control-container-row">
@@ -184,25 +192,28 @@
  <dt><span class='optional'>Name</span> <span class='property-type'>string</span></dt>
  <dd>The label for the node.</dd>
 
- <dt>input event <span class='property-type'>string</span></dt>
+ <dt>Input event <span class='property-type'>string</span></dt>
  <dd>The <code>tick</code> event (included in <code>msg.start</code>) that is counted by the sequencer. By default this is <code>beat</code>, but could be e.g. <code>bar</code></dd>
 
- <dt>start event <span class='property-type'>string</span></dt>
+ <dt>Start event <span class='property-type'>string</span></dt>
  <dd>After a reset (or reaching the end of a non-looping sequence) the sequencer will wait until this event (included in <code>msg.start</code>) to start the sequence. By default this is <code>bar</code>, but could be e.g. <code>section</code></dd>
  
- <dt>loop <span class='property-type'>boolean</span></dt>
+ <dt>List of lengths <span class='property-type'>list,number</span>
+	<dd>A list of numbers (or null values) representing the number of ticks to be counted for a note. The list should be specified as a JSON array, with default <code>[3,1]</code> or a number can be used if all notes have the same length. The size of this list does not have to be the same as the size of the list of notes: the list will be repeated as many times as necessary. If a <code>null</code> value is given then the sequencer will not progress until a message with payload <code>next</code> is received.</dd>
+ 
+<dt>Tick output <span class='property-type'>option</span></dt>
+ <dd>The default is 'single tick at sequence points' which means that the sequencer will absorb input events (i.e. ticks with the input event in <code>msg.start</code>) until the count defined in the 'List of lengths' is reached. If 'all ticks, with sequenced values added' is selected then all incoming ticks are forwarded to the output, but with the relevant control values add as properties to the message </dd>
+ 
+ <dt>Order <span class='property-type'>option/span></dt>
+ <dd>Play the sequence forwards or backwards or randomly. If 'forwards then backwards' with 'repeat ends' is selected then sequenced values of [1,3,5] would be played as 1,3,5,5,3,1,1,3,5,5... and without repeats it would be 1,3,5,3,1,3,5... </dd>
+ 
+ <dt>Loop <span class='property-type'>boolean</span></dt>
  <dd>If selected, the sequencer will loop straight back to the beginning again and continue. If not the sequencer will restart at the next <code>start event</code>.</dd>
 
- <dt>list of notes <span class='property-type'>list,number</span>
+ <dt>List of notes <span class='property-type'>list,number</span>
  <dd>A list of numbers representing the position in the scale of the note to be played. The list should be specified as a JSON array, with default <code>[1,4,5,4]</code> or a number can be used if a single note is to be repeated. If no note is to be played at some part of the sequence (i.e. a rest), the value <code>null</code> should be used.</dd>
-
- <dt>choose values randomly from list <span class='property-type'>boolean</span>
- <dd>If selected, values (e.g. notes) are selected randomly from the list for each note.</dd>
-
- <dt>list of lengths <span class='property-type'>list,number</span>
- <dd>A list of numbers (or null values) representing the number of ticks to be counted for a note. The list should be specified as a JSON array, with default <code>[3,1]</code> or a number can be used if all notes have the same length. The size of this list does not have to be the same as the size of the list of notes: the list will be repeated as many times as necessary. If a <code>null</code> value is given then the sequencer will not progress until a message with payload <code>next</code> is received.</dd>
-
- <dt>choose lengths randomly from list <span class='property-type'>boolean</span>
+ 
+ <dt>Choose lengths randomly from list <span class='property-type'>boolean</span>
  <dd>If selected, note lengths are selected randomly from the list for each note.</dd>
 
 
