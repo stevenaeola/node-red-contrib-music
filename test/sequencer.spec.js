@@ -13,12 +13,12 @@ describe('sequencer Node', function () {
             'type': 'sequencer',
             'name': 'sequencer',
             'input': 'beat',
-            'notesrand': false,
             'rhythm': '[2,1]',
             'rhythmrand': false,
             'loop': true,
             'start': 'bar',
             'output': 'single',
+            'direction': 'forward',
             'controls': [
                 {
                     'name': 'note',
@@ -56,6 +56,7 @@ describe('sequencer Node', function () {
             const n1 = helper.getNode('n1');
             try {
                 expect(n1).toHaveProperty('name', 'sequencer');
+                expect(n1).toHaveProperty('notesrand', false);
                 done();
               } catch (err) {
                 done(err);
@@ -404,15 +405,37 @@ describe('sequencer Node', function () {
                 'values': '3'
             }
         ] });
-        helper.load(sequencerNode, flow, function () {
+        helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
-            console.log(n1.controls);
             try {
                 expect(n1.controls[0]).toHaveProperty('valueList', [3]);
                 done();
               } catch (err) {
                 done(err);
               }
+        });
+    });
+
+    it('should go backwards', function (done) {
+        let flow = sequencerBase({ 'direction': 'backward' });
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 4);
+            await receivePromise(n1, beatMsg);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 2);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
         });
     });
 });
