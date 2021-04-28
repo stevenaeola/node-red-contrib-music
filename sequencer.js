@@ -43,14 +43,18 @@ module.exports = function (RED) {
                                 if (node.notesrand && node.loop) {
                                     control.value = _.sample(control.valueList);
                                 } else {
+                                    // control.pos always goes from 0 upwards, even when the sequence is running backwards
+                                    // node.reverse is true if running backwards
                                     control.pos++;
                                     if (control.pos >= control.valueList.length) {
                                         if (node.loop) {
                                             control.pos = 0;
-                                            control.value = control.valueList[control.pos];
+                                            let posIndex = node.reverse ? (control.valueList.length - 1 - control.pos) : control.pos;
+                                            control.value = control.valueList[posIndex];
                                         }
                                     } else {
-                                        control.value = control.valueList[control.pos];
+                                        let posIndex = node.reverse ? (control.valueList.length - 1 - control.pos) : control.pos;
+                                        control.value = control.valueList[posIndex];
                                     }
                                 }
                                 if (control.value !== undefined) {
@@ -228,8 +232,9 @@ module.exports = function (RED) {
             node.start = config.start || 'bar'; // sequence won't start until this
 
             node.loop = config.loop || false;
-            node.order = config.order || config.notesrand ? 'random' : 'forward';
+            node.order = config.order || (config.notesrand ? 'random' : 'forward');
             node.notesrand = node.order === 'random';
+            node.reverse = node.order === 'backward';
             node.rhythmrand = config.rhythmrand || false;
             node.output = config.output || 'single';
             node.controlsraw = [];

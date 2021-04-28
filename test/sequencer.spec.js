@@ -18,7 +18,7 @@ describe('sequencer Node', function () {
             'loop': true,
             'start': 'bar',
             'output': 'single',
-            'direction': 'forward',
+            'order': 'forward',
             'controls': [
                 {
                     'name': 'note',
@@ -57,6 +57,9 @@ describe('sequencer Node', function () {
             try {
                 expect(n1).toHaveProperty('name', 'sequencer');
                 expect(n1).toHaveProperty('notesrand', false);
+                expect(n1).toHaveProperty('reverse', false);
+                expect(n1).toHaveProperty('loop', true);
+
                 done();
               } catch (err) {
                 done(err);
@@ -157,11 +160,15 @@ describe('sequencer Node', function () {
             await receivePromise(n1, barMsg);
             expect(spy).toHaveBeenCalledTimes(1);
             await receivePromise(n1, beatMsg);
-            expect(spy).toHaveBeenCalledTimes(1);
+            expect(spy).toHaveBeenCalledTimes(1); // rhythm [2,1]
             await receivePromise(n1, beatMsg);
             expect(spy).toHaveBeenCalledTimes(2);
             await receivePromise(n1, beatMsg);
             expect(spy).toHaveBeenCalledTimes(3);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(3);
+            await receivePromise(n1, beatMsg);
+            expect(spy).toHaveBeenCalledTimes(4);
             done();
         });
     });
@@ -417,7 +424,7 @@ describe('sequencer Node', function () {
     });
 
     it('should go backwards', function (done) {
-        let flow = sequencerBase({ 'direction': 'backward' });
+        let flow = sequencerBase({ 'order': 'backward' });
         helper.load(sequencerNode, flow, async function () {
             const n1 = helper.getNode('n1');
             const n2 = helper.getNode('n2');
@@ -429,6 +436,7 @@ describe('sequencer Node', function () {
                     done(err);
                 }
             });
+            expect(n1).toHaveProperty('reverse', true);
             await receivePromise(n1, barMsg);
             expect(lastValue(spy)).toHaveProperty('note', 4);
             await receivePromise(n1, beatMsg);
@@ -436,6 +444,7 @@ describe('sequencer Node', function () {
             expect(lastValue(spy)).toHaveProperty('note', 2);
             await receivePromise(n1, beatMsg);
             expect(lastValue(spy)).toHaveProperty('note', 1);
+            done();
         });
     });
 });
