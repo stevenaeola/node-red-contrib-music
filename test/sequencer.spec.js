@@ -447,4 +447,33 @@ describe('sequencer Node', function () {
             done();
         });
     });
+
+    it('should go forwards and backwards with repeat', function (done) {
+        let flow = sequencerBase({ 'order': 'forwardbackwardrep', 'rhythm': '[1]' });
+        helper.load(sequencerNode, flow, async function () {
+            const n1 = helper.getNode('n1');
+            const n2 = helper.getNode('n2');
+            const spy = jest.fn();
+            n2.on('input', function (msg) {
+                try {
+                    spy(msg);
+                } catch (err) {
+                    done(err);
+                }
+            });
+            await receivePromise(n1, barMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 2);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 4);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 4);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 2);
+            await receivePromise(n1, beatMsg);
+            expect(lastValue(spy)).toHaveProperty('note', 1);
+            done();
+        });
+    });
 });
