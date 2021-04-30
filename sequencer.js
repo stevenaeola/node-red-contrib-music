@@ -28,10 +28,16 @@ module.exports = function (RED) {
                             } else {
                                 node.rhythmPos++;
                                 if (node.rhythmPos >= node.rhythm.length) {
-                                    node.rhythmPos = 0;
+                                    if (node.loop) {
+                                        node.rhythmPos = 0;
+                                    } else {
+                                        node.rhythmPos = -1;
+                                    }
                                 }
-                                node.rhythmCount = node.rhythm[node.rhythmPos];
-                                // use a null value to pause the sequence until a
+                                if (node.rhythmPos >= 0) {
+                                    node.rhythmCount = node.rhythm[node.rhythmPos];
+                                }
+                                // use a null value to pause the sequence until a start comes along
                                 if (node.rhythmCount === null) {
                                     node.rhythmCount = Number.NaN;
                                 }
@@ -44,18 +50,19 @@ module.exports = function (RED) {
                                     control.value = _.sample(control.valueList);
                                 } else {
                                     // control.pos always goes from 0 upwards, even when the sequence is running backwards
-                                    // node.reverse is true if running backwards
+                                    // control.reverse is true if running backwards
                                     control.pos++;
                                     if (control.pos >= control.valueList.length) {
-                                        if (node.loop) {
-                                            control.pos = 0;
-                                            let posIndex = node.reverse ? (control.valueList.length - 1 - control.pos) : control.pos;
-                                            control.value = control.valueList[posIndex];
+                                        control.pos = 0;
+                                        if (node.order.includes('forwardbackward')) {
+                                            control.reverse = !control.reverse;
                                         }
-                                    } else {
-                                        let posIndex = node.reverse ? (control.valueList.length - 1 - control.pos) : control.pos;
-                                        control.value = control.valueList[posIndex];
+
+                                        if (node.order === 'forwardbackwardnorep' && control.valueList.length > 1) {
+                                            control.pos = 1;
+                                        }
                                     }
+                                    control.value = control.valueList[pos2Index(control)];
                                 }
                                 if (control.value !== undefined) {
                                     controlSet = true;
@@ -186,6 +193,10 @@ module.exports = function (RED) {
             }
         });
 
+        function pos2Index (control) {
+            return control.reverse ? (control.valueList.length - 1 - control.pos) : control.pos;
+        }
+
         function restart () {
             node.controls = JSON.parse(JSON.stringify(node.controlsraw));
             if ((!Array.isArray(node.controls)) || node.controls.length < 1) {
@@ -211,6 +222,7 @@ module.exports = function (RED) {
             for (let i = 0; i < node.controls.length; i++) {
                 let control = node.controls[i];
                 control.pos = -1;
+                control.reverse = node.order === 'backward';
                 if (node.notesrand & !node.loop) {
                     control.valueList = _.shuffle(control.valueList);
                 }
@@ -234,7 +246,6 @@ module.exports = function (RED) {
             node.loop = config.loop || false;
             node.order = config.order || (config.notesrand ? 'random' : 'forward');
             node.notesrand = node.order === 'random';
-            node.reverse = node.order === 'backward';
             node.rhythmrand = config.rhythmrand || false;
             node.output = config.output || 'single';
             node.controlsraw = [];

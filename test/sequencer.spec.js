@@ -57,7 +57,6 @@ describe('sequencer Node', function () {
             try {
                 expect(n1).toHaveProperty('name', 'sequencer');
                 expect(n1).toHaveProperty('notesrand', false);
-                expect(n1).toHaveProperty('reverse', false);
                 expect(n1).toHaveProperty('loop', true);
 
                 done();
@@ -436,7 +435,6 @@ describe('sequencer Node', function () {
                     done(err);
                 }
             });
-            expect(n1).toHaveProperty('reverse', true);
             await receivePromise(n1, barMsg);
             expect(lastValue(spy)).toHaveProperty('note', 4);
             await receivePromise(n1, beatMsg);
