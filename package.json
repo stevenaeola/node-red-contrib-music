@@ -42,7 +42,7 @@
         "osc": "^2.3.1",
         "path": "^0.12.7",
         "request": "^2.88.0",
-        "underscore": "^1.9.1",
+        "underscore": "^1.12.1",
         "ws": "^6.2.1"
     },
     "devDependencies": {
