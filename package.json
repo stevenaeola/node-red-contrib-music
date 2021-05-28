@@ -43,7 +43,7 @@
         "path": "^0.12.7",
         "request": "^2.88.0",
         "underscore": "^1.12.1",
-        "ws": "^6.2.1"
+        "ws": "^7.4.5"
     },
     "devDependencies": {
         "eslint-plugin-jest": "^24.3.5",
