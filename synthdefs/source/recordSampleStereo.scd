@@ -1,6 +1,6 @@
 (
 SynthDef("recordSampleStereo", {
-	| buffer, recLevel=1, preLevel=1 |
+	| buffer, recLevel=2, preLevel=1 |
     var in;
 	in = SoundIn.ar([0,1]);
     RecordBuf.ar(in, buffer,
