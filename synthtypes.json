@@ -152,7 +152,7 @@
     "vinyl_backspin": {"stereo": true, "tags": ["sonic-pi", "misc"]},
     "vinyl_hiss": {"stereo": true, "tags": ["sonic-pi", "misc", "long"]},
     "vinyl_rewind": {"stereo": true, "tags": ["sonic-pi", "misc"]},
-    "vinyl_scratch": {"stereo": true, "tags": ["sonic-pi", "misc", "short"]},
+    "vinyl_scratch": {"tags": ["sonic-pi", "misc", "short"]},
     "beep": {"tuned": true, "synth": true, "tags": ["sonic-pi", "long"]},
     "chiplead": {"tuned": true, "synth": true, "tags": ["sonic-pi", "long"]},
     "chipbass": {"tuned": true, "synth": true, "tags": ["sonic-pi", "bass", "long"]},
