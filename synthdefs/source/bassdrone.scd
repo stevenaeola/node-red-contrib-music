@@ -20,7 +20,7 @@ SynthDef("s1",
 (
 var note_names, note_freqs, synths, sliders, slider1;
 note_names = ["C", "D", "E", "Fs", "G", "A", "Bb", "B", "C", "Cs", "D", "E", "F", "Fs", "G", "A", "Bb", "B", "C"];
-note_freqs = [36,  38,  40,  42,   43,  45,  46,  47,  48,  49,  50,   52,  53,  54,   55,  57, 59,  59, 60];
+note_freqs = [36,  38,  40,  42,   43,  45,  46,  47,  48,  49,  50,   52,  53,  54,   55,  57, 58,  59, 60];
 synths = Array.fill(note_freqs.size, {arg i; var s; s = Synth("s1"); s.set("freq", midicps(note_freqs[i])); s});
 
 w=Window("Bass synth", Rect(100, 400, 400, 500));
