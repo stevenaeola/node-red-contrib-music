@@ -151,5 +151,16 @@
                                 "default": 2
                         }
                 }
+        },
+        "soundIn": {
+                "description": "Sound input from system audio (mono)",
+                "fxcontrols": {
+                        "input_channel": {
+                                "description": "System audio channel number",
+                                "min": 0,
+                                "max": 20,
+                                "default": 0
+                        }
+                }
         }
 }
